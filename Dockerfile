@@ -8,5 +8,6 @@ FROM node:20
 WORKDIR /usr/app
 COPY --from=builder /usr/app/node_modules ./node_modules
 COPY --from=builder /usr/app/build ./build
+COPY --from=builder /usr/app/config ./config
 # EXPOSE 8080
 CMD [ "node", "build/evmEventMonitor.js" ]
