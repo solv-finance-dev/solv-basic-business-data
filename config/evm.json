@@ -1,0 +1,19 @@
+{
+  "chains": [
+    {
+      "chainId": 1,
+      "startBlockNumber": 17141000,
+      "blockLimit": 5
+    },
+    {
+      "chainId": 56,
+      "startBlockNumber": 27652000,
+      "blockLimit": 5
+    },
+    {
+      "chainId": 42161,
+      "startBlockNumber": 84104000,
+      "blockLimit": 5
+    }
+  ]
+}

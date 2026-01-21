@@ -1,0 +1,35 @@
+{
+	"name": "solv-basic-business-data",
+	"version": "1.0.0",
+	"description": "",
+	"scripts": {
+		"build": "tsc",
+		"test": "jest"
+	},
+	"license": "ISC",
+	"devDependencies": {
+		"@types/jest": "^30.0.0",
+		"@types/node": "^20.14.9",
+		"@types/pg": "^8.11.6",
+		"jest": "^29.7.0",
+		"ts-jest": "^29.4.6",
+		"ts-node": "^10.9.2",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^5.5.3"
+	},
+	"dependencies": {
+		"@solvprotocol/service-utils": "^0.1.0",
+		"@types/sequelize": "^4.28.20",
+		"aws-sdk": "^2.1692.0",
+		"axios": "^1.7.2",
+		"bignumber.js": "^9.1.2",
+		"body-parser": "^1.20.2",
+		"dotenv": "^16.4.5",
+		"ethers": "^6.13.0",
+		"pg": "^8.11.5",
+		"pg-hstore": "^2.3.4",
+		"redis": "^5.10.0",
+		"sequelize": "^6.37.3",
+		"sequelize-typescript": "^2.1.6"
+	}
+}
