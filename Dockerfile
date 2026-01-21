@@ -9,4 +9,4 @@ WORKDIR /usr/app
 COPY --from=builder /usr/app/node_modules ./node_modules
 COPY --from=builder /usr/app/build ./build
 # EXPOSE 8080
-# CMD [ "node", "build/okxTask.js" ]
+CMD [ "node", "build/evmEventMonitor.js" ]
