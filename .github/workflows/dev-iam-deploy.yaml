@@ -90,5 +90,5 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.basic-business-data-sync.outputs.task-definition }}
-          service: basic-business-data-sync
-          cluster: solv-non-evm-vault-cluster
+          service: solv-basic-business-data-definition-service
+          cluster: solv-basic-business-data-cluster
