@@ -37,13 +37,13 @@ export async function fetchChainEvents(
 	blockLimit?: number
 ): Promise<EventEvm[]> {
 	if (!Number.isFinite(chainId) || !Number.isFinite(beginBlockNumber)) {
-		console.warn('EvmService: Invalid chain inputs.', {chainId, beginBlockNumber});
+		console.error('EvmService: Invalid chain inputs.', {chainId, beginBlockNumber});
 		return [];
 	}
 
 	const effectiveBlockLimit = blockLimit ?? DEFAULT_BLOCK_LIMIT;
 	if (!Number.isFinite(effectiveBlockLimit) || effectiveBlockLimit <= 0) {
-		console.warn('EvmService: Invalid blockLimit.', {chainId, beginBlockNumber, blockLimit});
+		console.error('EvmService: Invalid blockLimit.', {chainId, beginBlockNumber, blockLimit});
 		return [];
 	}
 

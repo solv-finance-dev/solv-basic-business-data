@@ -13,32 +13,21 @@ export async function main() {
     const intervalMs = Number(process.env.MONITOR_INTERVAL_MS ?? DEFAULT_INTERVAL_MS);
 
     initHandlersConfig();
-    console.log('init Handlers Config');
+    console.log('init handlers config');
 
-    console.log('init sequelize');
-    const sequelize = await initSequelize();
-    console.log('init transaction');
-    const transaction = await sequelize.transaction();
+    setInterval(() => {
+        if (running) {
+            console.warn('EVM Event Monitor: Previous cycle still running, skip.');
+            return;
+        }
 
-    void runCycle().catch((error) => {
-        console.error('EVM Event Monitor: Error in main cycle:', error);
-    }).finally(() => {
-        running = false;
-    });
-
-    // setInterval(() => {
-    //     if (running) {
-    //         console.warn('EVM Event Monitor: Previous cycle still running, skip.');
-    //         return;
-    //     }
-    //
-    //     running = true;
-    //     void runCycle().catch((error) => {
-    //         console.error('EVM Event Monitor: Error in main cycle:', error);
-    //     }).finally(() => {
-    //         running = false;
-    //     });
-    // }, intervalMs);
+        running = true;
+        void runCycle().catch((error) => {
+            console.error('EVM Event Monitor: Error in main cycle:', error);
+        }).finally(() => {
+            running = false;
+        });
+    }, intervalMs);
 }
 
 async function runCycle(): Promise<void> {
@@ -61,9 +50,11 @@ async function runCycle(): Promise<void> {
 
 async function processChain(chain: ChainConfig): Promise<void> {
     const lastSyncedBlock = await getLastSyncedBlock(chain.chainId);
+    console.log('getLastSyncedBlock:', lastSyncedBlock);
     const beginBlockNumber = lastSyncedBlock === null ? chain.startBlockNumber : lastSyncedBlock + 1;
 
     const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit);
+    console.log(`fetchChainEvents: Fetched ${events.length} events for chain ${chain.chainId} from block ${beginBlockNumber}`);
     if (!events.length) {
         return;
     }
@@ -83,6 +74,7 @@ async function processChain(chain: ChainConfig): Promise<void> {
         try {
             await routerEvent(blockEvents, transaction);
             await transaction.commit();
+            console.log('setLastSyncedBlock:', blockNumber);
             await setLastSyncedBlock(chain.chainId, blockNumber);
         } catch (error) {
             await transaction.rollback();
