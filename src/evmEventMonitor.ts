@@ -50,7 +50,7 @@ async function runCycle(): Promise<void> {
 
 async function processChain(chain: ChainConfig): Promise<void> {
     const lastSyncedBlock = await getLastSyncedBlock(chain.chainId);
-    console.log('getLastSyncedBlock:', lastSyncedBlock);
+    console.log('getLastSyncedBlock:', lastSyncedBlock, 'chainId:', chain.chainId);
     const beginBlockNumber = lastSyncedBlock === null ? chain.startBlockNumber : lastSyncedBlock + 1;
 
     const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit);
