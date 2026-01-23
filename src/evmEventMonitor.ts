@@ -13,20 +13,26 @@ export async function main() {
     const intervalMs = Number(process.env.MONITOR_INTERVAL_MS ?? DEFAULT_INTERVAL_MS);
 
     initHandlersConfig();
+    console.log('init Handlers Config');
+    void runCycle().catch((error) => {
+        console.error('EVM Event Monitor: Error in main cycle:', error);
+    }).finally(() => {
+        running = false;
+    });
 
-    setInterval(() => {
-        if (running) {
-            console.warn('EVM Event Monitor: Previous cycle still running, skip.');
-            return;
-        }
-
-        running = true;
-        void runCycle().catch((error) => {
-            console.error('EVM Event Monitor: Error in main cycle:', error);
-        }).finally(() => {
-            running = false;
-        });
-    }, intervalMs);
+    // setInterval(() => {
+    //     if (running) {
+    //         console.warn('EVM Event Monitor: Previous cycle still running, skip.');
+    //         return;
+    //     }
+    //
+    //     running = true;
+    //     void runCycle().catch((error) => {
+    //         console.error('EVM Event Monitor: Error in main cycle:', error);
+    //     }).finally(() => {
+    //         running = false;
+    //     });
+    // }, intervalMs);
 }
 
 async function runCycle(): Promise<void> {
