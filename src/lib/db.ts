@@ -42,7 +42,7 @@ export async function initSequelize(): Promise<Sequelize> {
 				username,
 				password: localFlag ? password : token,
 				dialectOptions: {
-					ssl: !localFlag,
+                    ssl: true,
 				},
 				models: [Activity],
 				define: {
@@ -62,6 +62,7 @@ export async function initSequelize(): Promise<Sequelize> {
 			return sequelize;
 		} catch (err: any) {
 			sequelizeInitPromise = null;
+            console.error('Init Sequelize Error:', err);
 			throw new Error('Set Up DB Connection Failed.');
 		}
 	})();
