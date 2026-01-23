@@ -1,6 +1,10 @@
 import {createClient} from 'redis';
 import {printLogEx} from '@solvprotocol/service-utils';
 
+type RedisClient = Awaited<ReturnType<typeof createRedisClient>>;
+
+let redisClientPromise: Promise<RedisClient> | null = null;
+
 export async function createRedisClient() {
     try {
         const client = createClient({
@@ -26,4 +30,13 @@ export async function createRedisClient() {
         // );
         throw new Error('Redis connection failed... ');
     }
+}
+
+// Shared redis client singleton for non-business modules.
+export async function getRedisClient(): Promise<RedisClient> {
+    if (!redisClientPromise) {
+        redisClientPromise = createRedisClient();
+    }
+
+    return redisClientPromise;
 }

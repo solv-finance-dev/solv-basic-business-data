@@ -1,6 +1,7 @@
-import { EventEvm } from '../types/event';
+import type {HandlerParam} from '../types/handler';
 
-export async function handleEvent(event: EventEvm): Promise<void> {
+export async function handleEvent(param: HandlerParam): Promise<void> {
+	const event = param.event;
 	console.log('SampleHandler: received event ', JSON.stringify({
 		eventId: event.eventId,
 		chainId: event.chainId,

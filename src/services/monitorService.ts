@@ -2,8 +2,10 @@ import path from 'node:path';
 import { id } from 'ethers';
 import { loadJsonConfig } from '../lib/config';
 import { EventEvm } from '../types/event';
+import type {HandlerParam} from '../types/handler';
+import type {Transaction} from 'sequelize';
 
-type HandlerFn = (event: EventEvm) => Promise<void> | void;
+type HandlerFn = (param: HandlerParam) => Promise<void> | void;
 
 type ChainMatcher = number[] | null;
 type ContractMatcher = string[] | null;
@@ -44,7 +46,7 @@ export function initHandlersConfig(): void {
 }
 
 // 将事件路由到匹配的 handler，互不阻塞。
-export async function routerEvent(events: EventEvm[]): Promise<void> {
+export async function routerEvent(events: EventEvm[], transaction: Transaction): Promise<void> {
 	if (!events.length) {
 		return;
 	}
@@ -54,6 +56,7 @@ export async function routerEvent(events: EventEvm[]): Promise<void> {
 		console.warn('MonitorService: No handlers configured.');
 		return;
 	}
+	let hasFailure = false;
 
 	for (const event of events) {
 		const matchedHandlers = handlerEntries.filter((entry) => isEventMatch(event, entry));
@@ -61,17 +64,24 @@ export async function routerEvent(events: EventEvm[]): Promise<void> {
 			continue;
 		}
 
-		const tasks = matchedHandlers.map((entry) => invokeHandler(entry, event));
+		const tasks = matchedHandlers.map((entry) =>
+			invokeHandler(entry, {event, transaction})
+		);
 		const results = await Promise.allSettled(tasks);
 
 		results.forEach((result, index) => {
 			if (result.status === 'rejected') {
+				hasFailure = true;
 				console.error(
 					`MonitorService: Handler failed: ${matchedHandlers[index].name}`,
 					result.reason
 				);
 			}
 		});
+	}
+
+	if (hasFailure) {
+		throw new Error('MonitorService: handler execution failed.');
 	}
 }
 
@@ -238,9 +248,9 @@ function isEventMatch(event: EventEvm, config: HandlerEntry): boolean {
 	return true;
 }
 
-async function invokeHandler(entry: HandlerEntry, event: EventEvm): Promise<void> {
+async function invokeHandler(entry: HandlerEntry, param: HandlerParam): Promise<void> {
 	const handler = await getHandlerFunction(entry);
-	await handler(event);
+	await handler(param);
 }
 
 async function getHandlerFunction(entry: HandlerEntry): Promise<HandlerFn> {

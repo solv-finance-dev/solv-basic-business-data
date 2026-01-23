@@ -1,34 +1,14 @@
 import AWS from 'aws-sdk';
 import { loadJsonConfig } from '../lib/config';
-import { getLastSyncedBlock, setLastSyncedBlock } from '../data/evmSyncState';
 import { EventEvm } from '../types/event';
-
-interface ChainConfig {
-	chainId: number;
-	startBlockNumber: number;
-	blockLimit?: number;
-}
-
-interface EvmConfigFile {
-	chains: ChainConfig[];
-}
+import type {ChainConfig, EvmConfigFile} from '../types/config';
 
 const DEFAULT_BLOCK_LIMIT = 5;
 let lambdaClient: AWS.Lambda | null = null;
 
-// 拉取配置内所有链的事件数据。
-export async function fetchAllEvent(): Promise<EventEvm[]> {
+export function getChainConfigs(): ChainConfig[] {
 	const config = loadEvmConfig();
-	if (!config.chains.length) {
-		console.warn('EvmService: No chain config found.');
-		return [];
-	}
-
-	const results = await Promise.all(
-		config.chains.map((chain) => fetchChainEvents(normalizeChainConfig(chain)))
-	);
-
-	return results.flat();
+	return config.chains.map((chain) => normalizeChainConfig(chain));
 }
 
 function loadEvmConfig(): EvmConfigFile {
@@ -51,25 +31,26 @@ function normalizeChainConfig(chain: ChainConfig): ChainConfig {
 	};
 }
 
-async function fetchChainEvents(chain: ChainConfig): Promise<EventEvm[]> {
-	if (!Number.isFinite(chain.chainId) || !Number.isFinite(chain.startBlockNumber)) {
-		console.warn('EvmService: Invalid chain config.', chain);
+export async function fetchChainEvents(
+	chainId: number,
+	beginBlockNumber: number,
+	blockLimit?: number
+): Promise<EventEvm[]> {
+	if (!Number.isFinite(chainId) || !Number.isFinite(beginBlockNumber)) {
+		console.warn('EvmService: Invalid chain inputs.', {chainId, beginBlockNumber});
 		return [];
 	}
 
-	const blockLimit = chain.blockLimit ?? DEFAULT_BLOCK_LIMIT;
-	if (!Number.isFinite(blockLimit) || blockLimit <= 0) {
-		console.warn('EvmService: Invalid blockLimit.', chain);
+	const effectiveBlockLimit = blockLimit ?? DEFAULT_BLOCK_LIMIT;
+	if (!Number.isFinite(effectiveBlockLimit) || effectiveBlockLimit <= 0) {
+		console.warn('EvmService: Invalid blockLimit.', {chainId, beginBlockNumber, blockLimit});
 		return [];
 	}
-
-	const lastSyncedBlock = await getLastSyncedBlock(chain.chainId);
-	const beginBlockNumber = lastSyncedBlock === null ? chain.startBlockNumber : lastSyncedBlock + 1;
 
 	const payload = {
-		chainId: chain.chainId,
+		chainId,
 		beginBlockNumber,
-		blockLimit,
+		blockLimit: effectiveBlockLimit,
 	};
 
 	try {
@@ -80,16 +61,7 @@ async function fetchChainEvents(chain: ChainConfig): Promise<EventEvm[]> {
 			})
 			.promise();
 
-		const events = parseLambdaPayload(response.Payload);
-		// 空结果不推进区块，避免上游未同步导致漏数据。
-		if (events.length > 0) {
-			const maxBlockNumber = getMaxBlockNumber(events);
-			if (maxBlockNumber !== null) {
-				await setLastSyncedBlock(chain.chainId, maxBlockNumber);
-			}
-		}
-
-		return events;
+		return parseLambdaPayload(response.Payload);
 	} catch (error) {
 		console.error('EvmService: Failed to fetch chain events.', error);
 		return [];
@@ -128,13 +100,4 @@ function parseLambdaPayload(payload: AWS.Lambda.Types.InvocationResponse['Payloa
 	}
 
 	return [];
-}
-
-function getMaxBlockNumber(events: EventEvm[]): number | null {
-	const numbers = events.map((event) => event.blockNumber).filter((value) => Number.isFinite(value));
-	if (!numbers.length) {
-		return null;
-	}
-
-	return Math.max(...numbers);
 }

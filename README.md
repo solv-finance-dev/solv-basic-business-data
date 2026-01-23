@@ -50,13 +50,23 @@
 
 ## 同步流程 / Sync Flow
 - 入口：`src/services/evmService.ts`
-- 步骤：读取 `config/evm.json` → 从 Redis 读取最后同步区块 → 调用 Lambda 获取事件 → 若有事件则更新最大 `blockNumber` → 返回事件列表。
-- 说明：当返回事件为空时不推进区块，避免上游未同步导致漏数据。
+- 步骤：读取 `config/evm.json` → 计算 `beginBlockNumber` → 调用 Lambda 获取事件 → 返回事件列表。
+- 说明：`fetchChainEvents(chainId, beginBlockNumber, blockLimit)` 仅负责获取数据，不包含 Redis 读写。
+- 说明：按链逐一拉取并按区块高度排序后逐块处理，保证先出块先处理。Events are processed per chain and per block in ascending
+  order.
 
 ## 路由与处理 / Routing & Handling
 - 入口：`src/services/monitorService.ts`
 - 步骤：加载并校验 `config/handlers.json` → 事件匹配规则 → 并发调用匹配 handler → 单个失败不影响其他 handler。
 - 入口启动时调用 `initHandlersConfig()` 做一次配置校验。
+- 说明：事务在 `evmEventMonitor` 中创建并传入 `routerEvent()`；任一 handler 失败则回滚该区块事务。Transactions are created
+  in evmEventMonitor and passed to routerEvent; any failure triggers rollback.
+
+## 同步状态 / Sync State
+
+- 入口：`src/evmEventMonitor.ts`
+- 说明：每个区块处理成功后才写入 Redis（`setLastSyncedBlock`），以事务提交成功为前提。Redis updates happen after each block
+  completes successfully.
 
 ## 入口调度 / Scheduler
 - `src/evmEventMonitor.ts` 负责定时拉取与路由。
