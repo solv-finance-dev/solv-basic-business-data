@@ -14,6 +14,12 @@ export async function main() {
 
     initHandlersConfig();
     console.log('init Handlers Config');
+
+    console.log('init sequelize');
+    const sequelize = await initSequelize();
+    console.log('init transaction');
+    const transaction = await sequelize.transaction();
+
     void runCycle().catch((error) => {
         console.error('EVM Event Monitor: Error in main cycle:', error);
     }).finally(() => {
