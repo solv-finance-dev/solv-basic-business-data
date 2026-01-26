@@ -63,7 +63,7 @@ export async function initSequelize(): Promise<Sequelize> {
 				username,
 				password: localFlag ? password : token,
 				dialectOptions: {
-                    ssl: true,
+					ssl: !localFlag,
 				},
 				models: [
 					BondCurrencyInfo,
