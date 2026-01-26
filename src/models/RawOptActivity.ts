@@ -1,10 +1,10 @@
-import { Model, Table, Column, DataType, Sequelize } from 'sequelize-typescript';
+import {Model, Table, Column, DataType} from 'sequelize-typescript';
 
 @Table({
-	tableName: 'activity',
+	tableName: 'test_raw_opt_activity',
 	timestamps: true,
 })
-export default class Activity extends Model {
+export default class RawOptActivity extends Model {
 	@Column({
 		primaryKey: true,
 		autoIncrement: true,
@@ -14,23 +14,32 @@ export default class Activity extends Model {
 
 	@Column({
 		field: 'chain_id',
-		allowNull: true,
 		type: DataType.INTEGER,
+		comment: '链id,Ethereum,BSC,polygon ...',
 	})
-	declare chainId?: number;
+	declare chainId: number;
 
 	@Column({
 		field: 'contract_address',
 		allowNull: true,
 		type: DataType.STRING(64),
+		comment: '转成小写写入',
 	})
 	declare contractAddress?: string;
 
 	@Column({
 		field: 'token_id',
+		allowNull: true,
 		type: DataType.STRING(64),
 	})
-	declare tokenId: string;
+	declare tokenId?: string;
+
+	@Column({
+		field: 'tx_hash',
+		allowNull: true,
+		type: DataType.STRING(128),
+	})
+	declare txHash?: string;
 
 	@Column({
 		field: 'block_number',
@@ -40,11 +49,11 @@ export default class Activity extends Model {
 	declare blockNumber?: number;
 
 	@Column({
-		field: 'tx_hash',
+		field: 'block_timestamp',
 		allowNull: true,
-		type: DataType.STRING(128),
+		type: DataType.INTEGER,
 	})
-	declare txHash?: string;
+	declare blockTimestamp?: number;
 
 	@Column({
 		field: 'transaction_index',
@@ -61,46 +70,47 @@ export default class Activity extends Model {
 	declare eventIndex?: number;
 
 	@Column({
-		field: 'block_timestamp',
-		allowNull: true,
-		type: DataType.INTEGER,
-	})
-	declare blockTimestamp?: number;
-
-	@Column({
 		field: 'from_address',
 		allowNull: true,
-		type: DataType.STRING,
+		type: DataType.STRING(64),
+		comment: '小写',
 	})
 	declare fromAddress?: string;
 
 	@Column({
 		field: 'to_address',
 		allowNull: true,
-		type: DataType.STRING,
+		type: DataType.STRING(64),
+		comment: '小写',
 	})
 	declare toAddress?: string;
 
 	@Column({
-		field: 'amount',
 		allowNull: true,
 		type: DataType.DECIMAL,
 	})
 	declare amount?: string;
 
 	@Column({
-		field: 'decimals',
 		allowNull: true,
 		type: DataType.INTEGER,
+		comment: 'contract decimals',
 	})
 	declare decimals?: number;
 
 	@Column({
+		field: 'currency_address',
+		allowNull: true,
+		type: DataType.STRING(128),
+	})
+	declare currencyAddress?: string;
+
+	@Column({
 		field: 'currency_symbol',
 		allowNull: true,
-		type: DataType.STRING,
+		type: DataType.STRING(16),
 	})
-	declare currencySymbol: string;
+	declare currencySymbol?: string;
 
 	@Column({
 		field: 'currency_decimals',
@@ -110,32 +120,32 @@ export default class Activity extends Model {
 	declare currencyDecimals?: number;
 
 	@Column({
-		field: 'slot',
 		allowNull: true,
-		type: DataType.STRING,
+		type: DataType.STRING(128),
 	})
 	declare slot?: string;
 
 	@Column({
-		field: 'product_name',
-		allowNull: true,
-		type: DataType.STRING,
-	})
-	declare productName?: string;
-
-	@Column({
 		field: 'transaction_type',
 		allowNull: true,
-		type: DataType.STRING,
+		type: DataType.STRING(32),
+		comment: 'Sale、mint、Transfer...',
 	})
 	declare transactionType?: string;
 
 	@Column({
-		field: 'remark',
+		field: 'created_at',
 		allowNull: true,
-		type: DataType.STRING,
+		type: DataType.DATE,
 	})
-	declare remark?: string;
+	declare createdAt?: Date;
+
+	@Column({
+		field: 'updated_at',
+		allowNull: true,
+		type: DataType.DATE,
+	})
+	declare updatedAt?: Date;
 
 	@Column({
 		allowNull: true,
@@ -152,23 +162,16 @@ export default class Activity extends Model {
 	declare poolId?: string;
 
 	@Column({
-		field: 'created_at',
-		allowNull: true,
-		type: DataType.DATE,
-		defaultValue: Sequelize.literal('now()'),
-	})
-	declare createdAt?: Date;
-
-	@Column({
-		field: 'updated_at',
-		allowNull: true,
-		type: DataType.DATE,
-	})
-	declare updatedAt?: Date;
-
-	@Column({
 		field: 'product_type',
+		allowNull: true,
 		type: DataType.STRING(32),
 	})
-	declare productType: string;
+	declare productType?: string;
+
+	@Column({
+		field: 'last_updated',
+		allowNull: true,
+		type: DataType.INTEGER,
+	})
+	declare lastUpdated?: number;
 }

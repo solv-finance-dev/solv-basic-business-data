@@ -13,5 +13,23 @@
         ]
       }
     ]
+  },
+  {
+    "name": "BtcRedeemRecord",
+    "module": "redeem/BtcRedeemRecordHandler",
+    "handlers": [
+      {
+        "handler": "handleRedeemEvent",
+        "chainIds": [
+          56
+        ],
+        "contractAddresses": [
+          "0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"
+        ],
+        "eventSignatures": [
+          "Redeem(indexed address,indexed address,string,uint256,uint256,uint256)"
+        ]
+      }
+    ]
   }
 ]
