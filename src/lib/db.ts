@@ -54,6 +54,7 @@ export async function initSequelize(): Promise<Sequelize> {
 				host: string;
 			} = JSON.parse(secretString!);
 			const localFlag = process.env.CONFIG_ENV === 'local';
+			console.log('localFlag:', localFlag)
 
 			const sequelize = new Sequelize({
 				host: localFlag ? host : process.env.DB_PROXY_HOSTNAME,
