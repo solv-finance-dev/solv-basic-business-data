@@ -1,0 +1,138 @@
+[
+  {
+    "chain_id": 10143,
+    "rpc_node": "https://testnet-rpc.monad.xyz"
+  },
+  {
+    "chain_id": 80084,
+    "rpc_node": "https://berachain-testnet-rpc.publicnode.com"
+  },
+  {
+    "chain_id": 1946,
+    "rpc_node": "https://rpc.minato.soneium.org"
+  },
+  {
+    "chain_id": 80000,
+    "rpc_node": "https://rockbeard-eth-cartio.berachain.com"
+  },
+  {
+    "chain_id": 221122,
+    "rpc_node": "https://rollup-info.altlayer.io/hsk/hashkey_scroll_testnet"
+  },
+  {
+    "chain_id": 167000,
+    "rpc_node": "https://rpc.sft-api.com/taiko"
+  },
+  {
+    "chain_id": 1115,
+    "rpc_node": "https://rpc.test.btcs.network"
+  },
+  {
+    "chain_id": 97,
+    "rpc_node": "https://test.rpc.sft-api.com/bsctest"
+  },
+  {
+    "chain_id": 43113,
+    "rpc_node": "https://rpc.ankr.com/avalanche_fuji"
+  },
+  {
+    "chain_id": 111,
+    "rpc_node": "https://testnet.rpc.gobob.xyz/"
+  },
+  {
+    "chain_id": 2648,
+    "rpc_node": "https://testnet-rpc.ailayer.xyz/"
+  },
+  {
+    "chain_id": 810181,
+    "rpc_node": "https://sepolia.rpc.zklink.io"
+  },
+  {
+    "chain_id": 168587773,
+    "rpc_node": "https://blast-sepolia.drpc.org"
+  },
+  {
+    "chain_id": 686868,
+    "rpc_node": "https://test.rpc.sft-api.com/merlin"
+  },
+  {
+    "chain_id": 11155111,
+    "rpc_node": "https://rpc-proxy.dev.sft-api.com/sepolia"
+  },
+  {
+    "chain_id": 80001,
+    "rpc_node": "https://test.rpc.sft-api.com/mumbai"
+  },
+  {
+    "chain_id": 421613,
+    "rpc_node": "https://test.rpc.sft-api.com/arbgoerli"
+  },
+  {
+    "chain_id": 5001,
+    "rpc_node": "https://test.rpc.sft-api.com/mantlegoerli"
+  },
+  {
+    "chain_id": 8453,
+    "rpc_node": "https://rpc.sft-api.com/base"
+  },
+  {
+    "chain_id": 43114,
+    "rpc_node": "https://rpc.sft-api.com/avax"
+  },
+  {
+    "chain_id": 60808,
+    "rpc_node": "https://rpc.sft-api.com/bob"
+  },
+  {
+    "chain_id": 2649,
+    "rpc_node": "https://mainnet-rpc.ailayer.xyz/"
+  },
+  {
+    "chain_id": 238,
+    "rpc_node": "https://rpc.blastblockchain.com"
+  },
+  {
+    "chain_id": 4200,
+    "rpc_node": "https://rpc.sft-api.com/merlin"
+  },
+  {
+    "chain_id": 1,
+    "rpc_node": "https://rpc.sft-api.com/eth"
+  },
+  {
+    "chain_id": 56,
+    "rpc_node": "https://rpc.sft-api.com/bsc"
+  },
+  {
+    "chain_id": 137,
+    "rpc_node": "https://rpc.sft-api.com/polygon"
+  },
+  {
+    "chain_id": 42161,
+    "rpc_node": "https://rpc.sft-api.com/arb"
+  },
+  {
+    "chain_id": 5000,
+    "rpc_node": "https://rpc.sft-api.com/mantle"
+  },
+  {
+    "chain_id": 59144,
+    "rpc_node": "https://rpc.sft-api.com/linea"
+  },
+  {
+    "chain_id": 1116,
+    "rpc_node": "https://rpc.sft-api.com/core"
+  },
+  {
+    "chain_id": 200901,
+    "rpc_node": "https://rpc.sft-api.com/bitlayer"
+  },
+  {
+    "chain_id": 534352,
+    "rpc_node": "https://rpc.sft-api.com/scroll"
+  },
+  {
+    "chain_id": 810180,
+    "rpc_node": "https://rpc.sft-api.com/zklink"
+  }
+]
