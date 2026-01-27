@@ -6,12 +6,12 @@ import { getToken } from './token';
 import { getSecretValue } from './secret';
 import BondCurrencyInfo from '../models/BondCurrencyInfo';
 import BtcRedeemRecord from '../models/BtcRedeemRecord';
-import CarryCollectorHistory from '../models/CarryCollectorHistory';
+import CarryCollectoHistory from '../models/CarryCollectoHistory';
 import CarryInfo from '../models/CarryInfo';
 import CurrencyInfo from '../models/CurrencyInfo';
 import MarketInfo from '../models/MarketInfo';
 import NavRecords from '../models/NavRecords';
-import ProtocolFeeCollectorHistory from '../models/ProtocolFeeCollectorHistory';
+import ProtocolFeeCollectoHistory from '../models/ProtocolFeeCollectoHistory';
 import ProtocolFeeInfo from '../models/ProtocolFeeInfo';
 import RawOptActivity from '../models/RawOptActivity';
 import RawOptContractInfo from '../models/RawOptContractInfo';
@@ -69,12 +69,12 @@ export async function initSequelize(): Promise<Sequelize> {
 				models: [
 					BondCurrencyInfo,
 					BtcRedeemRecord,
-					CarryCollectorHistory,
+					CarryCollectoHistory,
 					CarryInfo,
 					CurrencyInfo,
 					MarketInfo,
 					NavRecords,
-					ProtocolFeeCollectorHistory,
+					ProtocolFeeCollectoHistory,
 					ProtocolFeeInfo,
 					RawOptActivity,
 					RawOptContractInfo,

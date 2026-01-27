@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_repay_info_open_end',
@@ -14,12 +14,14 @@ export default class RawOptRepayInfoOpenEnd extends Model {
 
     @Column({
         field: 'chain_id',
+        allowNull: true,
         type: DataType.INTEGER,
         comment: '链id,Ethereum,BSC,polygon ...',
     })
-    declare chainId: number;
+    declare chainId?: number;
 
     @Column({
+        field: 'slot',
         allowNull: true,
         type: DataType.STRING(128),
     })
@@ -46,7 +48,7 @@ export default class RawOptRepayInfoOpenEnd extends Model {
         type: DataType.BIGINT,
         comment: '还款日期',
     })
-    declare repayDate?: number;
+    declare repayDate?: string;
 
     @Column({
         field: 'currency_symbol',
@@ -71,28 +73,23 @@ export default class RawOptRepayInfoOpenEnd extends Model {
 
     @Column({
         field: 'transaction_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare transactionIndex: number;
+    declare transactionIndex?: number;
 
     @Column({
         field: 'event_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare eventIndex: number;
-
-    @Column({
-        field: 'repay_type',
-        allowNull: true,
-        type: DataType.STRING(32),
-        comment: 'Normal, Liquidation',
-    })
-    declare repayType?: string;
+    declare eventIndex?: number;
 
     @Column({
         field: 'created_at',
         allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('now()'),
     })
     declare createdAt?: Date;
 
@@ -104,9 +101,9 @@ export default class RawOptRepayInfoOpenEnd extends Model {
     declare updatedAt?: Date;
 
     @Column({
-        field: 'last_updated',
+        field: 'repay_type',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.STRING(32),
     })
-    declare lastUpdated?: number;
+    declare repayType?: string;
 }

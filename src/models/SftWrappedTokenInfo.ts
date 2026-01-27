@@ -1,32 +1,29 @@
-import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
+import {Table, Column, Model, Sequelize, PrimaryKey, AutoIncrement, DataType} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_sft_wrapped_token_info',
     timestamps: true,
 })
 export default class SftWrappedTokenInfo extends Model {
-    @Column({
-        primaryKey: true,
-        autoIncrement: true,
-        type: DataType.BIGINT,
-    })
+    @PrimaryKey
+    @AutoIncrement
+    @Column({type: DataType.BIGINT})
     declare id: number;
 
     @Column({
         field: 'chain_id',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare chainId?: number;
+    declare chainId: number;
 
     @Column({
         field: 'sft_address',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare sftAddress?: string;
+    declare sftAddress: string;
 
     @Column({
+        field: 'slot',
         allowNull: true,
         type: DataType.STRING(128),
     })
@@ -34,47 +31,43 @@ export default class SftWrappedTokenInfo extends Model {
 
     @Column({
         field: 'token_address',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare tokenAddress?: string;
+    declare tokenAddress: string;
 
     @Column({
-        allowNull: true,
-        type: DataType.STRING(64),
+        field: 'name',
+        type: DataType.STRING,
     })
-    declare name?: string;
+    declare name: string;
 
     @Column({
-        allowNull: true,
-        type: DataType.STRING(32),
+        field: 'symbol',
+        type: DataType.STRING,
     })
-    declare symbol?: string;
+    declare symbol: string;
 
     @Column({
-        allowNull: true,
+        field: 'decimals',
         type: DataType.INTEGER,
     })
-    declare decimals?: number;
+    declare decimals: number;
 
     @Column({
         field: 'nav_oracle',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare navOracle?: string;
+    declare navOracle: string;
 
     @Column({
         field: 'created_at',
-        allowNull: true,
         type: DataType.DATE,
-        defaultValue: Sequelize.literal('now()'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     })
     declare createdAt?: Date;
 
     @Column({
         field: 'updated_at',
-        allowNull: true,
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
@@ -91,5 +84,5 @@ export default class SftWrappedTokenInfo extends Model {
         allowNull: true,
         type: DataType.BOOLEAN,
     })
-    declare isDefaultSlot?: boolean;
+    declare isDefaultSlot: boolean;
 }

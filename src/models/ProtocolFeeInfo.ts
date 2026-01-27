@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Index, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_protocol_fee_info',
@@ -9,6 +9,12 @@ export default class ProtocolFeeInfo extends Model {
         primaryKey: true,
         autoIncrement: true,
         type: DataType.BIGINT,
+        defaultValue: Sequelize.literal("nextval('protocol_fee_info_id_seq'::regclass)"),
+    })
+    @Index({
+        name: 'protocol_fee_info_pkey',
+        using: 'btree',
+        unique: true,
     })
     declare id: number;
 
@@ -42,15 +48,24 @@ export default class ProtocolFeeInfo extends Model {
 
     @Column({
         field: 'transaction_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare transactionIndex: number;
+    declare transactionIndex?: number;
 
     @Column({
         field: 'event_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare eventIndex: number;
+    declare eventIndex?: number;
+
+    @Column({
+        field: 'last_updated',
+        allowNull: true,
+        type: DataType.INTEGER,
+    })
+    declare lastUpdated: number;
 
     @Column({
         field: 'created_at',
@@ -66,13 +81,6 @@ export default class ProtocolFeeInfo extends Model {
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
-
-    @Column({
-        field: 'last_updated',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare lastUpdated?: number;
 
     @Column({
         field: 'currency_address',

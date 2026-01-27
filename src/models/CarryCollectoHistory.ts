@@ -1,10 +1,10 @@
 import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
 
 @Table({
-    tableName: 'test_protocol_fee_collector_history',
+    tableName: 'test_carry_collector_history',
     timestamps: true,
 })
-export default class ProtocolFeeCollectorHistory extends Model {
+export default class CarryCollectorHistory extends Model {
     @Column({
         primaryKey: true,
         autoIncrement: true,
@@ -20,18 +20,17 @@ export default class ProtocolFeeCollectorHistory extends Model {
     declare chainId?: number;
 
     @Column({
-        field: 'protocol_fee_collector',
+        field: 'carry_collector',
         allowNull: true,
         type: DataType.STRING(64),
     })
-    declare protocolFeeCollector?: string;
+    declare carryCollector?: string;
 
     @Column({
         field: 'last_updated',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare lastUpdated?: number;
+    declare lastUpdated: number;
 
     @Column({
         field: 'created_at',

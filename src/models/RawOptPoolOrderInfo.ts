@@ -1,15 +1,13 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Sequelize, PrimaryKey, AutoIncrement} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_pool_order_info',
     timestamps: true,
 })
 export default class RawOptPoolOrderInfo extends Model {
-    @Column({
-        primaryKey: true,
-        autoIncrement: true,
-        type: DataType.BIGINT,
-    })
+    @PrimaryKey
+    @AutoIncrement
+    @Column({type: DataType.BIGINT})
     declare id: number;
 
     @Column({
@@ -25,13 +23,6 @@ export default class RawOptPoolOrderInfo extends Model {
         type: DataType.STRING(64),
     })
     declare msgSender?: string;
-
-    @Column({
-        field: 'market_contract_address',
-        allowNull: true,
-        type: DataType.STRING(64),
-    })
-    declare marketContractAddress?: string;
 
     @Column({
         field: 'contract_address',
@@ -167,13 +158,6 @@ export default class RawOptPoolOrderInfo extends Model {
     declare currency?: string;
 
     @Column({
-        field: 'currency_decimals',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare currencyDecimals?: number;
-
-    @Column({
         field: 'nav_oracle',
         allowNull: true,
         type: DataType.STRING(64),
@@ -186,7 +170,7 @@ export default class RawOptPoolOrderInfo extends Model {
         type: DataType.BIGINT,
         comment: '起息日',
     })
-    declare valueDate?: number;
+    declare valueDate?: string;
 
     @Column({
         field: 'fundraising_amount',
@@ -206,7 +190,6 @@ export default class RawOptPoolOrderInfo extends Model {
         field: 'pool_status',
         allowNull: true,
         type: DataType.STRING(32),
-        comment: 'Active,Removed,Closed',
     })
     declare poolStatus?: string;
 
@@ -216,30 +199,6 @@ export default class RawOptPoolOrderInfo extends Model {
         type: DataType.STRING(128),
     })
     declare txHash?: string;
-
-    @Column({
-        field: 'high_watermark',
-        allowNull: true,
-        type: DataType.DECIMAL,
-        comment: '最新的nav',
-    })
-    declare highWatermark?: string;
-
-    @Column({
-        field: 'total_value',
-        allowNull: true,
-        type: DataType.DECIMAL,
-        comment: '当前份额',
-    })
-    declare totalValue?: string;
-
-    @Column({
-        field: 'average_cost',
-        allowNull: true,
-        type: DataType.DECIMAL,
-        comment: '持仓成本',
-    })
-    declare averageCost?: string;
 
     @Column({
         field: 'handle_status',
@@ -260,6 +219,7 @@ export default class RawOptPoolOrderInfo extends Model {
         field: 'created_at',
         allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('now()'),
     })
     declare createdAt?: Date;
 
@@ -269,4 +229,25 @@ export default class RawOptPoolOrderInfo extends Model {
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
+
+    @Column({
+        field: 'total_value',
+        allowNull: true,
+        type: DataType.DECIMAL,
+    })
+    declare totalValue?: string;
+
+    @Column({
+        field: 'average_cost',
+        allowNull: true,
+        type: DataType.DECIMAL,
+    })
+    declare averageCost?: string;
+
+    @Column({
+        field: 'high_watermark',
+        allowNull: true,
+        type: DataType.DECIMAL,
+    })
+    declare highWatermark?: string;
 }

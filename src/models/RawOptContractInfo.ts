@@ -1,37 +1,33 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Table, Column, Model, Sequelize, PrimaryKey, AutoIncrement, DataType} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_contract_info',
     timestamps: true,
 })
 export default class RawOptContractInfo extends Model {
-    @Column({
-        primaryKey: true,
-        autoIncrement: true,
-        type: DataType.BIGINT,
-    })
+    @PrimaryKey
+    @AutoIncrement
+    @Column({type: DataType.BIGINT})
     declare id: number;
 
     @Column({
-        field: 'chain_id',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare chainId?: number;
-
-    @Column({
         field: 'contract_address',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare contractAddress?: string;
+    declare contractAddress: string;
 
     @Column({
         field: 'contract_type',
         allowNull: true,
-        type: DataType.STRING(64),
+        type: DataType.STRING(32),
     })
     declare contractType?: string;
+
+    @Column({
+        field: 'chain_id',
+        type: DataType.INTEGER,
+    })
+    declare chainId: number;
 
     @Column({
         allowNull: true,
@@ -41,48 +37,45 @@ export default class RawOptContractInfo extends Model {
 
     @Column({
         allowNull: true,
-        type: DataType.STRING(64),
+        type: DataType.INTEGER,
+    })
+    declare decimals?: number;
+
+    @Column({
+        allowNull: true,
+        type: DataType.STRING(16),
     })
     declare symbol?: string;
 
     @Column({
         field: 'total_supply',
         allowNull: true,
-        type: DataType.BIGINT,
+        type: DataType.DECIMAL,
     })
-    declare totalSupply?: number;
-
-    @Column({
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare decimals?: number;
+    declare totalSupply?: string;
 
     @Column({
         field: 'last_updated',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare lastUpdated?: number;
+    declare lastUpdated: number;
+
+    @Column({
+        field: 'contract_uri',
+        type: DataType.STRING,
+    })
+    declare contractURI: string;
 
     @Column({
         field: 'created_at',
-        allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     })
     declare createdAt?: Date;
 
     @Column({
         field: 'updated_at',
-        allowNull: true,
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
-
-    @Column({
-        field: 'contract_uri',
-        allowNull: true,
-        type: DataType.TEXT,
-    })
-    declare contractUri?: string;
 }

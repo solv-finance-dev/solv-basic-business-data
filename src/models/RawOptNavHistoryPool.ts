@@ -1,10 +1,10 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_nav_history_pool',
     timestamps: true,
 })
-export default class RawOptNavHistoryPool extends Model {
+export default class OptRawNavHistoryPool extends Model {
     @Column({
         primaryKey: true,
         autoIncrement: true,
@@ -13,18 +13,17 @@ export default class RawOptNavHistoryPool extends Model {
     declare id: number;
 
     @Column({
-        field: 'chain_id',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare chainId?: number;
-
-    @Column({
         field: 'pool_id',
         allowNull: true,
         type: DataType.STRING(128),
     })
     declare poolId?: string;
+
+    @Column({
+        allowNull: true,
+        type: DataType.DECIMAL,
+    })
+    declare nav?: string;
 
     @Column({
         field: 'nav_type',
@@ -35,16 +34,16 @@ export default class RawOptNavHistoryPool extends Model {
     declare navType?: string;
 
     @Column({
+        field: 'time',
         allowNull: true,
-        type: DataType.DECIMAL,
+        type: DataType.INTEGER,
     })
-    declare nav?: string;
+    declare time?: number;
 
     @Column({
         field: 'original_nav',
         allowNull: true,
         type: DataType.DECIMAL,
-        comment: '增发前nav',
     })
     declare originalNav?: string;
 
@@ -52,21 +51,21 @@ export default class RawOptNavHistoryPool extends Model {
         field: 'adjust_coefficient',
         allowNull: true,
         type: DataType.DECIMAL,
-        comment: '复权系数',
     })
     declare adjustCoefficient?: string;
 
     @Column({
-        field: 'last_updated',
+        field: 'adjusted_nav',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.DECIMAL,
     })
-    declare lastUpdated?: number;
+    declare adjustedNav?: string;
 
     @Column({
         field: 'created_at',
         allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('now()'),
     })
     declare createdAt?: Date;
 
@@ -78,15 +77,9 @@ export default class RawOptNavHistoryPool extends Model {
     declare updatedAt?: Date;
 
     @Column({
+        field: 'last_updated',
         allowNull: true,
         type: DataType.INTEGER,
     })
-    declare time?: number;
-
-    @Column({
-        field: 'adjusted_nav',
-        allowNull: true,
-        type: DataType.DECIMAL,
-    })
-    declare adjustedNav?: string;
+    declare lastUpdated?: number;
 }

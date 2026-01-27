@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Index, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_carry_info',
@@ -9,6 +9,12 @@ export default class CarryInfo extends Model {
         primaryKey: true,
         autoIncrement: true,
         type: DataType.BIGINT,
+        defaultValue: Sequelize.literal("nextval('carry_info_id_seq'::regclass)"),
+    })
+    @Index({
+        name: 'carry_info_pkey',
+        using: 'btree',
+        unique: true,
     })
     declare id: number;
 
@@ -56,15 +62,24 @@ export default class CarryInfo extends Model {
 
     @Column({
         field: 'transaction_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare transactionIndex: number;
+    declare transactionIndex?: number;
 
     @Column({
         field: 'event_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare eventIndex: number;
+    declare eventIndex?: number;
+
+    @Column({
+        field: 'last_updated',
+        allowNull: true,
+        type: DataType.INTEGER,
+    })
+    declare lastUpdated: number;
 
     @Column({
         field: 'created_at',
@@ -82,23 +97,9 @@ export default class CarryInfo extends Model {
     declare updatedAt?: Date;
 
     @Column({
-        field: 'last_updated',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare lastUpdated?: number;
-
-    @Column({
         field: 'currency_address',
         allowNull: true,
         type: DataType.STRING(64),
     })
     declare currencyAddress?: string;
-
-    @Column({
-        field: 'chain_name',
-        allowNull: true,
-        type: DataType.STRING(32),
-    })
-    declare chainName?: string;
 }

@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_redeem_slot_info',
@@ -55,6 +55,14 @@ export default class RawOptRedeemSlotInfo extends Model {
     declare txHash?: string;
 
     @Column({
+        field: 'handle_status',
+        allowNull: true,
+        type: DataType.STRING(128),
+        comment: '勾兑状态',
+    })
+    declare handleStatus?: string;
+
+    @Column({
         field: 'redeem_amount',
         allowNull: true,
         type: DataType.DECIMAL,
@@ -84,9 +92,17 @@ export default class RawOptRedeemSlotInfo extends Model {
     declare lastUpdated?: number;
 
     @Column({
+        field: 'block_timestamp',
+        allowNull: true,
+        type: DataType.INTEGER,
+    })
+    declare blockTimestamp?: number;
+
+    @Column({
         field: 'created_at',
         allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('now()'),
     })
     declare createdAt?: Date;
 
@@ -100,16 +116,9 @@ export default class RawOptRedeemSlotInfo extends Model {
     @Column({
         field: 'nav_set_time',
         allowNull: true,
-        type: DataType.STRING(128),
+        type: DataType.BIGINT,
     })
-    declare navSetTime?: string;
-
-    @Column({
-        field: 'currency_address',
-        allowNull: true,
-        type: DataType.STRING(128),
-    })
-    declare currencyAddress?: string;
+    declare navSetTime?: number;
 
     @Column({
         field: 'currency_symbol',
@@ -117,6 +126,13 @@ export default class RawOptRedeemSlotInfo extends Model {
         type: DataType.STRING(64),
     })
     declare currencySymbol?: string;
+
+    @Column({
+        field: 'currency_address',
+        allowNull: true,
+        type: DataType.STRING(128),
+    })
+    declare currencyAddress: string;
 
     @Column({
         allowNull: true,
@@ -129,32 +145,19 @@ export default class RawOptRedeemSlotInfo extends Model {
         allowNull: true,
         type: DataType.STRING(128),
     })
-    declare poolId?: string;
+    declare poolId: string;
 
     @Column({
         field: 'start_time',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.BIGINT,
     })
     declare startTime?: number;
 
     @Column({
+        field: 'state',
         allowNull: true,
-        type: DataType.STRING(32),
+        type: DataType.STRING(128),
     })
-    declare state?: string;
-
-    @Column({
-        field: 'handle_status',
-        allowNull: true,
-        type: DataType.STRING(32),
-    })
-    declare handleStatus?: string;
-
-    @Column({
-        field: 'block_timestamp',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare blockTimestamp?: number;
+    declare state: string;
 }

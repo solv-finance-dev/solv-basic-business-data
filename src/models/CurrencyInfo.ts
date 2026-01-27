@@ -14,10 +14,21 @@ export default class CurrencyInfo extends Model {
 
     @Column({
         field: 'chain_id',
+        type: DataType.INTEGER,
+    })
+    declare chainId: number;
+
+    @Column({
+        allowNull: true,
+        type: DataType.STRING(16),
+    })
+    declare symbol: string;
+
+    @Column({
         allowNull: true,
         type: DataType.INTEGER,
     })
-    declare chainId?: number;
+    declare decimals?: number;
 
     @Column({
         field: 'currency_address',
@@ -27,16 +38,11 @@ export default class CurrencyInfo extends Model {
     declare currencyAddress?: string;
 
     @Column({
+        field: 'is_stablecoin',
         allowNull: true,
-        type: DataType.STRING(16),
+        type: DataType.BOOLEAN,
     })
-    declare symbol?: string;
-
-    @Column({
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare decimals?: number;
+    declare isStablecoin?: string;
 
     @Column({
         field: 'created_at',
@@ -52,11 +58,4 @@ export default class CurrencyInfo extends Model {
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
-
-    @Column({
-        field: 'is_stablecoin',
-        allowNull: true,
-        type: DataType.BOOLEAN,
-    })
-    declare isStablecoin?: boolean;
 }

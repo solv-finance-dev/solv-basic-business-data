@@ -1,48 +1,38 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Table, Column, Model, Sequelize, PrimaryKey, AutoIncrement, DataType} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_erc20_asset_info',
     timestamps: true,
 })
 export default class RawOptErc20AssetInfo extends Model {
-    @Column({
-        primaryKey: true,
-        autoIncrement: true,
-        type: DataType.BIGINT,
-    })
+    @PrimaryKey
+    @AutoIncrement
+    @Column({type: DataType.BIGINT})
     declare id: number;
 
     @Column({
         field: 'chain_id',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare chainId?: number;
+    declare chainId: number;
+
+    @Column({
+        field: 'holder',
+        type: DataType.STRING(64),
+    })
+    declare holder: string;
 
     @Column({
         field: 'token_address',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare tokenAddress?: string;
+    declare tokenAddress: string;
 
     @Column({
-        allowNull: true,
-        type: DataType.STRING(64),
+        field: 'symbol',
+        type: DataType.STRING,
     })
-    declare holder?: string;
-
-    @Column({
-        allowNull: true,
-        type: DataType.STRING(64),
-    })
-    declare name?: string;
-
-    @Column({
-        allowNull: true,
-        type: DataType.STRING(64),
-    })
-    declare symbol?: string;
+    declare symbol: string;
 
     @Column({
         allowNull: true,
@@ -53,47 +43,50 @@ export default class RawOptErc20AssetInfo extends Model {
     @Column({
         field: 'mint_time',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.BIGINT,
     })
     declare mintTime?: number;
 
     @Column({
         field: 'last_updated',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare lastUpdated?: number;
+    declare lastUpdated: number;
+
+    @Column({
+        field: 'name',
+        type: DataType.STRING,
+    })
+    declare name: string;
 
     @Column({
         field: 'created_at',
-        allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     })
     declare createdAt?: Date;
 
     @Column({
         field: 'updated_at',
-        allowNull: true,
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
 
     @Column({
-        allowNull: true,
+        field: 'decimals',
         type: DataType.INTEGER,
     })
-    declare decimals?: number;
+    declare decimals: number;
 
     @Column({
         field: 'sft_address',
-        allowNull: true,
-        type: DataType.STRING(64),
+        type: DataType.STRING,
     })
-    declare sftAddress?: string;
+    declare sftAddress: string;
 
     @Column({
-        allowNull: true,
-        type: DataType.STRING(128),
+        field: 'slot',
+        type: DataType.STRING,
     })
-    declare slot?: string;
+    declare slot: string;
 }

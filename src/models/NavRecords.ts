@@ -30,6 +30,7 @@ export default class NavRecords extends Model {
         field: 'nav_type',
         allowNull: true,
         type: DataType.STRING(16),
+        comment: '申购, 赎回',
     })
     declare navType?: string;
 
@@ -43,7 +44,7 @@ export default class NavRecords extends Model {
         allowNull: true,
         type: DataType.BIGINT,
     })
-    declare time?: number;
+    declare time?: string;
 
     @Column({
         field: 'tx_hash',
@@ -54,22 +55,23 @@ export default class NavRecords extends Model {
 
     @Column({
         field: 'transaction_index',
-        type: DataType.INTEGER,
-    })
-    declare transactionIndex: number;
-
-    @Column({
-        field: 'event_index',
-        type: DataType.INTEGER,
-    })
-    declare eventIndex: number;
-
-    @Column({
-        field: 'last_updated',
         allowNull: true,
         type: DataType.INTEGER,
     })
-    declare lastUpdated?: number;
+    declare transactionIndex?: number;
+
+    @Column({
+        field: 'event_index',
+        allowNull: true,
+        type: DataType.INTEGER,
+    })
+    declare eventIndex?: number;
+
+    @Column({
+        field: 'last_updated',
+        type: DataType.INTEGER,
+    })
+    declare lastUpdated: number;
 
     @Column({
         field: 'created_at',

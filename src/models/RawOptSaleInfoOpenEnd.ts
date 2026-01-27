@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_sale_info_open_end',
@@ -14,9 +14,10 @@ export default class RawOptSaleInfoOpenEnd extends Model {
 
     @Column({
         field: 'chain_id',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare chainId: number;
+    declare chainId?: number;
 
     @Column({
         field: 'pool_id',
@@ -34,15 +35,17 @@ export default class RawOptSaleInfoOpenEnd extends Model {
 
     @Column({
         field: 'transaction_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare transactionIndex: number;
+    declare transactionIndex?: number;
 
     @Column({
         field: 'event_index',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare eventIndex: number;
+    declare eventIndex?: number;
 
     @Column({
         allowNull: true,
@@ -78,14 +81,16 @@ export default class RawOptSaleInfoOpenEnd extends Model {
 
     @Column({
         field: 'block_timestamp',
+        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare blockTimestamp: number;
+    declare blockTimestamp?: number;
 
     @Column({
         field: 'created_at',
         allowNull: true,
-        type: DataType.DATE,
+        type: DataType.DATE(6),
+        defaultValue: Sequelize.literal('now()'),
     })
     declare createdAt?: Date;
 
@@ -95,11 +100,4 @@ export default class RawOptSaleInfoOpenEnd extends Model {
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
-
-    @Column({
-        field: 'last_updated',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare lastUpdated?: number;
 }

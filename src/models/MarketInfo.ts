@@ -1,55 +1,50 @@
-import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
+import {Table, Column, Model, Sequelize, PrimaryKey, AutoIncrement, DataType} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_market_info',
     timestamps: true,
 })
 export default class MarketInfo extends Model {
-    @Column({
-        primaryKey: true,
-        autoIncrement: true,
-        type: DataType.BIGINT,
-    })
+    @PrimaryKey
+    @AutoIncrement
+    @Column({type: DataType.BIGINT})
     declare id: number;
 
     @Column({
-        allowNull: true,
-        type: DataType.STRING(32),
-    })
-    declare name?: string;
-
-    @Column({
         field: 'chain_id',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare chainId?: number;
+    declare chainId: number;
 
     @Column({
         field: 'contract_address',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare contractAddress?: string;
+    declare contractAddress: string;
+
+    @Column({
+        field: 'name',
+        allowNull: true,
+        type: DataType.STRING(255),
+    })
+    declare name: string;
 
     @Column({
         field: 'extra_info',
         allowNull: true,
         type: DataType.JSONB,
     })
-    declare extraInfo?: object;
+    declare extraInfo: object;
 
     @Column({
         field: 'created_at',
-        allowNull: true,
         type: DataType.DATE,
-        defaultValue: Sequelize.literal('now()'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     })
     declare createdAt?: Date;
 
     @Column({
         field: 'updated_at',
-        allowNull: true,
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
@@ -58,6 +53,7 @@ export default class MarketInfo extends Model {
         field: 'market_type',
         allowNull: true,
         type: DataType.STRING(32),
+        comment: 'Close-end, Open-end',
     })
     declare marketType?: string;
 
@@ -71,7 +67,7 @@ export default class MarketInfo extends Model {
     @Column({
         field: 'protocol_fee_collector',
         allowNull: true,
-        type: DataType.STRING(64),
+        type: DataType.STRING,
     })
     declare protocolFeeCollector?: string;
 }

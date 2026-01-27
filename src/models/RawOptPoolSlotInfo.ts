@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_pool_slot_info',
@@ -41,6 +41,13 @@ export default class RawOptPoolSlotInfo extends Model {
     declare slot?: string;
 
     @Column({
+        field: 'tx_hash',
+        allowNull: true,
+        type: DataType.STRING(128),
+    })
+    declare txHash?: string;
+
+    @Column({
         field: 'handle_status',
         allowNull: true,
         type: DataType.STRING(128),
@@ -73,13 +80,6 @@ export default class RawOptPoolSlotInfo extends Model {
     declare totalClaimedValue?: string;
 
     @Column({
-        field: 'tx_hash',
-        allowNull: true,
-        type: DataType.STRING(128),
-    })
-    declare txHash?: string;
-
-    @Column({
         field: 'last_updated',
         allowNull: true,
         type: DataType.INTEGER,
@@ -90,6 +90,7 @@ export default class RawOptPoolSlotInfo extends Model {
         field: 'created_at',
         allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('now()'),
     })
     declare createdAt?: Date;
 
@@ -101,13 +102,6 @@ export default class RawOptPoolSlotInfo extends Model {
     declare updatedAt?: Date;
 
     @Column({
-        field: 'currency_address',
-        allowNull: true,
-        type: DataType.STRING(128),
-    })
-    declare currencyAddress?: string;
-
-    @Column({
         field: 'currency_symbol',
         allowNull: true,
         type: DataType.STRING(64),
@@ -115,46 +109,56 @@ export default class RawOptPoolSlotInfo extends Model {
     declare currencySymbol?: string;
 
     @Column({
+        field: 'currency_address',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.STRING(128),
     })
-    declare maturity?: number;
+    declare currencyAddress: string;
+
+    @Column({
+        field: 'maturity',
+        allowNull: true,
+        type: DataType.BIGINT,
+    })
+    declare maturity: number;
 
     @Column({
         field: 'value_date',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.BIGINT,
     })
-    declare valueDate?: number;
+    declare valueDate: number;
 
     @Column({
         field: 'issue_quota',
         allowNull: true,
         type: DataType.STRING(128),
     })
-    declare issueQuota?: string;
+    declare issueQuota: string;
 
     @Column({
+        field: 'supervisor',
         allowNull: true,
         type: DataType.STRING(128),
     })
-    declare supervisor?: string;
+    declare supervisor: string;
 
     @Column({
         field: 'interest_rate',
         allowNull: true,
-        type: DataType.INTEGER,
+        type: DataType.BIGINT,
     })
-    declare interestRate?: number;
+    declare interestRate: number;
 
     @Column({
         field: 'interest_type',
         allowNull: true,
-        type: DataType.STRING(32),
+        type: DataType.STRING,
     })
-    declare interestType?: string;
+    declare interestType: string;
 
     @Column({
+        field: 'transferable',
         allowNull: true,
         type: DataType.BOOLEAN,
     })
@@ -163,14 +167,14 @@ export default class RawOptPoolSlotInfo extends Model {
     @Column({
         field: 'slot_uri',
         allowNull: true,
-        type: DataType.TEXT,
+        type: DataType.STRING,
     })
-    declare slotUri?: string;
+    declare slotURI?: string;
 
     @Column({
         field: 'pool_id',
         allowNull: true,
         type: DataType.STRING(128),
     })
-    declare poolId?: string;
+    declare poolId: string;
 }

@@ -1,4 +1,4 @@
-import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
+import {Model, Table, Column, DataType, Index, Sequelize} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_bond_currency_info',
@@ -9,6 +9,11 @@ export default class BondCurrencyInfo extends Model {
         primaryKey: true,
         autoIncrement: true,
         type: DataType.BIGINT,
+    })
+    @Index({
+        name: 'bond_currency_info_pkey',
+        using: 'btree',
+        unique: true,
     })
     declare id: number;
 
@@ -47,11 +52,4 @@ export default class BondCurrencyInfo extends Model {
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
-
-    @Column({
-        field: 'last_updated',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare lastUpdated?: number;
 }

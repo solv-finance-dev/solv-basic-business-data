@@ -1,50 +1,43 @@
-import {Model, Table, Column, DataType} from 'sequelize-typescript';
+import {Table, Column, Model, Sequelize, PrimaryKey, AutoIncrement, DataType} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_raw_opt_erc3525_token_info',
     timestamps: true,
 })
-export default class RawOptErc3525TokenInfo extends Model {
-    @Column({
-        primaryKey: true,
-        autoIncrement: true,
-        type: DataType.BIGINT,
-    })
+export default class OptRawErc3525TokenInfo extends Model {
+    @PrimaryKey
+    @AutoIncrement
+    @Column({type: DataType.BIGINT})
     declare id: number;
+
+    // @Column({
+    // 	field: 'contract_info_id',
+    // 	type: DataType.BIGINT,
+    // })
+    // declare contractInfoId: number;
 
     @Column({
         field: 'chain_id',
-        allowNull: true,
         type: DataType.INTEGER,
     })
-    declare chainId?: number;
+    declare chainId: number;
 
     @Column({
         field: 'contract_address',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare contractAddress?: string;
-
-    @Column({
-        allowNull: true,
-        type: DataType.STRING(64),
-    })
-    declare holder?: string;
+    declare contractAddress: string;
 
     @Column({
         field: 'token_id',
-        allowNull: true,
         type: DataType.STRING(64),
     })
-    declare tokenId?: string;
+    declare tokenId: string;
 
     @Column({
-        field: 'product_type',
-        allowNull: true,
-        type: DataType.STRING(64),
+        type: DataType.STRING(128),
     })
-    declare productType?: string;
+    declare slot: string;
 
     @Column({
         allowNull: true,
@@ -54,9 +47,9 @@ export default class RawOptErc3525TokenInfo extends Model {
 
     @Column({
         allowNull: true,
-        type: DataType.STRING(128),
+        type: DataType.STRING(64),
     })
-    declare slot?: string;
+    declare holder?: string;
 
     @Column({
         field: 'mint_time',
@@ -68,7 +61,8 @@ export default class RawOptErc3525TokenInfo extends Model {
     @Column({
         field: 'is_burned',
         allowNull: true,
-        type: DataType.SMALLINT,
+        type: DataType.INTEGER,
+        defaultValue: Sequelize.literal('0'),
     })
     declare isBurned?: number;
 
@@ -81,22 +75,20 @@ export default class RawOptErc3525TokenInfo extends Model {
 
     @Column({
         field: 'created_at',
-        allowNull: true,
         type: DataType.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     })
     declare createdAt?: Date;
 
     @Column({
         field: 'updated_at',
-        allowNull: true,
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
 
     @Column({
         field: 'token_uri',
-        allowNull: true,
-        type: DataType.TEXT,
+        type: DataType.STRING,
     })
-    declare tokenUri?: string;
+    declare tokenURI?: string;
 }

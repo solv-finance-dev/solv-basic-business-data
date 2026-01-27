@@ -1,8 +1,10 @@
-import {Model, Table, Column, DataType, Sequelize} from 'sequelize-typescript';
+import {Model, Table, Column, DataType} from 'sequelize-typescript';
 
 @Table({
     tableName: 'test_btc_redeem_record',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
 })
 export default class BtcRedeemRecord extends Model {
     @Column({
@@ -10,104 +12,87 @@ export default class BtcRedeemRecord extends Model {
         autoIncrement: true,
         type: DataType.BIGINT,
     })
-    declare id: number;
+    declare id: string;
 
     @Column({
         field: 'chain_id',
-        allowNull: true,
         type: DataType.INTEGER,
+        allowNull: true,
     })
     declare chainId?: number;
 
     @Column({
         field: 'token_address',
-        allowNull: true,
         type: DataType.STRING(128),
+        allowNull: true,
     })
     declare tokenAddress?: string;
 
     @Column({
         field: 'burn_amount',
-        allowNull: true,
         type: DataType.DECIMAL,
+        allowNull: true,
     })
     declare burnAmount?: string;
 
     @Column({
         field: 'burn_hash',
-        allowNull: true,
         type: DataType.STRING(128),
+        allowNull: true,
     })
     declare burnHash?: string;
 
     @Column({
         field: 'from_address',
-        allowNull: true,
         type: DataType.STRING(128),
+        allowNull: true,
     })
     declare fromAddress?: string;
 
     @Column({
-        field: 'receiver',
-        allowNull: true,
         type: DataType.STRING(128),
+        allowNull: true,
     })
     declare receiver?: string;
 
     @Column({
         field: 'withdraw_amount',
-        allowNull: true,
         type: DataType.DECIMAL,
+        allowNull: true,
     })
     declare withdrawAmount?: string;
 
     @Column({
-        field: 'state',
-        allowNull: true,
         type: DataType.STRING(32),
+        allowNull: true,
     })
     declare state?: string;
 
     @Column({
         field: 'btc_transfer_hash',
-        allowNull: true,
         type: DataType.STRING(128),
+        allowNull: true,
     })
     declare btcTransferHash?: string;
 
     @Column({
         field: 'withdraw_time',
-        allowNull: true,
         type: DataType.INTEGER,
+        allowNull: true,
     })
     declare withdrawTime?: number;
 
     @Column({
-        field: 'last_updated',
-        allowNull: true,
-        type: DataType.INTEGER,
-    })
-    declare lastUpdated?: number;
-
-    @Column({
-        field: 'created_at',
-        allowNull: true,
-        type: DataType.DATE,
-        defaultValue: Sequelize.literal('now()'),
-    })
-    declare createdAt?: Date;
-
-    @Column({
-        field: 'updated_at',
-        allowNull: true,
-        type: DataType.DATE,
-    })
-    declare updatedAt?: Date;
-
-    @Column({
         field: 'completion_time',
-        allowNull: true,
         type: DataType.INTEGER,
+        allowNull: true,
     })
     declare completionTime?: number;
+
+    @Column({
+        field: 'last_updated',
+        type: DataType.INTEGER,
+        allowNull: true,
+    })
+    declare lastUpdated?: number;
 }
