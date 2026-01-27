@@ -1,14 +1,13 @@
 [
   {
-    "name": "测试 Handler",
-    "module": "sampleHandler",
+    "name": "BondCurrencyInfo",
+    "module": "baseInfo/BondCurrencyInfoHandler",
     "handlers": [
       {
-        "handler": "handleEvent",
+        "handler": "handleSetCurrencyEvent",
         "chainIds": [1, 56, 42161],
         "contractAddresses": null,
         "eventSignatures": [
-          "NewDelegateBeaconProxy(bytes32,bytes32,address)",
           "SetCurrency(address,bool)"
         ]
       }
@@ -20,12 +19,8 @@
     "handlers": [
       {
         "handler": "handleRedeemEvent",
-        "chainIds": [
-          56
-        ],
-        "contractAddresses": [
-          "0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"
-        ],
+        "chainIds": [56],
+        "contractAddresses": ["0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"],
         "eventSignatures": [
           "Redeem(address,address,string,uint256,uint256,uint256)"
         ]

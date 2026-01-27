@@ -1,7 +1,7 @@
 [
   {
     "name": "BondCurrencyInfo",
-    "module": "redeem/BondCurrencyInfoHandler",
+    "module": "baseInfo/BondCurrencyInfoHandler",
     "handlers": [
       {
         "handler": "handleSetCurrencyEvent",
