@@ -1,5 +1,38 @@
 [
   {
+    "name": "测试 Handler",
+    "module": "sampleHandler",
+    "handlers": [
+      {
+        "handler": "handleEvent",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": null,
+        "eventSignatures": [
+          "NewDelegateBeaconProxy(bytes32,bytes32,address)",
+          "SetCurrency(address,bool)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BtcRedeemRecord",
+    "module": "redeem/BtcRedeemRecordHandler",
+    "handlers": [
+      {
+        "handler": "handleRedeemEvent",
+        "chainIds": [
+          56
+        ],
+        "contractAddresses": [
+          "0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"
+        ],
+        "eventSignatures": [
+          "Redeem(address,address,string,uint256,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "BondCurrencyInfo",
     "module": "baseInfo/BondCurrencyInfoHandler",
     "handlers": [
@@ -14,31 +47,13 @@
     ]
   },
   {
-    "name": "BtcRedeemRecord",
-    "module": "redeem/BtcRedeemRecordHandler",
-    "handlers": [
-      {
-        "handler": "handleRedeemEvent",
-        "chainIds": [56],
-        "contractAddresses": ["0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"],
-        "eventSignatures": [
-          "Redeem(address,address,string,uint256,uint256,uint256)"
-        ]
-      }
-    ]
-  },
-  {
     "name": "PayableDelegateFactory",
     "module": "baseInfo/ContractInfoHandler",
     "handlers": [
       {
         "handler": "handlePayableDelegateFactoryEvent",
-        "chainIds": [
-          56
-        ],
-        "contractAddresses": [
-          "0x5531f96bb9e9559ae9880cc0109e06ef477aef8e"
-        ],
+        "chainIds": null,
+        "contractAddresses": null,
         "eventSignatures": [
           "NewDelegateBeaconProxy(bytes32,bytes32,address)"
         ]

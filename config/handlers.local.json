@@ -26,5 +26,23 @@
         ]
       }
     ]
+  },
+  {
+    "name": "PayableDelegateFactory",
+    "module": "baseInfo/ContractInfoHandler",
+    "handlers": [
+      {
+        "handler": "handlePayableDelegateFactoryEvent",
+        "chainIds": [
+          56
+        ],
+        "contractAddresses": [
+          "0x5531f96bb9e9559ae9880cc0109e06ef477aef8e"
+        ],
+        "eventSignatures": [
+          "NewDelegateBeaconProxy(bytes32,bytes32,address)"
+        ]
+      }
+    ]
   }
 ]

@@ -42,20 +42,36 @@ export function getRpcProvider(chainId: number): JsonRpcProvider {
 export async function getErc20Metadata(
 	chainId: number,
 	tokenAddress: string
-): Promise<{ decimals: number; symbol: string }> {
+): Promise<{ decimals: number; symbol: string; name: string }> {
 	const provider = getRpcProvider(chainId);
 	const erc20Abi = [
 		'function decimals() view returns (uint8)',
 		'function symbol() view returns (string)',
+		'function name() view returns (string)',
 	];
 	const contract = new Contract(tokenAddress, erc20Abi, provider);
 
-	const [decimalsResult, symbolResult] = await Promise.all([
+	const [decimalsResult, symbolResult, nameResult] = await Promise.all([
 		contract.decimals(),
 		contract.symbol(),
+		contract.name(),
 	]);
 	const decimals = typeof decimalsResult === 'bigint' ? Number(decimalsResult) : Number(decimalsResult);
 	const symbol = String(symbolResult);
+	const name = String(nameResult);
+	return { decimals, symbol, name };
+}
 
-	return { decimals, symbol };
+
+export async function getContractTypeByAddress(
+	chainId: number,
+	contractAddress: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const contractAbi = [
+		'function contractType() view returns (string)',
+	];
+	const contract = new Contract(contractAddress, contractAbi, provider);
+	const contractType = await contract.contractType();
+	return String(contractType);
 }
