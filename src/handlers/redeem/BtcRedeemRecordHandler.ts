@@ -1,8 +1,8 @@
 import type {HandlerParam} from '../../types/handler';
 import {decodeEventParamsFromAbi} from '../../lib/abi';
 import BtcRedeemRecord from '../../models/BtcRedeemRecord';
-
 // import {BtcRedeemRecord} from "@solvprotocol/models";
+
 export async function handleRedeemEvent(param: HandlerParam): Promise<void> {
     const {event, transaction} = param;
     const burnHash = event.transactionHash;
