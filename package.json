@@ -20,6 +20,7 @@
 	"dependencies": {
 		"@solvprotocol/service-utils": "^0.1.0",
 		"@types/sequelize": "^4.28.20",
+		"@solvprotocol/models": "^0.12.13",
 		"aws-sdk": "^2.1692.0",
 		"axios": "^1.7.2",
 		"bignumber.js": "^9.1.2",
