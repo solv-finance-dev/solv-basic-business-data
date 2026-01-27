@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { id } from 'ethers';
 import { loadJsonConfig } from '../lib/config';
+import {getEnv} from '../lib/utils';
 import { EventEvm } from '../types/event';
 import type {HandlerParam} from '../types/handler';
 import type {Transaction} from 'sequelize';
@@ -94,9 +95,10 @@ function getHandlerEntries(): HandlerEntry[] {
 }
 
 function loadHandlerEntries(): HandlerEntry[] {
-	const configFile = loadJsonConfig<HandlerGroupConfig[]>('handlers.json');
+	const env = getEnv();
+	const configFile = loadJsonConfig<HandlerGroupConfig[]>(`handlers.${env}.json`);
 	if (!Array.isArray(configFile)) {
-		throw new Error('MonitorService: handlers.json should be an array.');
+		throw new Error('MonitorService: handlers config should be an array.');
 	}
 
 	const entries: HandlerEntry[] = [];

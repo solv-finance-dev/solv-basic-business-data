@@ -1,5 +1,6 @@
 import AWS from 'aws-sdk';
 import { loadJsonConfig } from '../lib/config';
+import {getEnv} from '../lib/utils';
 import { EventEvm } from '../types/event';
 import type {ChainConfig, EvmConfigFile} from '../types/config';
 
@@ -13,7 +14,8 @@ export function getChainConfigs(): ChainConfig[] {
 
 function loadEvmConfig(): EvmConfigFile {
 	try {
-		const config = loadJsonConfig<EvmConfigFile>('evm.json');
+		const env = getEnv();
+		const config = loadJsonConfig<EvmConfigFile>(`evm.${env}.json`);
 		return {
 			chains: Array.isArray(config.chains) ? config.chains : [],
 		};
