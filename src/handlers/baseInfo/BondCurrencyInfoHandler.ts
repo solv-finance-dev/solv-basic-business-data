@@ -51,19 +51,3 @@ export async function handleSetCurrencyEvent(param: HandlerParam): Promise<void>
     );
 }
 
-// 规范化 isAllowed 参数，兼容 bool/number/string/bigint。
-function normalizeBoolean(value: unknown): boolean {
-    if (typeof value === 'boolean') {
-        return value;
-    }
-    if (typeof value === 'number') {
-        return value !== 0;
-    }
-    if (typeof value === 'bigint') {
-        return value !== 0n;
-    }
-    if (typeof value === 'string') {
-        return value !== '0' && value.toLowerCase() !== 'false';
-    }
-    return false;
-}
