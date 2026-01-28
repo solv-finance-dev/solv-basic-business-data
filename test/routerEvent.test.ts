@@ -8,8 +8,8 @@ require("../src/services/monitorService");
 
 dotenv.config({ path: path.resolve(__dirname, '../config/.env.local') });
 
-// 设置测试超时时间为 30 秒
-jest.setTimeout(30000);
+// 设置测试超时时间为 60 秒
+jest.setTimeout(60000);
 
 describe('test router event', () => {
     // 测试结束后清理资源

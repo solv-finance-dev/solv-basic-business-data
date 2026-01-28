@@ -1,39 +1,19 @@
 import path from 'node:path';
-import { id } from 'ethers';
-import { loadJsonConfig } from '../lib/config';
+import {id} from 'ethers';
+import {loadJsonConfig} from '../lib/config';
 import {getEnv} from '../lib/utils';
-import { EventEvm } from '../types/event';
-import type {HandlerParam} from '../types/handler';
+import {EventEvm} from '../types/event';
+import type {
+    ChainMatcher,
+    ContractMatcher,
+    EventSignaturesMatcher,
+    HandlerEntry, HandlerFn,
+    HandlerGroupConfig,
+    HandlerParam,
+    HandlerRuleConfig
+} from '../types/handler';
 import type {Transaction} from 'sequelize';
-
-type HandlerFn = (param: HandlerParam) => Promise<void> | void;
-
-type ChainMatcher = number[] | null;
-type ContractMatcher = string[] | null;
-type EventSignaturesMatcher = string[] | null;
-
-interface HandlerRuleConfig {
-	handler: string;
-	chainIds: ChainMatcher;
-	contractAddresses: ContractMatcher;
-	eventSignatures: EventSignaturesMatcher;
-}
-
-interface HandlerGroupConfig {
-	name: string;
-	module: string;
-	handlers: HandlerRuleConfig[];
-}
-
-interface HandlerEntry {
-	name: string;
-	module: string;
-	handlerName: string;
-	chainIds: ChainMatcher;
-	contractAddresses: ContractMatcher;
-	eventSignatures: EventSignaturesMatcher;
-	normalizedEventSignatures: EventSignaturesMatcher;
-}
+import {decodeEventParamsFromAbi} from "../lib/abi";
 
 // 缓存 handler 函数，避免重复动态导入。
 const handlerCache = new Map<string, HandlerFn>();
@@ -41,241 +21,234 @@ let handlerEntriesCache: HandlerEntry[] | null = null;
 
 // 任务启动时调用，提前校验 handlers 配置。
 export function initHandlersConfig(): void {
-	if (!handlerEntriesCache) {
-		handlerEntriesCache = loadHandlerEntries();
-	}
+    if (!handlerEntriesCache) {
+        handlerEntriesCache = loadHandlerEntries();
+    }
 }
 
 // 将事件路由到匹配的 handler，互不阻塞。
 export async function routerEvent(events: EventEvm[], transaction: Transaction): Promise<void> {
-	if (!events.length) {
-		return;
-	}
+    if (!events.length) {
+        return;
+    }
 
-	const handlerEntries = getHandlerEntries();
-	if (!handlerEntries.length) {
-		console.warn('MonitorService: No handlers configured.');
-		return;
-	}
-	let hasFailure = false;
+    const handlerEntries = getHandlerEntries();
+    if (!handlerEntries.length) {
+        console.warn('MonitorService: No handlers configured.');
+        return;
+    }
 
-	for (const event of events) {
-		const matchedHandlers = handlerEntries.filter((entry) => isEventMatch(event, entry));
-		if (!matchedHandlers.length) {
-			continue;
-		}
+    for (const event of events) {
+        const matchedHandlers = handlerEntries.filter((entry) => isEventMatch(event, entry));
+        if (!matchedHandlers.length) {
+            continue;
+        }
 
-		const tasks = matchedHandlers.map((entry) =>
-			invokeHandler(entry, {event, transaction})
-		);
-		const results = await Promise.allSettled(tasks);
+        // 顺序执行每个 handler，而不是并发执行
+        for (const entry of matchedHandlers) {
+            const args = entry.abi ? decodeEventParamsFromAbi(entry.abi, event) : {};
+            try {
+                await invokeHandler(entry, {event, args, config: entry, transaction});
+            } catch (error) {
+                console.error(`MonitorService: Handler failed: ${entry.name}`, error);
+                throw new Error('MonitorService: handler execution failed.');
+            }
+        }
+    }
 
-		results.forEach((result, index) => {
-			if (result.status === 'rejected') {
-				hasFailure = true;
-				console.error(
-					`MonitorService: Handler failed: ${matchedHandlers[index].name}`,
-					result.reason
-				);
-			}
-		});
-	}
-
-	if (hasFailure) {
-		throw new Error('MonitorService: handler execution failed.');
-	}
 }
 
 function getHandlerEntries(): HandlerEntry[] {
-	if (!handlerEntriesCache) {
-		handlerEntriesCache = loadHandlerEntries();
-	}
+    if (!handlerEntriesCache) {
+        handlerEntriesCache = loadHandlerEntries();
+    }
 
-	return handlerEntriesCache;
+    return handlerEntriesCache;
 }
 
 function loadHandlerEntries(): HandlerEntry[] {
-	const env = getEnv();
-	const configFile = loadJsonConfig<HandlerGroupConfig[]>(`handlers.${env}.json`);
-	if (!Array.isArray(configFile)) {
-		throw new Error('MonitorService: handlers config should be an array.');
-	}
+    const env = getEnv();
+    const configFile = loadJsonConfig<HandlerGroupConfig[]>(`handlers.${env}.json`);
+    if (!Array.isArray(configFile)) {
+        throw new Error('MonitorService: handlers config should be an array.');
+    }
 
-	const entries: HandlerEntry[] = [];
-	for (const group of configFile) {
-		const groupEntries = normalizeGroup(group);
-		entries.push(...groupEntries);
-	}
+    const entries: HandlerEntry[] = [];
+    for (const group of configFile) {
+        const groupEntries = normalizeGroup(group);
+        entries.push(...groupEntries);
+    }
 
-	return entries;
+    return entries;
 }
 
 function normalizeGroup(group: HandlerGroupConfig): HandlerEntry[] {
-	if (!group.name || !group.module) {
-		throw new Error('MonitorService: handler group requires name and module.');
-	}
+    if (!group.name || !group.module) {
+        throw new Error('MonitorService: handler group requires name and module.');
+    }
 
-	if (!Array.isArray(group.handlers) || !group.handlers.length) {
-		throw new Error(`MonitorService: handler group ${group.name} has empty handlers.`);
-	}
+    if (!Array.isArray(group.handlers) || !group.handlers.length) {
+        throw new Error(`MonitorService: handler group ${group.name} has empty handlers.`);
+    }
 
-	return group.handlers.map((rule) => normalizeRule(group, rule));
+    return group.handlers.map((rule) => normalizeRule(group, rule));
 }
 
 function normalizeRule(group: HandlerGroupConfig, rule: HandlerRuleConfig): HandlerEntry {
-	if (!rule || !rule.handler) {
-		throw new Error(`MonitorService: handler rule missing handler in group ${group.name}.`);
-	}
+    if (!rule || !rule.handler) {
+        throw new Error(`MonitorService: handler rule missing handler in group ${group.name}.`);
+    }
 
-	if (rule.chainIds === undefined || rule.contractAddresses === undefined || rule.eventSignatures === undefined) {
-		throw new Error(`MonitorService: handler rule must declare chainIds, contractAddresses, eventSignatures.`);
-	}
+    if (rule.chainIds === undefined || rule.contractAddresses === undefined || rule.eventSignatures === undefined) {
+        throw new Error(`MonitorService: handler rule must declare chainIds, contractAddresses, eventSignatures.`);
+    }
 
-	const hasChainIds = rule.chainIds !== null;
-	const hasContracts = rule.contractAddresses !== null;
-	const hasEventSignatures = rule.eventSignatures !== null;
-	if (!hasChainIds && !hasContracts && !hasEventSignatures) {
-		throw new Error(
-			`MonitorService: handler rule ${rule.handler} must have at least one matcher value.`
-		);
-	}
+    const hasChainIds = rule.chainIds !== null;
+    const hasContracts = rule.contractAddresses !== null;
+    const hasEventSignatures = rule.eventSignatures !== null;
+    if (!hasChainIds && !hasContracts && !hasEventSignatures) {
+        throw new Error(
+            `MonitorService: handler rule ${rule.handler} must have at least one matcher value.`
+        );
+    }
 
-	return {
-		name: group.name,
-		module: group.module,
-		handlerName: rule.handler,
-		chainIds: normalizeChainIds(rule.chainIds),
-		contractAddresses: normalizeContractAddresses(rule.contractAddresses),
-		eventSignatures: rule.eventSignatures,
-		normalizedEventSignatures: normalizeConfigEventSignatures(rule.eventSignatures),
-	};
+    return {
+        name: group.name,
+        module: group.module,
+        handlerName: rule.handler,
+        abi: rule.abi,
+        chainIds: normalizeChainIds(rule.chainIds),
+        contractAddresses: normalizeContractAddresses(rule.contractAddresses),
+        eventSignatures: rule.eventSignatures,
+        normalizedEventSignatures: normalizeConfigEventSignatures(rule.eventSignatures),
+    };
 }
 
 function normalizeChainIds(chainIds: ChainMatcher): ChainMatcher {
-	if (chainIds === null) {
-		return null;
-	}
+    if (chainIds === null) {
+        return null;
+    }
 
-	if (!Array.isArray(chainIds)) {
-		throw new Error('MonitorService: chainIds must be an array or null.');
-	}
+    if (!Array.isArray(chainIds)) {
+        throw new Error('MonitorService: chainIds must be an array or null.');
+    }
 
-	return chainIds.map((chainId) => {
-		const parsed = Number(chainId);
-		if (!Number.isFinite(parsed)) {
-			throw new Error(`MonitorService: invalid chainId value ${chainId}.`);
-		}
-		return parsed;
-	});
+    return chainIds.map((chainId) => {
+        const parsed = Number(chainId);
+        if (!Number.isFinite(parsed)) {
+            throw new Error(`MonitorService: invalid chainId value ${chainId}.`);
+        }
+        return parsed;
+    });
 }
 
 function normalizeContractAddresses(addresses: ContractMatcher): ContractMatcher {
-	if (addresses === null) {
-		return null;
-	}
+    if (addresses === null) {
+        return null;
+    }
 
-	if (!Array.isArray(addresses)) {
-		throw new Error('MonitorService: contractAddresses must be an array or null.');
-	}
+    if (!Array.isArray(addresses)) {
+        throw new Error('MonitorService: contractAddresses must be an array or null.');
+    }
 
-	return addresses.map((address) => address.toLowerCase());
+    return addresses.map((address) => address.toLowerCase());
 }
 
 // 配置中的事件签名允许使用 ABI 字符串或 0x 哈希。
 function normalizeConfigEventSignatures(signatures: EventSignaturesMatcher): EventSignaturesMatcher {
-	if (signatures === null) {
-		return null;
-	}
+    if (signatures === null) {
+        return null;
+    }
 
-	if (!Array.isArray(signatures)) {
-		throw new Error('MonitorService: eventSignatures must be an array or null.');
-	}
+    if (!Array.isArray(signatures)) {
+        throw new Error('MonitorService: eventSignatures must be an array or null.');
+    }
 
-	return signatures.map((signature) => normalizeConfigEventSignature(signature));
+    return signatures.map((signature) => normalizeConfigEventSignature(signature));
 }
 
 function normalizeConfigEventSignature(signature: string): string {
-	if (signature === '') {
-		return '';
-	}
-	if (isHexSignature(signature)) {
-		return signature.toLowerCase();
-	}
+    if (signature === '') {
+        return '';
+    }
+    if (isHexSignature(signature)) {
+        return signature.toLowerCase();
+    }
 
-	return id(signature).toLowerCase();
+    return id(signature).toLowerCase();
 }
 
 function normalizeEventSignatureValue(signature: string): string {
-	if (signature === '') {
-		return '';
-	}
+    if (signature === '') {
+        return '';
+    }
 
-	return signature.toLowerCase();
+    return signature.toLowerCase();
 }
 
 function isHexSignature(signature: string): boolean {
-	return signature.startsWith('0x') && signature.length === 66;
+    return signature.startsWith('0x') && signature.length === 66;
 }
 
 function isEventMatch(event: EventEvm, config: HandlerEntry): boolean {
-	if (config.chainIds !== null) {
-		if (!config.chainIds.length) {
-			return false;
-		}
-		if (!config.chainIds.includes(event.chainId)) {
-			return false;
-		}
-	}
+    if (config.chainIds !== null) {
+        if (!config.chainIds.length) {
+            return false;
+        }
+        if (!config.chainIds.includes(event.chainId)) {
+            return false;
+        }
+    }
 
-	if (config.contractAddresses !== null) {
-		if (!config.contractAddresses.length) {
-			return false;
-		}
-		const target = event.contractAddress.toLowerCase();
-		if (!config.contractAddresses.includes(target)) {
-			return false;
-		}
-	}
+    if (config.contractAddresses !== null) {
+        if (!config.contractAddresses.length) {
+            return false;
+        }
+        const target = event.contractAddress.toLowerCase();
+        if (!config.contractAddresses.includes(target)) {
+            return false;
+        }
+    }
 
-	if (config.normalizedEventSignatures !== null) {
-		if (!config.normalizedEventSignatures.length) {
-			return false;
-		}
-		const eventSignature = normalizeEventSignatureValue(event.eventSignature);
-		if (!config.normalizedEventSignatures.includes(eventSignature)) {
-			return false;
-		}
-	}
+    if (config.normalizedEventSignatures !== null) {
+        if (!config.normalizedEventSignatures.length) {
+            return false;
+        }
+        const eventSignature = normalizeEventSignatureValue(event.eventSignature);
+        if (!config.normalizedEventSignatures.includes(eventSignature)) {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
 async function invokeHandler(entry: HandlerEntry, param: HandlerParam): Promise<void> {
-	const handler = await getHandlerFunction(entry);
-	await handler(param);
+    const handler = await getHandlerFunction(entry);
+    await handler(param);
 }
 
 async function getHandlerFunction(entry: HandlerEntry): Promise<HandlerFn> {
-	const cacheKey = `${entry.module}:${entry.handlerName}`;
-	const cached = handlerCache.get(cacheKey);
-	if (cached) {
-		return cached;
-	}
+    const cacheKey = `${entry.module}:${entry.handlerName}`;
+    const cached = handlerCache.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
 
-	// 从 src/handlers 动态解析并导入 handler 模块。
-	const modulePath = resolveHandlerModulePath(entry.module);
-	const importedModule = await import(modulePath);
-	const handler = importedModule[entry.handlerName];
+    // 从 src/handlers 动态解析并导入 handler 模块。
+    const modulePath = resolveHandlerModulePath(entry.module);
+    const importedModule = await import(modulePath);
+    const handler = importedModule[entry.handlerName];
 
-	if (typeof handler !== 'function') {
-		throw new Error(`Handler function not found: ${entry.handlerName} in ${entry.module}`);
-	}
+    if (typeof handler !== 'function') {
+        throw new Error(`Handler function not found: ${entry.handlerName} in ${entry.module}`);
+    }
 
-	handlerCache.set(cacheKey, handler as HandlerFn);
-	return handler as HandlerFn;
+    handlerCache.set(cacheKey, handler as HandlerFn);
+    return handler as HandlerFn;
 }
 
 function resolveHandlerModulePath(moduleName: string): string {
-	const baseDir = path.resolve(__dirname, '..');
-	return path.resolve(baseDir, 'handlers', moduleName);
+    const baseDir = path.resolve(__dirname, '..');
+    return path.resolve(baseDir, 'handlers', moduleName);
 }

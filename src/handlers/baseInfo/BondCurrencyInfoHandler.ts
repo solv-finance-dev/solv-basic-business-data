@@ -1,10 +1,8 @@
 import type {HandlerParam} from '../../types/handler';
-import {decodeEventParamsFromAbi} from '../../lib/abi';
 import BondCurrencyInfo from '../../models/BondCurrencyInfo';
 
 export async function handleSetCurrencyEvent(param: HandlerParam): Promise<void> {
-    const {event, transaction} = param;
-    const args = decodeEventParamsFromAbi('OpenFundShareDelegate.json', event);
+    const {event, args, transaction} = param;
 
     const address = event.contractAddress;
     const currency = String(args.currency ?? '');
@@ -30,6 +28,7 @@ export async function handleSetCurrencyEvent(param: HandlerParam): Promise<void>
                 where: {id: existing.id},
                 transaction,
             });
+            console.log('BondCurrencyInfoHandler: deleted record for contract ', address, ' currency ', currency, ' eventId ', event.eventId);
             return;
         }
         return;
@@ -49,5 +48,6 @@ export async function handleSetCurrencyEvent(param: HandlerParam): Promise<void>
         },
         {transaction},
     );
+    console.log('BondCurrencyInfoHandler: created record for contract ', address, ' currency ', currency, ' eventId ', event.eventId);
 }
 
