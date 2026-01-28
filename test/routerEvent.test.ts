@@ -55,4 +55,17 @@ describe('test router event', () => {
             throw error;
         }
     });
+    test('Erc3525TokenInfoHandler', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        try {
+            const events = "";
+            await routerEvent(JSON.parse(events) as EventEvm[], transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
 });

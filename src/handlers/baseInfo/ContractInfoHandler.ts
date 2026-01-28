@@ -32,7 +32,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
     const { decimals, symbol, name, contractURI } = await getErc3525TokenMetadata(event.chainId, beaconProxy);
     await RawOptContractInfo.create({
         chainId: event.chainId,
-        contractAddress: beaconProxy,
+        contractAddress: beaconProxy.toLowerCase(),
         contractType,
         decimals,
         symbol,

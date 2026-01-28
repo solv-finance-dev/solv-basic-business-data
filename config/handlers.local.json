@@ -44,5 +44,20 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Erc3525TokenInfo",
+    "module": "asset/Erc3525TokenInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleErc3525TokenInfoEvent",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "TransferValue(uint256,uint256,uint256)",
+          "Transfer(address,address,uint256)"
+        ]
+      }
+    ]
   }
 ]

@@ -102,3 +102,33 @@ export async function getContractTypeByAddress(
 	const contractType = await contract.contractType();
 	return contractType;
 }
+
+// 获取 ERC3525 token 的 slot
+export async function getSlotOf(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const erc3525Abi = [
+		'function slotOf(uint256 tokenId) view returns (uint256)',
+	];
+	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	const slot = await contract.slotOf(tokenId);
+	return String(slot);
+}
+
+// 获取 ERC3525 token 的 owner
+export async function getOwnerOf(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const erc3525Abi = [
+		'function ownerOf(uint256 tokenId) view returns (address)',
+	];
+	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	const owner = await contract.ownerOf(tokenId);
+	return String(owner);
+}
