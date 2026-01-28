@@ -1,12 +1,10 @@
 import type { HandlerParam } from '../../types/handler';
-import { decodeEventParamsFromAbi } from '../../lib/abi';
 import { getContractTypeByAddress, getErc3525TokenMetadata } from '../../lib/rpc';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
 // import {RawOptContractInfo} from "@solvprotocol/models"; 
 
 export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Promise<void> {
-    const { event, transaction } = param;
-    const args = decodeEventParamsFromAbi('PayableDelegateFactory.json', event);
+    const { event, args, transaction } = param;
     const beaconProxy = String(args.beaconProxy ?? '');
     if (!beaconProxy) {
         return;

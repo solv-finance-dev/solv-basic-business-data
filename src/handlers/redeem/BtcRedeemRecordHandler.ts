@@ -1,10 +1,9 @@
 import type {HandlerParam} from '../../types/handler';
-import {decodeEventParamsFromAbi} from '../../lib/abi';
 import BtcRedeemRecord from '../../models/BtcRedeemRecord';
 // import {BtcRedeemRecord} from "@solvprotocol/models";
 
-export async function handleRedeemEvent(param: HandlerParam): Promise<void> {
-    const {event, transaction} = param;
+export async function handleMainnetRedeemerEvent(param: HandlerParam): Promise<void> {
+    const {event, args, transaction} = param;
     const burnHash = event.transactionHash;
     const existing = await BtcRedeemRecord.findOne({
         where: {burnHash},
@@ -14,8 +13,6 @@ export async function handleRedeemEvent(param: HandlerParam): Promise<void> {
         console.log('BtcRedeemRecordHandler: record already exists for burnHash ', burnHash);
         return;
     }
-
-    const args = decodeEventParamsFromAbi('MainnetRedeemer.json', event);
 
     await BtcRedeemRecord.create(
         {

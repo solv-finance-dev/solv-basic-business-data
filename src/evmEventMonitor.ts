@@ -78,6 +78,7 @@ async function processChain(chain: ChainConfig): Promise<void> {
             await setLastSyncedBlock(chain.chainId, blockNumber);
         } catch (error) {
             await transaction.rollback();
+            console.error('EVM Event Monitor: Error processing block', blockNumber, 'on chain', chain.chainId, error);
             throw error;
         }
     }

@@ -4,7 +4,8 @@
     "module": "baseInfo/BondCurrencyInfoHandler",
     "handlers": [
       {
-        "handler": "handleSetCurrencyEvent",
+        "handler": "handleOpenFundShareDelegateEvent",
+        "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": null,
         "eventSignatures": [
@@ -18,11 +19,32 @@
     "module": "redeem/BtcRedeemRecordHandler",
     "handlers": [
       {
-        "handler": "handleRedeemEvent",
+        "handler": "handleMainnetRedeemerEvent",
+        "abi": "MainnetRedeemer.json",
         "chainIds": [56],
         "contractAddresses": ["0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"],
         "eventSignatures": [
           "Redeem(address,address,string,uint256,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "CarryCollectorHistory",
+    "module": "management/CarryCollectorHistoryHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [56],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
+          "UpdatePoolInfo(bytes32,uint16,address,uint256,uint256,address,address)"
         ]
       }
     ]
@@ -33,6 +55,7 @@
     "handlers": [
       {
         "handler": "handlePayableDelegateFactoryEvent",
+        "abi": "PayableDelegateFactory.json",
         "chainIds": [
           56
         ],
