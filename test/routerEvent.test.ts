@@ -68,4 +68,17 @@ describe('test router event', () => {
             throw error;
         }
     });
+    test('Erc20TokenInfoHandler', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        try {
+            const events = "[{\"blockHash\":\"0x921330942084d53e6c68709ce8528444e063ebdc12db34203640b04aa5edecb2\",\"blockNumber\":37393268,\"blockTimestamp\":1711717058,\"chainId\":56,\"contractAddress\":\"0x4aae823a6a0b376de6a78e74ecc5b079d38cbcf7\",\"createdAt\":\"2025-12-23T17:43:27.725908Z\",\"data\":\"0x0000000000000000000000000000000000000000000000000006e550045436cf\",\"dataSource\":\"QuickNodeStream\",\"eventId\":\"560x06adffc9e2c592be17fad6758e163e41af474f0b4cb8a7f815e590ebe46fcdfa516\",\"eventSignature\":\"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef\",\"id\":30,\"indexedTopic1\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"indexedTopic2\":\"0x000000000000000000000000a83376174f44b06536b0f0ddba6da6f7e8fd3167\",\"indexedTopic3\":null,\"logIndex\":516,\"removed\":false,\"transactionHash\":\"0x06adffc9e2c592be17fad6758e163e41af474f0b4cb8a7f815e590ebe46fcdfa\",\"transactionIndex\":126,\"updatedAt\":\"2026-01-25T15:00:15.588379Z\"},{\"blockHash\":\"0x921330942084d53e6c68709ce8528444e063ebdc12db34203640b04aa5edecb2\",\"blockNumber\":37393268,\"blockTimestamp\":1711717058,\"chainId\":56,\"contractAddress\":\"0x4aae823a6a0b376de6a78e74ecc5b079d38cbcf7\",\"createdAt\":\"2025-12-23T17:43:27.725908Z\",\"data\":\"0x0000000000000000000000000000000000000000000000000006e550045436cf\",\"dataSource\":\"QuickNodeStream\",\"eventId\":\"560x06adffc9e2c592be17fad6758e163e41af474f0b4cb8a7f815e590ebe46fcdfa517\",\"eventSignature\":\"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef\",\"id\":31,\"indexedTopic1\":\"0x000000000000000000000000a83376174f44b06536b0f0ddba6da6f7e8fd3167\",\"indexedTopic2\":\"0x0000000000000000000000003531386bada1ac1d9c36bb9364305e43f2ac87d7\",\"indexedTopic3\":null,\"logIndex\":517,\"removed\":false,\"transactionHash\":\"0x06adffc9e2c592be17fad6758e163e41af474f0b4cb8a7f815e590ebe46fcdfa\",\"transactionIndex\":126,\"updatedAt\":\"2026-01-25T15:00:15.588379Z\"}]";
+            await routerEvent(JSON.parse(events) as EventEvm[], transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
 });

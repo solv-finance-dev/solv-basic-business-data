@@ -83,5 +83,21 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Erc20TokenInfo",
+    "module": "asset/Erc20TokenInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleErc20TokenInfoEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "Transfer(address,address,uint256)",
+          "SetAlias(string,string)"
+        ]
+      }
+    ]
   }
 ]
