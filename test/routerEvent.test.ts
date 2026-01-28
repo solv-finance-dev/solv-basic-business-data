@@ -42,6 +42,21 @@ describe('test router event', () => {
             throw error;
         }
     });
+    test('CarryCollectorHistoryHandler.ts', async () => {
+        // Wait for testing
+    });
+    test('CarryInfoHandler.ts', async () => {
+        // Wait for testing
+    });
+    test('NavRecordsHandler.ts', async () => {
+        // Wait for testing
+    });
+    test('ProtocolFeeCollectorHistoryHandler.ts', async () => {
+        // Wait for testing
+    });
+    test('ProtocolFeeInfoHandler.ts', async () => {
+        // Wait for testing
+    });
     test('ContractInfoHandler', async () => {
         const sequelize = await initSequelize();
         const transaction = await sequelize.transaction();
