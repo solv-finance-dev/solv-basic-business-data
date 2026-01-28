@@ -5,6 +5,7 @@ export type HandlerFn = (param: HandlerParam) => Promise<void> | void;
 export type ChainMatcher = number[] | null;
 export type ContractMatcher = string[] | null;
 export type EventSignaturesMatcher = string[] | null;
+export type EventSignatureMap = Record<string, string> | null;
 
 export interface HandlerRuleConfig {
     handler: string;
@@ -28,13 +29,14 @@ export interface HandlerEntry {
     chainIds: ChainMatcher;
     contractAddresses: ContractMatcher;
     eventSignatures: EventSignaturesMatcher;
-    normalizedEventSignatures: EventSignaturesMatcher;
+    eventSignatureMap: EventSignatureMap;
 }
 
 // Handler 参数：包含事件与同一事务上下文。
 export interface HandlerParam {
     event: EventEvm;
     args: Record<string, unknown>;
+    eventSignature?: string;
     config: HandlerEntry;
     transaction: Transaction;
 }

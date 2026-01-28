@@ -6,8 +6,10 @@ import {EventEvm} from '../types/event';
 import type {
     ChainMatcher,
     ContractMatcher,
+    EventSignatureMap,
     EventSignaturesMatcher,
-    HandlerEntry, HandlerFn,
+    HandlerEntry,
+    HandlerFn,
     HandlerGroupConfig,
     HandlerParam,
     HandlerRuleConfig
@@ -47,8 +49,9 @@ export async function routerEvent(events: EventEvm[], transaction: Transaction):
         // 顺序执行每个 handler，而不是并发执行
         for (const entry of matchedHandlers) {
             const args = entry.abi ? decodeEventParamsFromAbi(entry.abi, event) : {};
+            const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[event.eventSignature] : undefined;
             try {
-                await invokeHandler(entry, {event, args, config: entry, transaction});
+                await invokeHandler(entry, {event, args, eventSignature, config: entry, transaction});
             } catch (error) {
                 console.error(`MonitorService: Handler failed: ${entry.name}`, error);
                 throw new Error('MonitorService: handler execution failed.');
@@ -120,7 +123,7 @@ function normalizeRule(group: HandlerGroupConfig, rule: HandlerRuleConfig): Hand
         chainIds: normalizeChainIds(rule.chainIds),
         contractAddresses: normalizeContractAddresses(rule.contractAddresses),
         eventSignatures: rule.eventSignatures,
-        normalizedEventSignatures: normalizeConfigEventSignatures(rule.eventSignatures),
+        eventSignatureMap: normalizeConfigEventSignatures(rule.eventSignatures),
     };
 }
 
@@ -155,7 +158,7 @@ function normalizeContractAddresses(addresses: ContractMatcher): ContractMatcher
 }
 
 // 配置中的事件签名允许使用 ABI 字符串或 0x 哈希。
-function normalizeConfigEventSignatures(signatures: EventSignaturesMatcher): EventSignaturesMatcher {
+function normalizeConfigEventSignatures(signatures: EventSignaturesMatcher): EventSignatureMap {
     if (signatures === null) {
         return null;
     }
@@ -164,7 +167,11 @@ function normalizeConfigEventSignatures(signatures: EventSignaturesMatcher): Eve
         throw new Error('MonitorService: eventSignatures must be an array or null.');
     }
 
-    return signatures.map((signature) => normalizeConfigEventSignature(signature));
+    return signatures.reduce<Record<string, string>>((acc, signature) => {
+        const normalized = normalizeConfigEventSignature(signature);
+        acc[normalized] = signature;
+        return acc;
+    }, {});
 }
 
 function normalizeConfigEventSignature(signature: string): string {
@@ -210,12 +217,13 @@ function isEventMatch(event: EventEvm, config: HandlerEntry): boolean {
         }
     }
 
-    if (config.normalizedEventSignatures !== null) {
-        if (!config.normalizedEventSignatures.length) {
+    if (config.eventSignatureMap !== null) {
+        const keys = Object.keys(config.eventSignatureMap);
+        if (!keys.length) {
             return false;
         }
         const eventSignature = normalizeEventSignatureValue(event.eventSignature);
-        if (!config.normalizedEventSignatures.includes(eventSignature)) {
+        if (!config.eventSignatureMap[eventSignature]) {
             return false;
         }
     }
