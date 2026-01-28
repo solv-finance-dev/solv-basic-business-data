@@ -36,7 +36,7 @@
       {
         "handler": "handleOpenFundMarketEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": [56],
+        "chainIds": [1, 56, 42161],
         "contractAddresses": [
           "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
           "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
@@ -45,6 +45,83 @@
         "eventSignatures": [
           "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
           "UpdatePoolInfo(bytes32,uint16,address,uint256,uint256,address,address)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "CarryInfo",
+    "module": "management/CarryInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "SettleCarry(bytes32,uint256,address,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "NavRecords",
+    "module": "management/NavRecordsHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "SetRedeemNav(bytes32,uint256,uint256)",
+          "SetSubscribeNav(bytes32,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ProtocolFeeCollectorHistory",
+    "module": "management/ProtocolFeeCollectorHistoryHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "SetProtocolFeeCollector(address,address)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ProtocolFeeInfo",
+    "module": "management/ProtocolFeeInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "SettleProtocolFee(bytes32,address,uint256)"
         ]
       }
     ]

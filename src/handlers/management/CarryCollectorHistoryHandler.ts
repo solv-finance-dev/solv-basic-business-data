@@ -29,5 +29,5 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         },
         {transaction},
     );
-    console.log('CarryCollectoHistoryHandler: created record for carryCollector ', newCarryCollector, ' eventId ', event.eventId);
+    console.log('CarryCollectorHistoryHandler: created record for carryCollector ', newCarryCollector, ' eventId ', event.eventId);
 }
