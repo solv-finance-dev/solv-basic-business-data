@@ -2,7 +2,7 @@ import type {HandlerParam} from '../../types/handler';
 import BtcRedeemRecord from '../../models/BtcRedeemRecord';
 // import {BtcRedeemRecord} from "@solvprotocol/models";
 
-export async function handleRedeemEvent(param: HandlerParam): Promise<void> {
+export async function handleMainnetRedeemerEvent(param: HandlerParam): Promise<void> {
     const {event, args, transaction} = param;
     const burnHash = event.transactionHash;
     const existing = await BtcRedeemRecord.findOne({

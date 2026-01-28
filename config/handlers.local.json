@@ -4,7 +4,7 @@
     "module": "baseInfo/BondCurrencyInfoHandler",
     "handlers": [
       {
-        "handler": "handleSetCurrencyEvent",
+        "handler": "handleOpenFundShareDelegateEvent",
         "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": null,
@@ -19,7 +19,7 @@
     "module": "redeem/BtcRedeemRecordHandler",
     "handlers": [
       {
-        "handler": "handleRedeemEvent",
+        "handler": "handleMainnetRedeemerEvent",
         "abi": "MainnetRedeemer.json",
         "chainIds": [56],
         "contractAddresses": ["0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"],

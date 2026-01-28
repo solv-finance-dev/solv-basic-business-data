@@ -1,7 +1,7 @@
 import type {HandlerParam} from '../../types/handler';
 import BondCurrencyInfo from '../../models/BondCurrencyInfo';
 
-export async function handleSetCurrencyEvent(param: HandlerParam): Promise<void> {
+export async function handleOpenFundShareDelegateEvent(param: HandlerParam): Promise<void> {
     const {event, args, transaction} = param;
 
     const address = event.contractAddress;
