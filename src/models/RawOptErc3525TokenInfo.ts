@@ -86,9 +86,9 @@ export default class OptRawErc3525TokenInfo extends Model {
     })
     declare updatedAt?: Date;
 
-    @Column({
-        field: 'token_uri',
-        type: DataType.STRING,
-    })
-    declare tokenURI?: string;
+	@Column({
+		field: 'token_uri',
+		type: DataType.STRING,
+	})
+	declare tokenURI?: string;
 }

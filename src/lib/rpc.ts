@@ -132,3 +132,23 @@ export async function getOwnerOf(
 	const owner = await contract.ownerOf(tokenId);
 	return String(owner);
 }
+
+// 获取 ERC3525 token 的 tokenURI
+export async function getTokenURI(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const erc3525Abi = [
+		'function tokenURI(uint256 tokenId) view returns (string)',
+	];
+	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	try {
+		const tokenURI = await contract.tokenURI(tokenId);
+		return String(tokenURI);
+	} catch (error) {
+		// 如果调用失败，返回空字符串
+		return '';
+	}
+}

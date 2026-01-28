@@ -74,6 +74,7 @@
     "handlers": [
       {
         "handler": "handleErc3525TokenInfoEvent",
+        "abi": "OpenFundShareDelegate.json",
         "chainIds": null,
         "contractAddresses": null,
         "eventSignatures": [

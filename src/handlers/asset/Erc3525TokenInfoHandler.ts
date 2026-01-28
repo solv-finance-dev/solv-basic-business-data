@@ -1,10 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
-import { decodeEventParamsFromAbi } from '../../lib/abi';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
 import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
-import { getSlotOf, getOwnerOf } from '../../lib/rpc';
+import { getSlotOf, getOwnerOf, getTokenURI } from '../../lib/rpc';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO_TOKEN_ID = '0';
@@ -35,11 +32,55 @@ async function findTokenInfo(
 	});
 }
 
+// 安全获取 slot（链上调用失败时返回 '0'）
+async function getSlotSafe(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string,
+	logPrefix: string
+): Promise<string> {
+	try {
+		return await getSlotOf(chainId, contractAddress, tokenId);
+	} catch (error) {
+		console.warn(`${logPrefix}: Failed to get slotOf`, { contractAddress, tokenId, error });
+		return '0';
+	}
+}
+
+// 安全获取 owner（链上调用失败时返回 NULL_ADDRESS）
+async function getOwnerSafe(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string,
+	logPrefix: string
+): Promise<string> {
+	try {
+		return await getOwnerOf(chainId, contractAddress, tokenId);
+	} catch (error) {
+		console.warn(`${logPrefix}: Failed to get ownerOf`, { contractAddress, tokenId, error });
+		return NULL_ADDRESS;
+	}
+}
+
+// 安全获取 tokenURI（链上调用失败时返回空字符串）
+async function getTokenURISafe(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string,
+	logPrefix: string
+): Promise<string> {
+	try {
+		return await getTokenURI(chainId, contractAddress, tokenId);
+	} catch (error) {
+		console.warn(`${logPrefix}: Failed to get tokenURI`, { contractAddress, tokenId, error });
+		return '';
+	}
+}
+
 // 处理 TransferValue 事件
 async function handleTransferValue(
 	event: any,
 	args: Record<string, unknown>,
-	contractInfo: RawOptContractInfo,
 	transaction: any
 ): Promise<void> {
 	const contractAddress = event.contractAddress.toLowerCase();
@@ -75,21 +116,11 @@ async function handleTransferValue(
 	if (toTokenId !== ZERO_TOKEN_ID) {
 		// 如果 slot 为空，从链上获取
 		if (!slot || slot === '0') {
-			try {
-				slot = await getSlotOf(event.chainId, event.contractAddress, toTokenId);
-			} catch (error) {
-				console.error('Erc3525TokenInfoHandler: Failed to get slotOf:', error);
-				slot = '0';
-			}
+			slot = await getSlotSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
 		}
 
 		// 获取 owner
-		let owner = NULL_ADDRESS;
-		try {
-			owner = await getOwnerOf(event.chainId, event.contractAddress, toTokenId);
-		} catch (error) {
-			console.error('Erc3525TokenInfoHandler: Failed to get ownerOf:', error);
-		}
+		const owner = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
 
 		// 查询目标 token 信息
 		const toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
@@ -102,36 +133,17 @@ async function handleTransferValue(
 		const balance = toTokenInfo.balance || '0';
 		const newBalance = addBigInt(balance, value);
 
+		// 获取 tokenURI
+		const tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
+
 		// 准备更新数据
 		const updateData: any = {
 			balance: newBalance,
 			lastUpdated: timestamp,
 			slot,
 			holder: owner.toLowerCase(),
+			tokenURI,
 		};
-
-		// 根据 contractType 查询对应的 SlotInfo（如果需要 poolId 可以在这里设置）
-		if (contractInfo.contractType === 'Open Fund Shares') {
-			await RawOptPoolSlotInfo.findOne({
-				where: {
-					chainId: event.chainId,
-					contractAddress,
-					slot,
-				},
-				transaction,
-			});
-			// 如果需要设置 poolId: updateData.poolId = poolSlot?.poolId;
-		} else if (contractInfo.contractType === 'Open Fund Redemptions') {
-			await RawOptRedeemSlotInfo.findOne({
-				where: {
-					chainId: event.chainId,
-					contractAddress,
-					slot,
-				},
-				transaction,
-			});
-			// 如果需要设置 poolId: updateData.poolId = redeemSlot?.poolId;
-		}
 
 		await toTokenInfo.update(updateData, { transaction });
 
@@ -155,25 +167,24 @@ async function handleMint(
 	transaction: any
 ): Promise<void> {
 	// 获取 slot
-	let slot = '0';
-	try {
-		slot = await getSlotOf(chainId, contractAddress, tokenId);
-	} catch (error) {
-		console.error('Erc3525TokenInfoHandler: Failed to get slotOf for mint:', error);
-	}
+	const slot = await getSlotSafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
+
+	// 获取 tokenURI
+	const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
 
 	// 创建新的 TokenInfo
 	await OptRawErc3525TokenInfo.create(
 		{
 			chainId,
-			contractAddress,
+			contractAddress: contractAddress.toLowerCase(),
 			tokenId,
 			slot,
 			balance: '0',
-			holder: to,
+			holder: to.toLowerCase(),
 			mintTime: timestamp,
 			isBurned: 0,
 			lastUpdated: timestamp,
+			tokenURI,
 		},
 		{ transaction }
 	);
@@ -194,13 +205,21 @@ async function handleTransferOrBurn(
 		throw new Error(`TokenInfo not found for tokenId ${tokenId}`);
 	}
 
+	// 获取 tokenURI（如果需要更新）
+	const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Transfer');
+
 	// 更新 holder 和 lastUpdated
 	const updateData: any = {
-		holder: to,
+		holder: to.toLowerCase(),
 		lastUpdated: timestamp,
 	};
 
-	// 如果 to 是 nullAddress，标记为 burned
+	// 如果获取到了 tokenURI，也更新它
+	if (tokenURI) {
+		updateData.tokenURI = tokenURI;
+	}
+
+	// 如果 to 是 NULL_ADDRESS，标记为 burned
 	const isBurned = to === NULL_ADDRESS;
 	if (isBurned) {
 		updateData.isBurned = 1;
@@ -216,101 +235,94 @@ async function handleTransferOrBurn(
 
 // 处理 Transfer 事件
 async function handleTransfer(
-	event: any,
-	args: Record<string, unknown>,
-	contractInfo: RawOptContractInfo,
-	transaction: any
+    event: any,
+    args: Record<string, unknown>,
+    contractInfo: RawOptContractInfo,
+    transaction: any
 ): Promise<void> {
-	const contractAddress = event.contractAddress.toLowerCase();
-	const tokenId = String(args._tokenId ?? '');
-	const from = String(args._from ?? '').toLowerCase();
-	const to = String(args._to ?? '').toLowerCase();
-	const timestamp = event.blockTimestamp;
+    const contractAddress = event.contractAddress.toLowerCase();
+    const tokenId = String(args._tokenId ?? '');
+    const from = String(args._from ?? '').toLowerCase();
+    const to = String(args._to ?? '').toLowerCase();
+    const timestamp = event.blockTimestamp;
 
-	let totalSupply = contractInfo.totalSupply || '0';
+    let totalSupply = contractInfo.totalSupply || '0';
 
-	// 根据 from 地址判断操作类型
-	if (from === NULL_ADDRESS) {
-		// Mint 操作：增加 totalSupply
-		totalSupply = addBigInt(totalSupply, '1');
-		await handleMint(event.chainId, contractAddress, tokenId, to, timestamp, transaction);
-	} else {
-		// 普通转账或 Burn 操作
-		try {
-			const result = await handleTransferOrBurn(event.chainId, contractAddress, tokenId, to, timestamp, transaction);
-			// 如果是 burn 操作，减少 totalSupply
-			if (result.isBurned) {
-				totalSupply = subBigInt(totalSupply, '1');
-			}
-		} catch (error) {
-			// TokenInfo 不存在时直接返回
-			return;
-		}
-	}
+    // 根据 from 地址判断操作类型
+    if (from === NULL_ADDRESS) {
+        // Mint 操作：增加 totalSupply
+        totalSupply = addBigInt(totalSupply, '1');
+        await handleMint(event.chainId, contractAddress, tokenId, to, timestamp, transaction);
+    } else {
+        // 普通转账或 Burn 操作
+        try {
+            const result = await handleTransferOrBurn(event.chainId, contractAddress, tokenId, to, timestamp, transaction);
+            // 如果是 burn 操作，减少 totalSupply
+            if (result.isBurned) {
+                totalSupply = subBigInt(totalSupply, '1');
+            }
+        } catch (error) {
+            // TokenInfo 不存在时直接返回
+            return;
+        }
+    }
 
-	// 更新合约信息
-	await contractInfo.update(
-		{
-			totalSupply,
-			lastUpdated: timestamp,
-		},
-		{ transaction }
-	);
+    // 更新合约信息
+    await contractInfo.update(
+        {
+            totalSupply,
+            lastUpdated: timestamp,
+        },
+        { transaction }
+    );
 }
 
 export async function handleErc3525TokenInfoEvent(param: HandlerParam): Promise<void> {
-	const { event, transaction } = param;
-	const args = decodeEventParamsFromAbi('OpenFundShareDelegate.json', event);
+    const { event, transaction, eventSignature, args } = param;
 
-	const eventSignatures: Record<string, string> = {
-		'0x0b2aac84f3ec956911fd78eae5311062972ff949f38412e8da39069d9f068cc6': 'TransferValue',
-		'0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef': 'Transfer',
-	};
+    console.log('Erc3525TokenInfoHandler: eventSignature', eventSignature);
 
-	const eventSignature = eventSignatures[event.eventSignature] || 'Unknown';
-	console.log('Erc3525TokenInfoHandler: eventSignature', eventSignature);
+    if (eventSignature === 'TransferValue(uint256,uint256,uint256)') {
+        // 查询合约信息
+        const contractInfo = await RawOptContractInfo.findOne({
+            where: {
+                chainId: event.chainId,
+                contractAddress: event.contractAddress.toLowerCase(),
+            },
+            transaction,
+        });
 
-	if (eventSignature === 'TransferValue') {
-		// 查询合约信息
-		const contractInfo = await RawOptContractInfo.findOne({
-			where: {
-				chainId: event.chainId,
-				contractAddress: event.contractAddress.toLowerCase(),
-			},
-			transaction,
-		});
+        if (!contractInfo) {
+            console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
+            return;
+        }
 
-		if (!contractInfo) {
-			console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
-			return;
-		}
+        // 更新合约的 lastUpdated
+        await contractInfo.update(
+            {
+                lastUpdated: event.blockTimestamp,
+            },
+            { transaction }
+        );
 
-		// 更新合约的 lastUpdated
-		await contractInfo.update(
-			{
-				lastUpdated: event.blockTimestamp,
-			},
-			{ transaction }
-		);
+        // 处理 TransferValue 事件
+        await handleTransferValue(event, args, transaction);
+    } else if (eventSignature === 'Transfer(address,address,uint256)') {
+        // 查询合约信息
+        const contractInfo = await RawOptContractInfo.findOne({
+            where: {
+                chainId: event.chainId,
+                contractAddress: event.contractAddress.toLowerCase(),
+            },
+            transaction,
+        });
 
-		// 处理 TransferValue 事件
-		await handleTransferValue(event, args, contractInfo, transaction);
-	} else if (eventSignature === 'Transfer') {
-		// 查询合约信息
-		const contractInfo = await RawOptContractInfo.findOne({
-			where: {
-				chainId: event.chainId,
-				contractAddress: event.contractAddress.toLowerCase(),
-			},
-			transaction,
-		});
+        if (!contractInfo) {
+            console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
+            return;
+        }
 
-		if (!contractInfo) {
-			console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
-			return;
-		}
-
-		// 处理 Transfer 事件
-		await handleTransfer(event, args, contractInfo, transaction);
-	}
+        // 处理 Transfer 事件
+        await handleTransfer(event, args, contractInfo, transaction);
+    }
 }
