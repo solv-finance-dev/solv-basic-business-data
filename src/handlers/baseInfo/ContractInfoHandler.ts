@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
 import { decodeEventParamsFromAbi } from '../../lib/abi';
-import { getContractTypeByAddress, getErc20Metadata } from '../../lib/rpc';
+import { getContractTypeByAddress, getErc3525TokenMetadata } from '../../lib/rpc';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
 // import {RawOptContractInfo} from "@solvprotocol/models"; 
 
@@ -29,7 +29,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
         console.log('ContractInfoHandler: contractType is not valid ', contractType, ' beaconProxy ', beaconProxy, ' eventId ', event.eventId);
         return;
     }
-    const { decimals, symbol, name } = await getErc20Metadata(event.chainId, beaconProxy);
+    const { decimals, symbol, name, contractURI } = await getErc3525TokenMetadata(event.chainId, beaconProxy);
     await RawOptContractInfo.create({
         chainId: event.chainId,
         contractAddress: beaconProxy,
@@ -39,6 +39,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
         name,
         totalSupply: '0',
         lastUpdated: event.blockTimestamp,
+        contractURI,
     }, { transaction });
 
     console.log('ContractInfoHandler: created record for beaconProxy ', beaconProxy, ' eventId ', event.eventId);

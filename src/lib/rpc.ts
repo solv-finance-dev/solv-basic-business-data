@@ -63,6 +63,33 @@ export async function getErc20Metadata(
 }
 
 
+export async function getErc3525TokenMetadata(
+	chainId: number,
+	tokenAddress: string
+): Promise<{ decimals: number; symbol: string; name: string; contractURI: string }> {
+	const provider = getRpcProvider(chainId);
+	const erc20Abi = [
+		'function valueDecimals() view returns (uint8)',
+		'function symbol() view returns (string)',
+		'function name() view returns (string)',
+		'function contractURI() view returns (string)',
+	];
+	const contract = new Contract(tokenAddress, erc20Abi, provider);
+
+	const [decimalsResult, symbolResult, nameResult, contractURIResult] = await Promise.all([
+		contract.valueDecimals(),
+		contract.symbol(),
+		contract.name(),
+		contract.contractURI(),
+	]);
+	const decimals = typeof decimalsResult === 'bigint' ? Number(decimalsResult) : Number(decimalsResult);
+	const symbol = String(symbolResult);
+	const name = String(nameResult);
+	const contractURI = String(contractURIResult);
+	return { decimals, symbol, name, contractURI };
+}
+
+
 export async function getContractTypeByAddress(
 	chainId: number,
 	contractAddress: string
@@ -73,5 +100,5 @@ export async function getContractTypeByAddress(
 	];
 	const contract = new Contract(contractAddress, contractAbi, provider);
 	const contractType = await contract.contractType();
-	return String(contractType);
+	return contractType;
 }
