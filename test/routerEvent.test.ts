@@ -1,12 +1,12 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { routerEvent } from "../src/services/monitorService";
-import { EventEvm } from "../src/types/event";
-import { initSequelize, closeSequelize } from "../src/lib/db";
+import {routerEvent} from "../src/services/monitorService";
+import {EventEvm} from "../src/types/event";
+import {closeSequelize, initSequelize} from "../src/lib/db";
 
 require("../src/services/monitorService");
 
-dotenv.config({ path: path.resolve(__dirname, '../config/.env.local') });
+dotenv.config({path: path.resolve(__dirname, '../config/.env.local')});
 
 // 设置测试超时时间为 60 秒
 jest.setTimeout(60000);
@@ -103,6 +103,20 @@ describe('test router event', () => {
         const transaction = await sequelize.transaction();
 
         const events = "[{\"id\": \"5407298\", \"eventId\": \"42161_0x7d5b8afee6672c6e4ce336ad216c71212d556d618c5308b02a75424f44b72908_12\", \"chainId\": 42161, \"blockNumber\": \"123824018\", \"blockHash\": \"0x11b261bb99a977432455981ff08b6157c6ab36683a0d9667692733be2fa7bfe3\", \"blockTimestamp\": \"1692698122\", \"transactionHash\": \"0x7d5b8afee6672c6e4ce336ad216c71212d556d618c5308b02a75424f44b72908\", \"transactionIndex\": 3, \"logIndex\": 12, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0xa45ad11a8f07c35f34f99d383133ff3d9de1f51286e14db3b6be8a4667fccb01\", \"indexedTopic1\": \"0x375ebcd78e8b3571c0f6482bdaae602672e73e145e92ca40f9b8f1537236bf2e\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000fd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb90000000000000000000000000000000000000000000000000000000001c1e181\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-29T08:49:02.775Z\", \"updatedAt\": \"2026-01-29T08:49:02.775Z\"}]";
+        try {
+            await routerEvent(JSON.parse(events) as EventEvm[], transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
+    test('XSolvBTCTransactionInfoHandler.ts', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        // Deposit(address,address,address,uint256,uint256) && Withdraw(address,address,address,uint256,uint256)
+        const events = "[{\"id\": \"5265944\", \"eventId\": \"56_0x4acada2edda5a274140407daa1ddbf87270e90ef4f4a7d4848f5b9e7e627e650_375\", \"chainId\": 56, \"blockNumber\": \"53410917\", \"blockHash\": \"0xa4ab7064028066f275992353e377aa49b5420d7ea4cf38918942a0da1be2ccaa\", \"blockTimestamp\": \"1752056014\", \"transactionHash\": \"0x4acada2edda5a274140407daa1ddbf87270e90ef4f4a7d4848f5b9e7e627e650\", \"transactionIndex\": 75, \"logIndex\": 375, \"contractAddress\": \"0xf50860533d209e44dbe02f58b77ea85a8bfc28a3\", \"eventSignature\": \"0x5fe47ed6d4225326d3303476197d782ded5a4e9c14f479dc9ec4992af4e85d59\", \"indexedTopic1\": \"0x00000000000000000000000067035877f5c12202c387d1698274c2abf28f3678\", \"indexedTopic2\": \"0x0000000000000000000000004aae823a6a0b376de6a78e74ecc5b079d38cbcf7\", \"indexedTopic3\": \"0x0000000000000000000000001346b618dc92810ec74163e4c27004c921d446a5\", \"data\": \"0x00000000000000000000000000000000000000000000000000003691d6afc00000000000000000000000000000000000000000000000000000003691d6afc000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2025-11-26T15:56:57.369Z\", \"updatedAt\": \"2025-11-26T15:56:57.369Z\"}, {\"id\": \"714175\", \"eventId\": \"56_0xd4fe19e2113d05d7805f2f7f28b05efd47865fc4af1900ffd4649403ef097357_526\", \"chainId\": 56, \"blockNumber\": \"55003982\", \"blockHash\": \"0x02f6183714d61515541389307cb49be2fa51a8a91f9acfb5fe0d0df993a3ad19\", \"blockTimestamp\": \"1753250922\", \"transactionHash\": \"0xd4fe19e2113d05d7805f2f7f28b05efd47865fc4af1900ffd4649403ef097357\", \"transactionIndex\": 90, \"logIndex\": 526, \"contractAddress\": \"0xf50860533d209e44dbe02f58b77ea85a8bfc28a3\", \"eventSignature\": \"0xfbde797d201c681b91056529119e0b02407c7bb96a4a2c75c01fc9667232c8db\", \"indexedTopic1\": \"0x000000000000000000000000d5e2e43b58865d60c1961e6037d3eff3a946f378\", \"indexedTopic2\": \"0x0000000000000000000000004aae823a6a0b376de6a78e74ecc5b079d38cbcf7\", \"indexedTopic3\": \"0x0000000000000000000000001346b618dc92810ec74163e4c27004c921d446a5\", \"data\": \"0x00000000000000000000000000000000000000000000000000005af3107a400000000000000000000000000000000000000000000000000000005af3107a4000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2025-11-25T08:45:28.166Z\", \"updatedAt\": \"2025-11-25T08:45:28.166Z\"}]";
         try {
             await routerEvent(JSON.parse(events) as EventEvm[], transaction);
             await transaction.commit();

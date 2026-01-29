@@ -127,6 +127,25 @@
     ]
   },
   {
+    "name": "XSolvBTCTransactionInfo",
+    "module": "xpool/XSolvBTCTransactionInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleXSolvBTCPoolEvent",
+        "abi": "XSolvBTCPool.json",
+        "chainIds": [1, 56],
+        "contractAddresses": [
+          "0xF50860533D209E44dbe02F58B77EA85a8bfC28a3",
+          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86"
+        ],
+        "eventSignatures": [
+          "Deposit(address,address,address,uint256,uint256)",
+          "Withdraw(address,address,address,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "PayableDelegateFactory",
     "module": "baseInfo/ContractInfoHandler",
     "handlers": [
