@@ -176,5 +176,37 @@
         ]
       }
     ]
+  },
+  {
+    "name": "MarketContract",
+    "module": "baseInfo/MarketContractHandler",
+    "handlers": [
+      {
+        "handler": "handleMarketContractEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "AddSFT(address,address)",
+          "RemoveSFT(address)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "NavHistoryPool",
+    "module": "management/NavHistoryPoolHandler",
+    "handlers": [
+      {
+        "handler": "handleNavHistoryPoolEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "SetRedeemNav(bytes32,uint256,uint256)",
+          "SetSubscribeNav(bytes32,uint256,uint256)"
+        ]
+      }
+    ]
   }
 ]

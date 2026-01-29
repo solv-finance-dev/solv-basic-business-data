@@ -47,12 +47,14 @@ async function getOrCreateWrappedAssetInfo(
 	transaction: any
 ): Promise<RawOptErc20AssetInfo> {
 	const { chainId, contractAddress, holder, timestamp } = params;
+	const lowerContractAddress = contractAddress.toLowerCase();
+	const lowerHolder = holder.toLowerCase();
 
 	const existing = await RawOptErc20AssetInfo.findOne({
 		where: {
 			chainId,
-			tokenAddress: contractAddress,
-			holder,
+			tokenAddress: lowerContractAddress,
+			holder: lowerHolder,
 		},
 		transaction,
 	});
@@ -64,8 +66,8 @@ async function getOrCreateWrappedAssetInfo(
 	const created = await RawOptErc20AssetInfo.create(
 		{
 			chainId,
-			holder,
-			tokenAddress: contractAddress,
+			holder: lowerHolder,
+			tokenAddress: lowerContractAddress,
 			symbol: wrappedInfo.symbol ?? '',
 			name: wrappedInfo.name ?? '',
 			decimals: wrappedInfo.decimals ?? 0,
@@ -81,7 +83,7 @@ async function getOrCreateWrappedAssetInfo(
 	return created;
 }
 
-async function handleTransferEvent(param: HandlerParam): Promise<void> {
+async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrappedTokenInfo): Promise<void> {
 	const { event, transaction, args } = param;
 
 	const contractAddress = event.contractAddress;
@@ -93,15 +95,6 @@ async function handleTransferEvent(param: HandlerParam): Promise<void> {
 	const value = valueStr || '0';
 
 	const timestamp = event.blockTimestamp;
-
-	const sftWrappedInfo = await getSftWrappedTokenInfo(chainId, contractAddress, timestamp, transaction);
-	if (!sftWrappedInfo) {
-		console.warn('Erc20TokenInfoHandler: SftWrappedTokenInfo not found for Transfer', {
-			chainId,
-			contractAddress: contractAddress,
-		});
-		return;
-	}
 
 	if (from !== NULL_ADDRESS) {
 		const fromAsset = await getOrCreateWrappedAssetInfo(
@@ -152,32 +145,13 @@ async function handleTransferEvent(param: HandlerParam): Promise<void> {
 	}
 }
 
-async function handleSetAliasEvent(param: HandlerParam): Promise<void> {
+async function handleSetAliasEvent(param: HandlerParam, sftWrappedInfo: SftWrappedTokenInfo): Promise<void> {
 	const { event, transaction, args } = param;
-
-	const contractAddress = event.contractAddress.toLowerCase();
-	const chainId = event.chainId;
 
 	const name = String(args.name ?? '');
 	const symbol = String(args.symbol ?? '');
 
-	const existing = await SftWrappedTokenInfo.findOne({
-		where: {
-			chainId,
-			tokenAddress: contractAddress,
-		},
-		transaction,
-	});
-
-	if (!existing) {
-		console.warn(
-			'Erc20TokenInfoHandler: SftWrappedTokenInfo not found for SetAlias',
-			{ chainId, contractAddress }
-		);
-		return;
-	}
-
-	await existing.update(
+	await sftWrappedInfo.update(
 		{
 			name,
 			symbol,
@@ -187,12 +161,24 @@ async function handleSetAliasEvent(param: HandlerParam): Promise<void> {
 }
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
-	const { eventSignature } = param;
+	const { event, transaction, eventSignature } = param;
 	console.log('Erc20TokenInfoHandler: eventSignature', eventSignature);
+
+	// 统一查询一次，避免重复调用
+	const sftWrappedInfo = await getSftWrappedTokenInfo(event.chainId, event.contractAddress, event.blockTimestamp, transaction);
+	if (!sftWrappedInfo) {
+		console.warn('Erc20TokenInfoHandler: SftWrappedTokenInfo not found', {
+			eventSignature,
+			chainId: event.chainId,
+			contractAddress: event.contractAddress,
+		});
+		return;
+	}
+
 	if (eventSignature === 'Transfer(address,address,uint256)') {
-		await handleTransferEvent(param);
+		await handleTransferEvent(param, sftWrappedInfo);
 	} else if (eventSignature === 'SetAlias(string,string)') {
-		await handleSetAliasEvent(param);
+		await handleSetAliasEvent(param, sftWrappedInfo);
 	}
 }
 

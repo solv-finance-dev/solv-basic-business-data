@@ -8,229 +8,229 @@ const ZERO_TOKEN_ID = '0';
 
 // 大数运算辅助函数
 function addBigInt(a: string, b: string): string {
-	return (BigInt(a) + BigInt(b)).toString();
+    return (BigInt(a) + BigInt(b)).toString();
 }
 
 function subBigInt(a: string, b: string): string {
-	return (BigInt(a) - BigInt(b)).toString();
+    return (BigInt(a) - BigInt(b)).toString();
 }
 
 // 查询 TokenInfo 的辅助函数
 async function findTokenInfo(
-	chainId: number,
-	contractAddress: string,
-	tokenId: string,
-	transaction: any
+    chainId: number,
+    contractAddress: string,
+    tokenId: string,
+    transaction: any
 ): Promise<OptRawErc3525TokenInfo | null> {
-	return await OptRawErc3525TokenInfo.findOne({
-		where: {
-			chainId,
-			contractAddress: contractAddress.toLowerCase(),
-			tokenId,
-		},
-		transaction,
-	});
+    return await OptRawErc3525TokenInfo.findOne({
+        where: {
+            chainId,
+            contractAddress: contractAddress.toLowerCase(),
+            tokenId,
+        },
+        transaction,
+    });
 }
 
 // 安全获取 slot（链上调用失败时返回 '0'）
 async function getSlotSafe(
-	chainId: number,
-	contractAddress: string,
-	tokenId: string,
-	logPrefix: string
+    chainId: number,
+    contractAddress: string,
+    tokenId: string,
+    logPrefix: string
 ): Promise<string> {
-	try {
-		return await getSlotOf(chainId, contractAddress, tokenId);
-	} catch (error) {
-		console.warn(`${logPrefix}: Failed to get slotOf`, { contractAddress, tokenId, error });
-		return '0';
-	}
+    try {
+        return await getSlotOf(chainId, contractAddress, tokenId);
+    } catch (error) {
+        console.warn(`${logPrefix}: Failed to get slotOf`, { contractAddress, tokenId, error });
+        return '0';
+    }
 }
 
 // 安全获取 owner（链上调用失败时返回 NULL_ADDRESS）
 async function getOwnerSafe(
-	chainId: number,
-	contractAddress: string,
-	tokenId: string,
-	logPrefix: string
+    chainId: number,
+    contractAddress: string,
+    tokenId: string,
+    logPrefix: string
 ): Promise<string> {
-	try {
-		return await getOwnerOf(chainId, contractAddress, tokenId);
-	} catch (error) {
-		console.warn(`${logPrefix}: Failed to get ownerOf`, { contractAddress, tokenId, error });
-		return NULL_ADDRESS;
-	}
+    try {
+        return await getOwnerOf(chainId, contractAddress, tokenId);
+    } catch (error) {
+        console.warn(`${logPrefix}: Failed to get ownerOf`, { contractAddress, tokenId, error });
+        return NULL_ADDRESS;
+    }
 }
 
 // 安全获取 tokenURI（链上调用失败时返回空字符串）
 async function getTokenURISafe(
-	chainId: number,
-	contractAddress: string,
-	tokenId: string,
-	logPrefix: string
+    chainId: number,
+    contractAddress: string,
+    tokenId: string,
+    logPrefix: string
 ): Promise<string> {
-	try {
-		return await getTokenURI(chainId, contractAddress, tokenId);
-	} catch (error) {
-		console.warn(`${logPrefix}: Failed to get tokenURI`, { contractAddress, tokenId, error });
-		return '';
-	}
+    try {
+        return await getTokenURI(chainId, contractAddress, tokenId);
+    } catch (error) {
+        console.warn(`${logPrefix}: Failed to get tokenURI`, { contractAddress, tokenId, error });
+        return '';
+    }
 }
 
 // 处理 TransferValue 事件
 async function handleTransferValue(
-	event: any,
-	args: Record<string, unknown>,
-	transaction: any
+    event: any,
+    args: Record<string, unknown>,
+    transaction: any
 ): Promise<void> {
-	const contractAddress = event.contractAddress.toLowerCase();
-	const fromTokenId = String(args._fromTokenId ?? '');
-	const toTokenId = String(args._toTokenId ?? '');
-	const value = String(args._value ?? '');
-	const timestamp = event.blockTimestamp;
+    const contractAddress = event.contractAddress.toLowerCase();
+    const fromTokenId = String(args._fromTokenId ?? '');
+    const toTokenId = String(args._toTokenId ?? '');
+    const value = String(args._value ?? '');
+    const timestamp = event.blockTimestamp;
 
-	// 如果 fromTokenId 不为 0，处理源 token
-	let slot = '';
-	if (fromTokenId !== ZERO_TOKEN_ID) {
-		const fromTokenInfo = await findTokenInfo(event.chainId, contractAddress, fromTokenId, transaction);
-		if (!fromTokenInfo) {
-			console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for fromTokenId ${fromTokenId}`);
-			return;
-		}
+    // 如果 fromTokenId 不为 0，处理源 token
+    let slot = '';
+    if (fromTokenId !== ZERO_TOKEN_ID) {
+        const fromTokenInfo = await findTokenInfo(event.chainId, contractAddress, fromTokenId, transaction);
+        if (!fromTokenInfo) {
+            console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for fromTokenId ${fromTokenId}`);
+            return;
+        }
 
-		// 减少余额
-		const balance = fromTokenInfo.balance || '0';
-		const newBalance = subBigInt(balance, value);
-		await fromTokenInfo.update(
-			{
-				balance: newBalance,
-				lastUpdated: timestamp,
-			},
-			{ transaction }
-		);
+        // 减少余额
+        const balance = fromTokenInfo.balance || '0';
+        const newBalance = subBigInt(balance, value);
+        await fromTokenInfo.update(
+            {
+                balance: newBalance,
+                lastUpdated: timestamp,
+            },
+            { transaction }
+        );
 
-		slot = fromTokenInfo.slot || '0';
-	}
+        slot = fromTokenInfo.slot || '0';
+    }
 
-	// 如果 toTokenId 不为 0，处理目标 token
-	if (toTokenId !== ZERO_TOKEN_ID) {
-		// 如果 slot 为空，从链上获取
-		if (!slot || slot === '0') {
-			slot = await getSlotSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
-		}
+    // 如果 toTokenId 不为 0，处理目标 token
+    if (toTokenId !== ZERO_TOKEN_ID) {
+        // 如果 slot 为空，从链上获取
+        if (!slot || slot === '0') {
+            slot = await getSlotSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
+        }
 
-		// 获取 owner
-		const owner = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
+        // 获取 owner
+        const owner = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
 
-		// 查询目标 token 信息
-		const toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
-		if (!toTokenInfo) {
-			console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId}`);
-			return;
-		}
+        // 查询目标 token 信息
+        const toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+        if (!toTokenInfo) {
+            console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId}`);
+            return;
+        }
 
-		// 增加余额
-		const balance = toTokenInfo.balance || '0';
-		const newBalance = addBigInt(balance, value);
+        // 增加余额
+        const balance = toTokenInfo.balance || '0';
+        const newBalance = addBigInt(balance, value);
 
-		// 获取 tokenURI
-		const tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
+        // 获取 tokenURI
+        const tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
 
-		// 准备更新数据
-		const updateData: any = {
-			balance: newBalance,
-			lastUpdated: timestamp,
-			slot,
-			holder: owner.toLowerCase(),
-			tokenURI,
-		};
+        // 准备更新数据
+        const updateData: any = {
+            balance: newBalance,
+            lastUpdated: timestamp,
+            slot,
+            holder: owner.toLowerCase(),
+            tokenURI,
+        };
 
-		await toTokenInfo.update(updateData, { transaction });
+        await toTokenInfo.update(updateData, { transaction });
 
-		// 如果 fromTokenId 不为 0，也需要更新其 slot
-		if (fromTokenId !== ZERO_TOKEN_ID) {
-			const fromTokenInfo = await findTokenInfo(event.chainId, contractAddress, fromTokenId, transaction);
-			if (fromTokenInfo) {
-				await fromTokenInfo.update({ slot }, { transaction });
-			}
-		}
-	}
+        // 如果 fromTokenId 不为 0，也需要更新其 slot
+        if (fromTokenId !== ZERO_TOKEN_ID) {
+            const fromTokenInfo = await findTokenInfo(event.chainId, contractAddress, fromTokenId, transaction);
+            if (fromTokenInfo) {
+                await fromTokenInfo.update({ slot }, { transaction });
+            }
+        }
+    }
 }
 
 // 处理 Mint 操作
 async function handleMint(
-	chainId: number,
-	contractAddress: string,
-	tokenId: string,
-	to: string,
-	timestamp: number,
-	transaction: any
+    chainId: number,
+    contractAddress: string,
+    tokenId: string,
+    to: string,
+    timestamp: number,
+    transaction: any
 ): Promise<void> {
-	// 获取 slot
-	const slot = await getSlotSafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
+    // 获取 slot
+    const slot = await getSlotSafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
 
-	// 获取 tokenURI
-	const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
+    // 获取 tokenURI
+    const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
 
-	// 创建新的 TokenInfo
-	await OptRawErc3525TokenInfo.create(
-		{
-			chainId,
-			contractAddress: contractAddress.toLowerCase(),
-			tokenId,
-			slot,
-			balance: '0',
-			holder: to.toLowerCase(),
-			mintTime: timestamp,
-			isBurned: 0,
-			lastUpdated: timestamp,
-			tokenURI,
-		},
-		{ transaction }
-	);
+    // 创建新的 TokenInfo
+    await OptRawErc3525TokenInfo.create(
+        {
+            chainId,
+            contractAddress: contractAddress.toLowerCase(),
+            tokenId,
+            slot,
+            balance: '0',
+            holder: to.toLowerCase(),
+            mintTime: timestamp,
+            isBurned: 0,
+            lastUpdated: timestamp,
+            tokenURI,
+        },
+        { transaction }
+    );
 }
 
 // 处理普通转账或 Burn 操作
 async function handleTransferOrBurn(
-	chainId: number,
-	contractAddress: string,
-	tokenId: string,
-	to: string,
-	timestamp: number,
-	transaction: any
+    chainId: number,
+    contractAddress: string,
+    tokenId: string,
+    to: string,
+    timestamp: number,
+    transaction: any
 ): Promise<{ supplyDelta: string; isBurned: boolean }> {
-	const tokenInfo = await findTokenInfo(chainId, contractAddress, tokenId, transaction);
-	if (!tokenInfo) {
-		console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for tokenId ${tokenId} in Transfer event`);
-		throw new Error(`TokenInfo not found for tokenId ${tokenId}`);
-	}
+    const tokenInfo = await findTokenInfo(chainId, contractAddress, tokenId, transaction);
+    if (!tokenInfo) {
+        console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for tokenId ${tokenId} in Transfer event`);
+        throw new Error(`TokenInfo not found for tokenId ${tokenId}`);
+    }
 
-	// 获取 tokenURI（如果需要更新）
-	const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Transfer');
+    // 获取 tokenURI（如果需要更新）
+    const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Transfer');
 
-	// 更新 holder 和 lastUpdated
-	const updateData: any = {
-		holder: to.toLowerCase(),
-		lastUpdated: timestamp,
-	};
+    // 更新 holder 和 lastUpdated
+    const updateData: any = {
+        holder: to.toLowerCase(),
+        lastUpdated: timestamp,
+    };
 
-	// 如果获取到了 tokenURI，也更新它
-	if (tokenURI) {
-		updateData.tokenURI = tokenURI;
-	}
+    // 如果获取到了 tokenURI，也更新它
+    if (tokenURI) {
+        updateData.tokenURI = tokenURI;
+    }
 
-	// 如果 to 是 NULL_ADDRESS，标记为 burned
-	const isBurned = to === NULL_ADDRESS;
-	if (isBurned) {
-		updateData.isBurned = 1;
-	}
+    // 如果 to 是 NULL_ADDRESS，标记为 burned
+    const isBurned = to === NULL_ADDRESS;
+    if (isBurned) {
+        updateData.isBurned = 1;
+    }
 
-	await tokenInfo.update(updateData, { transaction });
+    await tokenInfo.update(updateData, { transaction });
 
-	return {
-		supplyDelta: isBurned ? '1' : '0', // burn 时返回 '1' 表示需要减 1
-		isBurned,
-	};
+    return {
+        supplyDelta: isBurned ? '1' : '0', // burn 时返回 '1' 表示需要减 1
+        isBurned,
+    };
 }
 
 // 处理 Transfer 事件
@@ -281,48 +281,29 @@ export async function handleErc3525TokenInfoEvent(param: HandlerParam): Promise<
     const { event, transaction, eventSignature, args } = param;
 
     console.log('Erc3525TokenInfoHandler: eventSignature', eventSignature);
+    // 查询合约信息
+    const contractInfo = await RawOptContractInfo.findOne({
+        where: {
+            chainId: event.chainId,
+            contractAddress: event.contractAddress.toLowerCase(),
+        },
+        transaction,
+    });
+
+    if (!contractInfo) {
+        console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
+        return;
+    }
+    await contractInfo.update(
+        {
+            lastUpdated: event.blockTimestamp,
+        },
+        { transaction }
+    );
 
     if (eventSignature === 'TransferValue(uint256,uint256,uint256)') {
-        // 查询合约信息
-        const contractInfo = await RawOptContractInfo.findOne({
-            where: {
-                chainId: event.chainId,
-                contractAddress: event.contractAddress.toLowerCase(),
-            },
-            transaction,
-        });
-
-        if (!contractInfo) {
-            console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
-            return;
-        }
-
-        // 更新合约的 lastUpdated
-        await contractInfo.update(
-            {
-                lastUpdated: event.blockTimestamp,
-            },
-            { transaction }
-        );
-
-        // 处理 TransferValue 事件
         await handleTransferValue(event, args, transaction);
     } else if (eventSignature === 'Transfer(address,address,uint256)') {
-        // 查询合约信息
-        const contractInfo = await RawOptContractInfo.findOne({
-            where: {
-                chainId: event.chainId,
-                contractAddress: event.contractAddress.toLowerCase(),
-            },
-            transaction,
-        });
-
-        if (!contractInfo) {
-            console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
-            return;
-        }
-
-        // 处理 Transfer 事件
         await handleTransfer(event, args, contractInfo, transaction);
     }
 }
