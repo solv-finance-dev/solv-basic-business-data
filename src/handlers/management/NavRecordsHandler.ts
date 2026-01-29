@@ -1,11 +1,11 @@
-import type { HandlerParam } from '../../types/handler';
+import type {HandlerParam} from '../../types/handler';
 import NavRecords from '../../models/NavRecords';
 
 // 处理 OpenFundMarket 的 SetRedeemNav/SetSubscribeNav 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
-    const { event, args, transaction, config } = param;
+    const {eventSignature, event, args, transaction} = param;
 
-    const poolId = args.poolId !== undefined ? String(args.poolId) : undefined;
+    const poolId = args.poolId !== undefined ? String(args.poolId).toLowerCase() : undefined;
     if (!poolId) {
         return;
     }
@@ -24,10 +24,15 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         return;
     }
 
-    const navType = 'Redemption';
+    let navType = '';
+    if (eventSignature === 'SetRedeemNav(bytes32,uint256,uint256)') {
+        navType = 'Redemption';
+    } else if (eventSignature === 'SetSubscribeNav(bytes32,uint256,uint256)') {
+        navType = 'Investment';
+    }
 
     const nav = args.nav !== undefined ? String(args.nav) : undefined;
-    const time = args.time !== undefined ? String(args.time) : undefined;
+    const time = String(event.blockTimestamp);
 
     await NavRecords.create(
         {
@@ -41,7 +46,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
             eventIndex: event.logIndex,
             lastUpdated: event.blockTimestamp,
         },
-        { transaction },
+        {transaction},
     );
 
     console.log('NavRecordsHandler: created record for txHash ', event.transactionHash, ' eventId ', event.eventId);

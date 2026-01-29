@@ -5,7 +5,7 @@ export async function handleOpenFundShareDelegateEvent(param: HandlerParam): Pro
     const {event, args, transaction} = param;
 
     const address = event.contractAddress;
-    const currency = String(args.currency ?? '');
+    const currency = String(args.currency ?? '').toLowerCase();
     const isAllowed = args.isAllowed == 1;
 
     if (!currency) {

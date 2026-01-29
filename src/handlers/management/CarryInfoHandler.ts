@@ -18,9 +18,9 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         return;
     }
 
-    const poolId = args.poolId !== undefined ? String(args.poolId) : undefined;
+    const poolId = args.poolId !== undefined ? String(args.poolId).toLowerCase() : undefined;
     const redeemSlot = args.redeemSlot !== undefined ? String(args.redeemSlot) : undefined;
-    const currency = args.currency !== undefined ? String(args.currency) : undefined;
+    const currency = args.currency !== undefined ? String(args.currency).toLowerCase() : undefined;
     const currencyBalance = args.currencyBalance !== undefined ? String(args.currencyBalance) : undefined;
     const carryAmount = args.carryAmount !== undefined ? String(args.carryAmount) : undefined;
 

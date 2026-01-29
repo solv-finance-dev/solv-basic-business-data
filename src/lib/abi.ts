@@ -20,7 +20,7 @@ function getAbiInterface(fileName: string): Interface {
     return iface;
 }
 
-export function decodeEventParamsFromAbi(fileName: string, event: EventEvm): Record<string, unknown> {
+export function decodeEventFromAbi(fileName: string, event: EventEvm): Record<string, unknown> {
     const iface = getAbiInterface(fileName);
     const topics = [
         event.eventSignature,
