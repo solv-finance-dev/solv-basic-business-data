@@ -5,7 +5,7 @@ import ProtocolFeeInfo from '../../models/ProtocolFeeInfo';
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
     const {event, args, transaction} = param;
 
-    const poolId = args.poolId !== undefined ? String(args.poolId) : undefined;
+    const poolId = args.poolId !== undefined ? String(args.poolId).toLowerCase() : undefined;
     if (!poolId) {
         return;
     }
@@ -23,7 +23,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         return;
     }
 
-    const currency = args.currency !== undefined ? String(args.currency) : undefined;
+    const currency = args.currency !== undefined ? String(args.currency).toLowerCase() : undefined;
     const protocolFeeAmount = args.protocolFeeAmount !== undefined ? String(args.protocolFeeAmount) : undefined;
 
     await ProtocolFeeInfo.create(

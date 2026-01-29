@@ -13,6 +13,8 @@ export async function handleMainnetRedeemerEvent(param: HandlerParam): Promise<v
         console.log('BtcRedeemRecordHandler: record already exists for burnHash ', burnHash);
         return;
     }
+    const sender = String(args.sender ?? '').toLowerCase();
+    const receiver = String(args.receiver ?? '').toLowerCase();
 
     await BtcRedeemRecord.create(
         {
@@ -20,8 +22,8 @@ export async function handleMainnetRedeemerEvent(param: HandlerParam): Promise<v
             tokenAddress: event.contractAddress,
             burnAmount: args.solvBTCAmount,
             burnHash,
-            fromAddress: args.sender,
-            receiver: args.receiver,
+            fromAddress: sender,
+            receiver: receiver,
             withdrawAmount: args.btcAmount,
             state: 'Pending',
             btcTransferHash: '',

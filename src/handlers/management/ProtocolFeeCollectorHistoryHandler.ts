@@ -4,7 +4,7 @@ import ProtocolFeeCollectorHistory from '../../models/ProtocolFeeCollectoHistory
 // 处理 OpenFundMarket 的 SetProtocolFeeCollector 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
     const {event, args, transaction} = param;
-    const newFeeCollector = String(args.newFeeCollector ?? '');
+    const newFeeCollector = String(args.newFeeCollector ?? '').toLowerCase();
 
     if (!newFeeCollector) {
         return;
