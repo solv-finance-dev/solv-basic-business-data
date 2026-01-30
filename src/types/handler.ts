@@ -36,7 +36,7 @@ export interface HandlerEntry {
 export interface HandlerParam {
     event: EventEvm;
     args: Record<string, unknown>;
-    eventSignature?: string;
+    eventSignature: string;
     config: HandlerEntry;
     transaction: Transaction;
 }

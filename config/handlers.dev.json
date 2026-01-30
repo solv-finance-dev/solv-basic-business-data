@@ -127,6 +127,45 @@
     ]
   },
   {
+    "name": "XSolvBTCTransactionInfo",
+    "module": "xpool/XSolvBTCTransactionInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleXSolvBTCPoolEvent",
+        "abi": "XSolvBTCPool.json",
+        "chainIds": [1, 56],
+        "contractAddresses": [
+          "0xF50860533D209E44dbe02F58B77EA85a8bfC28a3",
+          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86"
+        ],
+        "eventSignatures": [
+          "Deposit(address,address,address,uint256,uint256)",
+          "Withdraw(address,address,address,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "MarketInfo",
+    "module": "baseInfo/MarketInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "SetProtocolFeeCollector(address,address)",
+          "SetProtocolFeeRate(uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "PayableDelegateFactory",
     "module": "baseInfo/ContractInfoHandler",
     "handlers": [

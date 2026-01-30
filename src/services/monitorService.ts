@@ -49,7 +49,7 @@ export async function routerEvent(events: EventEvm[], transaction: Transaction):
         // 顺序执行每个 handler，而不是并发执行
         for (const entry of matchedHandlers) {
             const args = entry.abi ? decodeEventFromAbi(entry.abi, event) : {};
-            const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[event.eventSignature] : undefined;
+            const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[event.eventSignature] : '';
             try {
                 await invokeHandler(entry, {event, args, eventSignature, config: entry, transaction});
             } catch (error) {

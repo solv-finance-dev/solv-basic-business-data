@@ -125,6 +125,21 @@ describe('test router event', () => {
             throw error;
         }
     });
+    test('MarketInfoHandler.ts', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        // SetProtocolFeeCollector(address,address)
+        // SetProtocolFeeRate(uint256,uint256)
+        const events = "[{\"id\": \"5407284\", \"eventId\": \"42161_0x3723eba85a84162709635fc4264fdda02b1a7e1d8daa2772d68bb8f5b3b67c99_0\", \"chainId\": 42161, \"blockNumber\": \"123423136\", \"blockHash\": \"0x9840a2bc577b9cfda4f70d6ea034d5ce1691ae00217526671d935aa3622d3181\", \"blockTimestamp\": \"1692588949\", \"transactionHash\": \"0x3723eba85a84162709635fc4264fdda02b1a7e1d8daa2772d68bb8f5b3b67c99\", \"transactionIndex\": 1, \"logIndex\": 0, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0xd14a872b3c2506b548b78b31d3336d5cf5cae0db9641d742da52dd397fb1e2c0\", \"indexedTopic1\": null, \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004dd7cf38a249a371a8e589bc1c44485bc791d3f\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-29T08:29:16.506Z\", \"updatedAt\": \"2026-01-29T08:29:16.506Z\"}]";
+        try {
+            await routerEvent(JSON.parse(events) as EventEvm[], transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
     test('ContractInfoHandler', async () => {
         const sequelize = await initSequelize();
         const transaction = await sequelize.transaction();
