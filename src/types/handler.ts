@@ -12,6 +12,7 @@ export interface HandlerRuleConfig {
     abi: string;
     chainIds: ChainMatcher;
     contractAddresses: ContractMatcher;
+    templateSignature?: string | null;
     eventSignatures: EventSignaturesMatcher;
 }
 
@@ -28,6 +29,7 @@ export interface HandlerEntry {
     abi: string;
     chainIds: ChainMatcher;
     contractAddresses: ContractMatcher;
+    templateSignature: string | null;
     eventSignatures: EventSignaturesMatcher;
     eventSignatureMap: EventSignatureMap;
 }

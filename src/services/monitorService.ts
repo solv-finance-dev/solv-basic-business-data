@@ -1,7 +1,6 @@
 import path from 'node:path';
-import {id} from 'ethers';
 import {loadJsonConfig} from '../lib/config';
-import {getEnv} from '../lib/utils';
+import {getEnv, eventSignature} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
 import type {
     ChainMatcher,
@@ -17,6 +16,8 @@ import type {
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
 
+type TemplateAddressMap = Record<string, string[]>;
+
 // 缓存 handler 函数，避免重复动态导入。
 const handlerCache = new Map<string, HandlerFn>();
 let handlerEntriesCache: HandlerEntry[] | null = null;
@@ -29,7 +30,11 @@ export function initHandlersConfig(): void {
 }
 
 // 将事件路由到匹配的 handler，互不阻塞。
-export async function routerEvent(events: EventEvm[], transaction: Transaction): Promise<void> {
+export async function routerEvent(
+    events: EventEvm[],
+    templateAddressesMap: TemplateAddressMap,
+    transaction: Transaction
+): Promise<void> {
     if (!events.length) {
         return;
     }
@@ -41,7 +46,7 @@ export async function routerEvent(events: EventEvm[], transaction: Transaction):
     }
 
     for (const event of events) {
-        const matchedHandlers = handlerEntries.filter((entry) => isEventMatch(event, entry));
+        const matchedHandlers = handlerEntries.filter((entry) => isEventMatch(event, entry, templateAddressesMap));
         if (!matchedHandlers.length) {
             continue;
         }
@@ -49,7 +54,8 @@ export async function routerEvent(events: EventEvm[], transaction: Transaction):
         // 顺序执行每个 handler，而不是并发执行
         for (const entry of matchedHandlers) {
             const args = entry.abi ? decodeEventFromAbi(entry.abi, event) : {};
-            const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[event.eventSignature] : '';
+            const eventSignatureKey = event.eventSignature.toLowerCase();
+            const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[eventSignatureKey] : '';
             try {
                 await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, transaction});
             } catch (error) {
@@ -109,7 +115,8 @@ function normalizeRule(group: HandlerGroupConfig, rule: HandlerRuleConfig): Hand
     const hasChainIds = rule.chainIds !== null;
     const hasContracts = rule.contractAddresses !== null;
     const hasEventSignatures = rule.eventSignatures !== null;
-    if (!hasChainIds && !hasContracts && !hasEventSignatures) {
+    const hasTemplateSignature = rule.templateSignature !== null && rule.templateSignature !== undefined;
+    if (!hasChainIds && !hasContracts && !hasEventSignatures && !hasTemplateSignature) {
         throw new Error(
             `MonitorService: handler rule ${rule.handler} must have at least one matcher value.`
         );
@@ -121,9 +128,10 @@ function normalizeRule(group: HandlerGroupConfig, rule: HandlerRuleConfig): Hand
         handlerName: rule.handler,
         abi: rule.abi,
         chainIds: normalizeChainIds(rule.chainIds),
-        contractAddresses: normalizeContractAddresses(rule.contractAddresses),
+        contractAddresses: normalizeAddresses(rule.contractAddresses),
+        templateSignature: eventSignature(rule.templateSignature),
         eventSignatures: rule.eventSignatures,
-        eventSignatureMap: normalizeConfigEventSignatures(rule.eventSignatures),
+        eventSignatureMap: toEventSignaturesMap(rule.eventSignatures),
     };
 }
 
@@ -145,20 +153,20 @@ function normalizeChainIds(chainIds: ChainMatcher): ChainMatcher {
     });
 }
 
-function normalizeContractAddresses(addresses: ContractMatcher): ContractMatcher {
+function normalizeAddresses(addresses: ContractMatcher): ContractMatcher {
     if (addresses === null) {
         return null;
     }
 
     if (!Array.isArray(addresses)) {
-        throw new Error('MonitorService: contractAddresses must be an array or null.');
+        throw new Error('MonitorService: addresses must be an array or null.');
     }
 
     return addresses.map((address) => address.toLowerCase());
 }
 
 // 配置中的事件签名允许使用 ABI 字符串或 0x 哈希。
-function normalizeConfigEventSignatures(signatures: EventSignaturesMatcher): EventSignatureMap {
+function toEventSignaturesMap(signatures: EventSignaturesMatcher): EventSignatureMap {
     if (signatures === null) {
         return null;
     }
@@ -168,36 +176,13 @@ function normalizeConfigEventSignatures(signatures: EventSignaturesMatcher): Eve
     }
 
     return signatures.reduce<Record<string, string>>((acc, signature) => {
-        const normalized = normalizeConfigEventSignature(signature);
+        const normalized = eventSignature(signature);
         acc[normalized] = signature;
         return acc;
     }, {});
 }
 
-function normalizeConfigEventSignature(signature: string): string {
-    if (signature === '') {
-        return '';
-    }
-    if (isHexSignature(signature)) {
-        return signature.toLowerCase();
-    }
-
-    return id(signature).toLowerCase();
-}
-
-function normalizeEventSignatureValue(signature: string): string {
-    if (signature === '') {
-        return '';
-    }
-
-    return signature.toLowerCase();
-}
-
-function isHexSignature(signature: string): boolean {
-    return signature.startsWith('0x') && signature.length === 66;
-}
-
-function isEventMatch(event: EventEvm, config: HandlerEntry): boolean {
+function isEventMatch(event: EventEvm, config: HandlerEntry, templateAddressesMap: TemplateAddressMap): boolean {
     if (config.chainIds !== null) {
         if (!config.chainIds.length) {
             return false;
@@ -207,12 +192,23 @@ function isEventMatch(event: EventEvm, config: HandlerEntry): boolean {
         }
     }
 
+    const target = event.contractAddress.toLowerCase();
+    let contractMatched = true;
     if (config.contractAddresses !== null) {
-        if (!config.contractAddresses.length) {
+        if (!config.contractAddresses.length && !config.templateSignature) {
+            // 如果配置了空数组 且 templateSignature 也未配置，则不匹配任何数据直接退出。
             return false;
         }
-        const target = event.contractAddress.toLowerCase();
-        if (!config.contractAddresses.includes(target)) {
+        contractMatched = config.contractAddresses.includes(target);
+    }
+
+    if (!contractMatched) {
+        if (!config.templateSignature) {
+            return false;
+        }
+        const templateSignatureKey = eventSignature(config.templateSignature);
+        const templateAddresses = templateAddressesMap[templateSignatureKey];
+        if (!templateAddresses || !templateAddresses.includes(target)) {
             return false;
         }
     }
@@ -222,7 +218,7 @@ function isEventMatch(event: EventEvm, config: HandlerEntry): boolean {
         if (!keys.length) {
             return false;
         }
-        const eventSignature = normalizeEventSignatureValue(event.eventSignature);
+        const eventSignature = event.eventSignature.toLowerCase();
         if (!config.eventSignatureMap[eventSignature]) {
             return false;
         }

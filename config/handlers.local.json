@@ -26,7 +26,8 @@
         "handler": "handleOpenFundShareDelegateEvent",
         "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
-        "templateSignature": ["NewDelegateBeaconProxy(bytes32,bytes32,address)"],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "SetCurrency(address,bool)"
         ]

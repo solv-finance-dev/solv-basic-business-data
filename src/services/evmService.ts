@@ -2,7 +2,8 @@ import AWS from 'aws-sdk';
 import {loadJsonConfig} from '../lib/config';
 import {getEnv} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
-import type {ChainConfig, EvmConfigFile} from '../types/config';
+import type { ChainConfig, EvmConfigFile } from '../types/config';
+import type { TemplateAddress } from '../types/templateAddress';
 
 const DEFAULT_BLOCK_LIMIT = 5;
 let lambdaClient: AWS.Lambda | null = null;
@@ -70,6 +71,29 @@ export async function fetchChainEvents(
     }
 }
 
+export async function fetchTemplateAddresses(chainId: number): Promise<TemplateAddress[]> {
+    if (!Number.isFinite(chainId)) {
+        console.error('EvmService: Invalid chainId for template addresses.', { chainId });
+        return [];
+    }
+
+    const payload = { chainId };
+
+    try {
+        const response = await getLambdaClient()
+            .invoke({
+                FunctionName: `${process.env.CONFIG_ENV}-infra-basic-template-address-getByChainId-handler`,
+                Payload: JSON.stringify(payload),
+            })
+            .promise();
+
+        return parseTemplateAddressPayload(response.Payload);
+    } catch (error) {
+        console.error('EvmService: Failed to fetch template addresses.', error);
+        return [];
+    }
+}
+
 function getLambdaClient(): AWS.Lambda {
     if (!lambdaClient) {
         lambdaClient = new AWS.Lambda({
@@ -99,6 +123,30 @@ function parseLambdaPayload(payload: AWS.Lambda.Types.InvocationResponse['Payloa
         }
     } catch (error) {
         console.error('EvmService: Failed to parse lambda payload.', error);
+    }
+
+    return [];
+}
+
+function parseTemplateAddressPayload(payload: AWS.Lambda.Types.InvocationResponse['Payload']): TemplateAddress[] {
+    if (!payload) {
+        return [];
+    }
+
+    try {
+        const raw = typeof payload === 'string' ? payload : payload.toString();
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+            return parsed as TemplateAddress[];
+        }
+
+        if (parsed && typeof parsed === 'object' && 'body' in parsed) {
+            const body = (parsed as { body?: unknown }).body;
+            const data = typeof body === 'string' ? JSON.parse(body) : body;
+            return Array.isArray(data) ? (data as TemplateAddress[]) : [];
+        }
+    } catch (error) {
+        console.error('EvmService: Failed to parse template payload.', error);
     }
 
     return [];
