@@ -1,5 +1,5 @@
 import type {Transaction} from 'sequelize';
-import type {EventEvm} from './event';
+import type {EventEvm} from './eventEvm';
 
 export type HandlerFn = (param: HandlerParam) => Promise<void> | void;
 export type ChainMatcher = number[] | null;
@@ -36,7 +36,7 @@ export interface HandlerEntry {
 export interface HandlerParam {
     event: EventEvm;
     args: Record<string, unknown>;
-    eventSignature: string;
+    eventFunc: string;
     config: HandlerEntry;
     transaction: Transaction;
 }

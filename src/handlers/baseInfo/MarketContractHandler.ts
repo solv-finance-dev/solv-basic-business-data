@@ -101,11 +101,11 @@ async function handleRemoveSFTEvent(param: HandlerParam): Promise<void> {
 }
 
 export async function handleMarketContractEvent(param: HandlerParam): Promise<void> {
-    const { eventSignature } = param;
+    const { eventFunc } = param;
 
-    if (eventSignature === 'AddSFT(address,address)') {
+    if (eventFunc === 'AddSFT(address,address)') {
         await handleAddSFTEvent(param);
-    } else if (eventSignature === 'RemoveSFT(address)') {
+    } else if (eventFunc === 'RemoveSFT(address)') {
         await handleRemoveSFTEvent(param);
     }
 }

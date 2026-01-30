@@ -3,7 +3,7 @@ import NavRecords from '../../models/NavRecords';
 
 // 处理 OpenFundMarket 的 SetRedeemNav/SetSubscribeNav 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
-    const {eventSignature, event, args, transaction} = param;
+    const {eventFunc, event, args, transaction} = param;
 
     const poolId = args.poolId !== undefined ? String(args.poolId).toLowerCase() : undefined;
     if (!poolId) {
@@ -25,9 +25,9 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
     }
 
     let navType = '';
-    if (eventSignature === 'SetRedeemNav(bytes32,uint256,uint256)') {
+    if (eventFunc === 'SetRedeemNav(bytes32,uint256,uint256)') {
         navType = 'Redemption';
-    } else if (eventSignature === 'SetSubscribeNav(bytes32,uint256,uint256)') {
+    } else if (eventFunc === 'SetSubscribeNav(bytes32,uint256,uint256)') {
         navType = 'Investment';
     }
 

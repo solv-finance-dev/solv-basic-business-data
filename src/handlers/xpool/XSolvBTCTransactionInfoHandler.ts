@@ -3,7 +3,7 @@ import XSolvBTCTransactionInfo from '../../models/XsolvbtcTransactionInfo';
 
 // 处理 XSolvBTCPool 的 Deposit/Withdraw 事件。
 export async function handleXSolvBTCPoolEvent(param: HandlerParam): Promise<void> {
-    const {eventSignature, event, args, transaction} = param;
+    const {eventFunc, event, args, transaction} = param;
 
     const existing = await XSolvBTCTransactionInfo.findOne({
         where: {
@@ -27,11 +27,11 @@ export async function handleXSolvBTCPoolEvent(param: HandlerParam): Promise<void
     let fromAddress = '';
     let toAddress = '';
     let transactionType = '';
-    if (eventSignature == 'Deposit(address,address,address,uint256,uint256)') {
+    if (eventFunc == 'Deposit(address,address,address,uint256,uint256)') {
         transactionType = 'Deposit';
         fromAddress = owner;
         toAddress = xSolvBTC;
-    } else if (eventSignature == 'Withdraw(address,address,address,uint256,uint256)') {
+    } else if (eventFunc == 'Withdraw(address,address,address,uint256,uint256)') {
         transactionType = 'Withdraw';
         fromAddress = solvBTC;
         toAddress = owner;

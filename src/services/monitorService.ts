@@ -2,7 +2,7 @@ import path from 'node:path';
 import {id} from 'ethers';
 import {loadJsonConfig} from '../lib/config';
 import {getEnv} from '../lib/utils';
-import {EventEvm} from '../types/event';
+import {EventEvm} from '../types/eventEvm';
 import type {
     ChainMatcher,
     ContractMatcher,
@@ -51,7 +51,7 @@ export async function routerEvent(events: EventEvm[], transaction: Transaction):
             const args = entry.abi ? decodeEventFromAbi(entry.abi, event) : {};
             const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[event.eventSignature] : '';
             try {
-                await invokeHandler(entry, {event, args, eventSignature, config: entry, transaction});
+                await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, transaction});
             } catch (error) {
                 console.error(`MonitorService: Handler failed: ${entry.name}`, error);
                 throw new Error('MonitorService: handler execution failed.');

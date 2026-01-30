@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import {routerEvent} from "../src/services/monitorService";
-import {EventEvm} from "../src/types/event";
+import {EventEvm} from "../src/types/eventEvm";
 import {closeSequelize, initSequelize} from "../src/lib/db";
 
 require("../src/services/monitorService");
@@ -17,6 +17,18 @@ describe('test router event', () => {
         await closeSequelize();
     });
 
+    test('CurrencyInfoHandler', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+        try {
+            const events = "[{\"id\": \"5407435\", \"eventId\": \"42161_0x6c8d11ea8186b4c39bf2ae56fad01c6f21760557572131ae7e50590174ebf3b6_8\", \"chainId\": 42161, \"blockNumber\": \"113055785\", \"blockHash\": \"0x22175d2a6d6bb54ad4b601e0a6252b0f5db6f2c85e134b1131b2ec2e252d07f3\", \"blockTimestamp\": \"1689836167\", \"transactionHash\": \"0x6c8d11ea8186b4c39bf2ae56fad01c6f21760557572131ae7e50590174ebf3b6\", \"transactionIndex\": 3, \"logIndex\": 8, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0x98c0c4bde5f642566cdaebfb7cd2cdc72a98bc7f3440e38c19e1d58d92388d34\", \"indexedTopic1\": \"0x000000000000000000000000fd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000001\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-30T04:03:09.515Z\", \"updatedAt\": \"2026-01-30T04:03:09.515Z\"}]";
+            await routerEvent(JSON.parse(events) as EventEvm[], transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
     test('BondCurrencyInfoHandler', async () => {
         const sequelize = await initSequelize();
         const transaction = await sequelize.transaction();

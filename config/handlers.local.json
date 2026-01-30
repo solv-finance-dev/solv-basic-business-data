@@ -1,5 +1,24 @@
 [
   {
+    "name": "CurrencyInfo",
+    "module": "baseInfo/CurrencyInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
+        "eventSignatures": [
+          "SetCurrency(address,bool)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "BondCurrencyInfo",
     "module": "baseInfo/BondCurrencyInfoHandler",
     "handlers": [
@@ -7,7 +26,7 @@
         "handler": "handleOpenFundShareDelegateEvent",
         "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
-        "contractAddresses": null,
+        "templateSignature": ["NewDelegateBeaconProxy(bytes32,bytes32,address)"],
         "eventSignatures": [
           "SetCurrency(address,bool)"
         ]

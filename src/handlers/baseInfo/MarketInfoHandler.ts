@@ -3,7 +3,7 @@ import MarketInfo from '../../models/MarketInfo';
 
 // 处理 OpenFundMarket 的 SetProtocolFeeCollector/SetProtocolFeeRate 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
-    const {eventSignature, event, args, transaction} = param;
+    const {eventFunc, event, args, transaction} = param;
     const contractAddress = event.contractAddress.toLowerCase();
 
     const existing = await MarketInfo.findOne({
@@ -17,7 +17,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
     if (!existing) {
         console.log('MarketInfoHandler: record not found for event ', JSON.stringify({
             eventId: event.id,
-            eventSignature,
+            eventSignature: eventFunc,
             chainId: event.chainId,
             contractAddress,
             args,
@@ -25,7 +25,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         return;
     }
 
-    if (eventSignature === 'SetProtocolFeeCollector(address,address)') {
+    if (eventFunc === 'SetProtocolFeeCollector(address,address)') {
         const newFeeCollector = args.newFeeCollector !== undefined ? String(args.newFeeCollector).toLowerCase() : '';
         if (!newFeeCollector) {
             return;
@@ -37,7 +37,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         return;
     }
 
-    if (eventSignature === 'SetProtocolFeeRate(uint256,uint256)') {
+    if (eventFunc === 'SetProtocolFeeRate(uint256,uint256)') {
         const newFeeRate = args.newFeeRate !== undefined ? String(args.newFeeRate) : undefined;
         if (!newFeeRate) {
             return;

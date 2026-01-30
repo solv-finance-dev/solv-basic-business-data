@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {Interface} from 'ethers';
-import type {EventEvm} from '../types/event';
+import type {EventEvm} from '../types/eventEvm';
 
 const abiCache = new Map<string, Interface>();
 

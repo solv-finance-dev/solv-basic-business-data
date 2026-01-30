@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk';
 import {loadJsonConfig} from '../lib/config';
 import {getEnv} from '../lib/utils';
-import {EventEvm} from '../types/event';
+import {EventEvm} from '../types/eventEvm';
 import type {ChainConfig, EvmConfigFile} from '../types/config';
 
 const DEFAULT_BLOCK_LIMIT = 5;

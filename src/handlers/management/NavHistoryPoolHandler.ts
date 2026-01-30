@@ -188,11 +188,11 @@ async function handleSetSubscribeNavEvent(param: HandlerParam): Promise<void> {
 }
 
 export async function handleNavHistoryPoolEvent(param: HandlerParam): Promise<void> {
-    const { eventSignature } = param;
+    const { eventFunc } = param;
 
-    if (eventSignature === 'SetSubscribeNav(bytes32,uint256,uint256)') {
+    if (eventFunc === 'SetSubscribeNav(bytes32,uint256,uint256)') {
         await handleSetSubscribeNavEvent(param);
-    } else if (eventSignature === 'SetRedeemNav(bytes32,uint256,uint256)') {
+    } else if (eventFunc === 'SetRedeemNav(bytes32,uint256,uint256)') {
         await handleSetRedeemNavEvent(param);
     }
 }

@@ -278,9 +278,9 @@ async function handleTransfer(
 }
 
 export async function handleErc3525TokenInfoEvent(param: HandlerParam): Promise<void> {
-    const { event, transaction, eventSignature, args } = param;
+    const { event, transaction, eventFunc, args } = param;
 
-    console.log('Erc3525TokenInfoHandler: eventSignature', eventSignature);
+    console.log('Erc3525TokenInfoHandler: eventSignature', eventFunc);
     // 查询合约信息
     const contractInfo = await RawOptContractInfo.findOne({
         where: {
@@ -301,9 +301,9 @@ export async function handleErc3525TokenInfoEvent(param: HandlerParam): Promise<
         { transaction }
     );
 
-    if (eventSignature === 'TransferValue(uint256,uint256,uint256)') {
+    if (eventFunc === 'TransferValue(uint256,uint256,uint256)') {
         await handleTransferValue(event, args, transaction);
-    } else if (eventSignature === 'Transfer(address,address,uint256)') {
+    } else if (eventFunc === 'Transfer(address,address,uint256)') {
         await handleTransfer(event, args, contractInfo, transaction);
     }
 }

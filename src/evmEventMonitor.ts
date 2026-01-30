@@ -1,7 +1,7 @@
 import {fetchChainEvents, getChainConfigs} from './services/evmService';
 import {getLastSyncedBlock, setLastSyncedBlock} from './data/evmSyncState';
 import {initHandlersConfig, routerEvent} from './services/monitorService';
-import {EventEvm} from './types/event';
+import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
 import {initSequelize} from './lib/db';
 

@@ -161,23 +161,23 @@ async function handleSetAliasEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 }
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
-	const { event, transaction, eventSignature } = param;
-	console.log('Erc20TokenInfoHandler: eventSignature', eventSignature);
+	const { event, transaction, eventFunc } = param;
+	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc);
 
 	// 统一查询一次，避免重复调用
 	const sftWrappedInfo = await getSftWrappedTokenInfo(event.chainId, event.contractAddress, event.blockTimestamp, transaction);
 	if (!sftWrappedInfo) {
 		console.warn('Erc20TokenInfoHandler: SftWrappedTokenInfo not found', {
-			eventSignature,
+			eventSignature: eventFunc,
 			chainId: event.chainId,
 			contractAddress: event.contractAddress,
 		});
 		return;
 	}
 
-	if (eventSignature === 'Transfer(address,address,uint256)') {
+	if (eventFunc === 'Transfer(address,address,uint256)') {
 		await handleTransferEvent(param, sftWrappedInfo);
-	} else if (eventSignature === 'SetAlias(string,string)') {
+	} else if (eventFunc === 'SetAlias(string,string)') {
 		await handleSetAliasEvent(param, sftWrappedInfo);
 	}
 }
