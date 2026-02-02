@@ -267,5 +267,73 @@
         ]
       }
     ]
+  },
+  {
+    "name": "PoolOrderInfo",
+    "module": "poolInfo/PoolOrderInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
+          "RemovePool(bytes32)",
+          "UpdateFundraisingEndTime(bytes32,uint64,uint64)",
+          "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
+          "CloseRedeemSlot(bytes32,uint256,uint256)",
+          "SettleProtocolFee(bytes32,address,uint256)",
+          "UpdatePoolInfo(bytes32,uint16,address,uint256,uint256,address,address)"
+        ]
+      },
+      {
+        "handler": "handleOracleEvent",
+        "abi": "NavOracle.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "UpdateAllTimeHighRedeemNav(bytes32,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleWhitelistEvent",
+        "abi": "Whitelist.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "SetWhitelist(bytes32,bytes32,bool)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PoolSoltInfo",
+    "module": "poolInfo/PoolSoltInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "CreatePoolSlot(bytes32,address,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleOpenShareDelegateEvent",
+        "abi": "OpenFundShareDelegate.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "CreateSlot(uint256,address,bytes)",
+          "MintValue(uint256,uint256,uint256)",
+          "Claim(address,uint256,uint256)",
+          "Repay(uint256,address,uint256)",
+          "SetInterestRate(uint256,int32)",
+          "BurnValue(uint256,uint256)"
+        ]
+      }
+    ]
   }
 ]

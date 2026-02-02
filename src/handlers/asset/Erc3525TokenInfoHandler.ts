@@ -32,7 +32,7 @@ async function findTokenInfo(
     });
 }
 
-// 安全获取 slot（链上调用失败时返回 '0'）
+// 安全获取 slot（链上调用失败或 token 无效时返回 '0'）
 async function getSlotSafe(
     chainId: number,
     contractAddress: string,
@@ -40,7 +40,9 @@ async function getSlotSafe(
     logPrefix: string
 ): Promise<string> {
     try {
-        return await getSlotOf(chainId, contractAddress, tokenId);
+        const slot = await getSlotOf(chainId, contractAddress, tokenId);
+        // getSlotOf 在 token 无效时会返回 null
+        return slot || '0';
     } catch (error) {
         console.warn(`${logPrefix}: Failed to get slotOf`, { contractAddress, tokenId, error });
         return '0';

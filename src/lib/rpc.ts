@@ -108,14 +108,50 @@ export async function getSlotOf(
 	chainId: number,
 	contractAddress: string,
 	tokenId: string
-): Promise<string> {
+): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Abi = [
 		'function slotOf(uint256 tokenId) view returns (uint256)',
 	];
 	const contract = new Contract(contractAddress, erc3525Abi, provider);
-	const slot = await contract.slotOf(tokenId);
-	return String(slot);
+	try {
+		const slot = await contract.slotOf(tokenId);
+		return String(slot);
+	} catch (error) {
+		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
+			// 不记录警告，因为这是正常情况（token 可能已被 burn），调用方会从数据库查找
+			return null;
+		}
+		// 其他错误继续抛出
+		throw error;
+	}
+}
+
+// 通过 tokenId 从链上获取 slot（使用 slotByIndex 方法）
+export async function getSlotByIndex(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const erc3525Abi = [
+		'function slotByIndex(uint256 tokenId) view returns (uint256)',
+	];
+	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	try {
+		const slot = await contract.slotByIndex(tokenId);
+		return String(slot);
+	} catch (error) {
+		console.warn('Rpc: Failed to get slotByIndex', {
+			chainId,
+			contractAddress,
+			tokenId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		throw error;
+	}
 }
 
 // 获取 ERC3525 token 的 owner
@@ -150,5 +186,85 @@ export async function getTokenURI(
 	} catch (error) {
 		// 如果调用失败，返回空字符串
 		return '';
+	}
+}
+
+// 获取 ERC3525 slot 的 slotURI
+export async function getSlotURI(
+	chainId: number,
+	contractAddress: string,
+	slot: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const erc3525Abi = [
+		'function slotURI(uint256 slot) view returns (string)',
+	];
+	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	try {
+		const slotURI = await contract.slotURI(slot);
+		return String(slotURI);
+	} catch (error) {
+		// 如果调用失败，返回空字符串
+		return '';
+	}
+}
+
+/**
+ * 交易基本信息接口
+ */
+export interface TransactionInfo {
+	from: string | null;           // 发起交易的地址（小写）
+	to: string | null;             // 接收交易的地址（小写）
+	value: string;                 // 交易金额（wei，字符串格式）
+	gasPrice: bigint | null;       // Gas 价格
+	gasLimit: bigint | null;       // Gas 限制
+	nonce: number | null;          // 交易 nonce
+	data: string;                  // 交易数据
+	chainId: bigint | null;        // 链 ID
+	hash: string;                   // 交易哈希
+	blockNumber: number | null;    // 区块号
+	blockHash: string | null;      // 区块哈希
+	transactionIndex: number | null; // 交易索引
+}
+
+/**
+ * 通过交易哈希获取交易的基本信息
+ * @param chainId 链 ID
+ * @param txHash 交易哈希
+ * @returns 交易基本信息，如果获取失败返回 null
+ */
+export async function getTransactionInfo(
+	chainId: number,
+	txHash: string
+): Promise<TransactionInfo | null> {
+	const provider = getRpcProvider(chainId);
+	try {
+		const tx = await provider.getTransaction(txHash);
+		if (!tx) {
+			console.warn('Rpc: Transaction not found', { chainId, txHash });
+			return null;
+		}
+
+		return {
+			from: tx.from ? tx.from.toLowerCase() : null,
+			to: tx.to ? tx.to.toLowerCase() : null,
+			value: tx.value.toString(),
+			gasPrice: tx.gasPrice || null,
+			gasLimit: tx.gasLimit || null,
+			nonce: tx.nonce,
+			data: tx.data,
+			chainId: tx.chainId || null,
+			hash: tx.hash,
+			blockNumber: tx.blockNumber ? Number(tx.blockNumber) : null,
+			blockHash: tx.blockHash || null,
+			transactionIndex: tx.index !== null ? tx.index : null,
+		};
+	} catch (error) {
+		console.warn('Rpc: Failed to get transaction info', {
+			chainId,
+			txHash,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		return null;
 	}
 }
