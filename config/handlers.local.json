@@ -147,6 +147,32 @@
     ]
   },
   {
+    "name": "RawOptRepayInfoOpenEnd",
+    "module": "management/RawOptRepayInfoOpenEndHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundRedemptionDelegateEvent",
+        "abi": "OpenFundRedemptionDelegate.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
+        "eventSignatures": [
+          "Repay(uint256,address,address,uint256)"
+        ]
+      },
+      {
+        "handler": "handleOpenFundShareDelegateEvent",
+        "abi": "OpenFundShareDelegate.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
+        "eventSignatures": [
+          "Repay(uint256,address,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "XSolvBTCTransactionInfo",
     "module": "xpool/XSolvBTCTransactionInfoHandler",
     "handlers": [

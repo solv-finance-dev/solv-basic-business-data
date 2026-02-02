@@ -1,6 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
-import { getContractTypeByAddress, getErc3525TokenMetadata } from '../../lib/rpc';
+import { getErc3525TokenMetadata } from '../../lib/rpc';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {getContractType} from "../../services/evmService";
 // import {RawOptContractInfo} from "@solvprotocol/models"; 
 
 export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Promise<void> {
@@ -22,7 +23,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
         return;
     }
 
-    const contractType = await getContractTypeByAddress(event.chainId, beaconProxy);
+    const contractType = await getContractType(event.chainId, beaconProxy);
     if (!contractType || (contractType !== 'Open Fund Shares' && contractType !== 'Open Fund Redemptions')) {
         console.log('ContractInfoHandler: contractType is not valid ', contractType, ' beaconProxy ', beaconProxy, ' eventId ', event.eventId);
         return;
