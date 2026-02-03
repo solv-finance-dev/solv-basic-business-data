@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
-import { getErc20Metadata } from '../../lib/rpc';
 import CurrencyInfo from '../../models/CurrencyInfo';
+import {getErc20Metadata} from "../../services/evmService";
 
 // 处理 OpenFundMarket 的 SetCurrency 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {

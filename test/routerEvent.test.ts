@@ -17,6 +17,16 @@ const ARBITRUM_TEMPLATE_ADDRESS_MAP: Record<string, string[]> = {
     "0xc8a272a7f3a153b04ab11279ddaf18e6b898f114aa17a8b329630d37e9a6c572": ["0x346c574c56e1a4aaa8dc88cda8f7eb12b39947ab", "0x3647c54c4c2c65bc7a2d63c0da2809b399dbbdc0", "0xafafd68afe3fe65d376eec9eab1802616cfaccb8"]
 };
 
+const BNB_TEMPLATE_ADDRESS_MAP: Record<string, string[]> = {
+    "0x6ec857c6ca1ae8448b8fa03c99fffa6d43899fd913f1af415e37176918c1de7a": ["0x1c588701356f247a61ad625fa8faeef055a31738", "0x1eab979d3c58efd5c506fe9a957695538074f2fe", "0x66e6b4c8aa1b8ca548cc4ebcd6f3a8c6f4f3d04d", "0x744697899058b32d84506ad05dc1f3266603ab8a", "0xaa295ff24c1130a4ceb07842860a8fd7cb9de9cd", "0xb816018e5d421e8b809a4dc01af179d86056ebdf", "0xe16cec2f385ea7a382772334a44506a865f98562"],
+    "0xc30ce88f5e35e9e52ef522887407c7e48fc30575f887289cd41d63bbc665e7ec": ["0x0de7336c70a8dad4bdea1b2bca8efb3c955e989d", "0x0f6f337b09cb5131cf0ce9df3beb295b8e728f3b", "0x38a001e57430f781404fff7a81de4bd67d1f6117", "0x3f88888909544a2c858a790ed77c612076c0bd39", "0x4ca70811e831db42072cba1f0d03496ef126faad", "0x52a912a78d9261a2aaebc4834f84de9f77a2d03a", "0x647a50540f5a1058b206f5a3eb17f56f29127f53", "0x6c948a4c31d013515d871930fe3807276102f25d", "0x8260c40beddcb8f63c56b6c73476ef5e20f156a5", "0xb9f59cab0d6aa9d711ace5c3640003bc09c15faf", "0xcf6fd5ba51cc279240629370ac7009ea268c22f7"],
+    "0xc30ce88f5e35e9e52ef522887407c7e48fc30575f887289cd41d63bbc665e7ed": ["0x3f88888909544a2c858a790ed77c612076c0bd39"],
+    "0xc30ce88f5e35e9e52ef522887407c7e48fc30575f887289cd41d63bbc665e7eg": ["0x3f88888909544a2c858a790ed77c612076c0bd39"],
+    "0xc8a272a7f3a153b04ab11279ddaf18e6b898f114aa17a8b329630d37e9a6c572": ["0x1346b618dc92810ec74163e4c27004c921d446a5", "0x4aae823a6a0b376de6a78e74ecc5b079d38cbcf7", "0x53e63a31fd1077f949204b94f431bcab98f72bce"]
+};
+
+const ETH_TEMPLATE_ADDRESS_MAP: Record<string, string[]> = {"0x6ec857c6ca1ae8448b8fa03c99fffa6d43899fd913f1af415e37176918c1de7a": ["0x1d0db695f3033875d1b6a0155c38b3ee2aed3082", "0x66e6b4c8aa1b8ca548cc4ebcd6f3a8c6f4f3d04d", "0x7d6c3860b71cf82e2e1e8d5d104cf77f5b84f93a", "0x982d50f8557d57b748733a3fc3d55aef40c46756", "0xc9a8d31465a1d4bd9b95e0e80016f7b23f992ebf", "0xd3ba838b3e32654ad2ad1741d2483d807c49e6f9"]};
+
 describe('test router event', () => {
     // 测试结束后清理资源
     afterAll(async () => {
@@ -40,6 +50,23 @@ describe('test router event', () => {
         const transaction = await sequelize.transaction();
         try {
             const events = "[{\"id\": \"5406864\", \"eventId\": \"42161_0xa51144119e7cd15cb2fda2477bcd643b7064aa805d3170cd6c11145d38fc8e6b_9\", \"chainId\": 42161, \"blockNumber\": \"122465586\", \"blockHash\": \"0x94cf2a303b5da0badc6dcb5f8d934ddf25fa4543f0e1b3bf7fc1ea28c8a6aeee\", \"blockTimestamp\": \"1692328418\", \"transactionHash\": \"0xa51144119e7cd15cb2fda2477bcd643b7064aa805d3170cd6c11145d38fc8e6b\", \"transactionIndex\": 3, \"logIndex\": 9, \"contractAddress\": \"0x66e6b4c8aa1b8ca548cc4ebcd6f3a8c6f4f3d04d\", \"eventSignature\": \"0x98c0c4bde5f642566cdaebfb7cd2cdc72a98bc7f3440e38c19e1d58d92388d34\", \"indexedTopic1\": \"0x0000000000000000000000002f2a2543b76a4166549f7aab2e75bef0aefc5b0f\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000001\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-27T08:27:03.913Z\", \"updatedAt\": \"2026-01-27T08:27:03.913Z\"}]";
+            await routerEvent(JSON.parse(events) as EventEvm[], ARBITRUM_TEMPLATE_ADDRESS_MAP, transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
+    test('SftWrappedTokenInfoHandler', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+        try {
+            // case 1:handleSftWrappedTokenFactoryEvent
+            // const events = "[{\"id\": \"32\", \"eventId\": \"56_0xd615b4fc2ed682eb1b0a9d506d40846316cc46c1a93d36283f26ed1080615c5c_385\", \"chainId\": 56, \"blockNumber\": \"37391171\", \"blockHash\": \"0xe85d78e063e0611b8e33ed92f536d4ad09159174b850f7661b0d548f39fc2417\", \"blockTimestamp\": \"1711710737\", \"transactionHash\": \"0xd615b4fc2ed682eb1b0a9d506d40846316cc46c1a93d36283f26ed1080615c5c\", \"transactionIndex\": 149, \"logIndex\": 385, \"contractAddress\": \"0xf940230a3357971fe0f22e8c144bc70d9fa91d43\", \"eventSignature\": \"0xc8a272a7f3a153b04ab11279ddaf18e6b898f114aa17a8b329630d37e9a6c572\", \"indexedTopic1\": \"0x000000000000000000000000744697899058b32d84506ad05dc1f3266603ab8a\", \"indexedTopic2\": \"0xab88b344303677d25f209a36504f93d53d02ce009ac9303d753b87822c4e1f3b\", \"indexedTopic3\": \"0x0000000000000000000000004aae823a6a0b376de6a78e74ecc5b079d38cbcf7\", \"data\": \"0x000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000bfda88765a07f60b04619d1c95a3ec1e75f8b71e0000000000000000000000000000000000000000000000000000000000000008536f6c76204254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007536f6c7642544300000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2025-11-19T00:47:59.755Z\", \"updatedAt\": \"2026-01-30T07:56:32.868Z\"}]";
+            // case 2:handleSolvBTCMultiAssetPoolEvent
+            // const events = "[{\"id\": \"5407537\", \"eventId\": \"1_0xa59a196df77c3ae643d589a454c2c9887e4a6691bd9014395095a55fd6e1dd94_231\", \"chainId\": 1, \"blockNumber\": \"20634270\", \"blockHash\": \"0x1b325f9e804749d71a0b9ee59104f122c5297e7823f14b1062020554f21f5609\", \"blockTimestamp\": \"1724934863\", \"transactionHash\": \"0xa59a196df77c3ae643d589a454c2c9887e4a6691bd9014395095a55fd6e1dd94\", \"transactionIndex\": 87, \"logIndex\": 231, \"contractAddress\": \"0x1d5262919c4aab745a8c9dd56b80db9feaef86ba\", \"eventSignature\": \"0xc2532812ecf7eb4907c9cac96370c00bfb6064322750c6dd0bc97114ceeaa187\", \"indexedTopic1\": \"0x0000000000000000000000007d6c3860b71cf82e2e1e8d5d104cf77f5b84f93a\", \"indexedTopic2\": \"0xf0ab652c324b26e25af071b4d878745297bf7c7c1b7686617d7f61c301cc4f62\", \"indexedTopic3\": \"0x0000000000000000000000007a56e1c57c7475ccf742a1832b028f0456652f97\", \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-03T09:03:51.211Z\", \"updatedAt\": \"2026-02-03T09:03:51.211Z\"}]";
+            // case 3:handleSolvBTCYieldTokenMultiAssetPoolEvent
+            const events = "[{\"id\": \"5407558\", \"eventId\": \"42161_0x4ac3dd808a2c8d3c01d2ecdb0fd4c4279e887ff71d2b34de8689ff0cb7208c78_52\", \"chainId\": 42161, \"blockNumber\": \"361306611\", \"blockHash\": \"0xa77de4893a0a7a9cc8133eadf9e80f6975bfe5d9c6e27f70223cce73b7d1643d\", \"blockTimestamp\": \"1753419245\", \"transactionHash\": \"0x4ac3dd808a2c8d3c01d2ecdb0fd4c4279e887ff71d2b34de8689ff0cb7208c78\", \"transactionIndex\": 36, \"logIndex\": 52, \"contractAddress\": \"0x0679e96f5eeda5313099f812b558714717aec176\", \"eventSignature\": \"0xc2532812ecf7eb4907c9cac96370c00bfb6064322750c6dd0bc97114ceeaa187\", \"indexedTopic1\": \"0x00000000000000000000000022799daa45209338b7f938edf251bdfd1e6dcb32\", \"indexedTopic2\": \"0x2395f61b7ea25e8e074d69359967deac66f30b5ae0acb262bdd16093d933bdaa\", \"indexedTopic3\": \"0x0000000000000000000000004ca70811e831db42072cba1f0d03496ef126faad\", \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-03T09:06:36.978Z\", \"updatedAt\": \"2026-02-03T09:06:36.978Z\"}]";
             await routerEvent(JSON.parse(events) as EventEvm[], ARBITRUM_TEMPLATE_ADDRESS_MAP, transaction);
             await transaction.commit();
         } catch (error) {
@@ -123,6 +150,22 @@ describe('test router event', () => {
         const events = "[{\"id\": \"5407298\", \"eventId\": \"42161_0x7d5b8afee6672c6e4ce336ad216c71212d556d618c5308b02a75424f44b72908_12\", \"chainId\": 42161, \"blockNumber\": \"123824018\", \"blockHash\": \"0x11b261bb99a977432455981ff08b6157c6ab36683a0d9667692733be2fa7bfe3\", \"blockTimestamp\": \"1692698122\", \"transactionHash\": \"0x7d5b8afee6672c6e4ce336ad216c71212d556d618c5308b02a75424f44b72908\", \"transactionIndex\": 3, \"logIndex\": 12, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0xa45ad11a8f07c35f34f99d383133ff3d9de1f51286e14db3b6be8a4667fccb01\", \"indexedTopic1\": \"0x375ebcd78e8b3571c0f6482bdaae602672e73e145e92ca40f9b8f1537236bf2e\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000fd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb90000000000000000000000000000000000000000000000000000000001c1e181\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-29T08:49:02.775Z\", \"updatedAt\": \"2026-01-29T08:49:02.775Z\"}]";
         try {
             await routerEvent(JSON.parse(events) as EventEvm[], {}, transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
+    test('RawOptRepayInfoOpenEndHandler.ts', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        // Normal:Repay(uint256,address,address,uint256)
+        // const events = "[{\"id\": \"5407515\", \"eventId\": \"56_0xc374cacf3c67c558399ff9b3f95a06260c2fb18c4518022dc4337c91d4785084_245\", \"chainId\": 56, \"blockNumber\": \"42738095\", \"blockHash\": \"0xb1d66f3da9f41cfe665226a3db079fbfdb102c84fe572268074039c6801bb729\", \"blockTimestamp\": \"1727794094\", \"transactionHash\": \"0xc374cacf3c67c558399ff9b3f95a06260c2fb18c4518022dc4337c91d4785084\", \"transactionIndex\": 117, \"logIndex\": 245, \"contractAddress\": \"0xaa295ff24c1130a4ceb07842860a8fd7cb9de9cd\", \"eventSignature\": \"0xb42c5f4d7454a3dbf5af30732b0d66efa11d73c66cef1f5732fa84b7e63cf99a\", \"indexedTopic1\": \"0xf3853960a3516db520f2c2cbccd3efcd939f8c3148583ed2a66ac510aad69bdc\", \"indexedTopic2\": \"0x0000000000000000000000009537bc0546506785bd1ebd19fd67d1f06800d185\", \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000007130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c0000000000000000000000000000000000000000000000008f4c84f11e667bc6\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-02T08:24:13.277Z\", \"updatedAt\": \"2026-02-02T08:24:13.277Z\"}]";
+        // Liquidation:Repay(uint256,address,uint256)
+        const events = "[{\"id\": \"5407513\", \"eventId\": \"56_0xb74be7e3b64c8b78c8c25796dea6f80830ab3d6876fcbd2b646f2cbd030c6dea_35\", \"chainId\": 56, \"blockNumber\": \"43702504\", \"blockHash\": \"0x084e70edcd6c630bf111e1435ef5176a5713f67488268f42065c9825914f18b0\", \"blockTimestamp\": \"1730687505\", \"transactionHash\": \"0xb74be7e3b64c8b78c8c25796dea6f80830ab3d6876fcbd2b646f2cbd030c6dea\", \"transactionIndex\": 23, \"logIndex\": 35, \"contractAddress\": \"0xb816018e5d421e8b809a4dc01af179d86056ebdf\", \"eventSignature\": \"0xc030da26557a891f33dbaee473c007cdfa269acb9628d7d12e744ec6923ed2b3\", \"indexedTopic1\": \"0x95d2b485a22e63a0d53d8cdcd625a98038163c623bbf8fee828e4620bdcf1f7f\", \"indexedTopic2\": \"0x0000000000000000000000006b406268572f5a7220ccc8b1c3837d8f37897701\", \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000000000000000000000000000000000a284df1415cf\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-02T07:37:28.711Z\", \"updatedAt\": \"2026-02-02T07:37:28.711Z\"}]";
+        try {
+            await routerEvent(JSON.parse(events) as EventEvm[], BNB_TEMPLATE_ADDRESS_MAP, transaction);
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();

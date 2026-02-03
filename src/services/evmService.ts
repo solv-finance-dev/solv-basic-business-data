@@ -2,11 +2,14 @@ import AWS from 'aws-sdk';
 import {loadJsonConfig} from '../lib/config';
 import {getEnv} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
-import type { ChainConfig, EvmConfigFile } from '../types/config';
-import type { TemplateAddress } from '../types/templateAddress';
+import type {ChainConfig, EvmConfigFile} from '../types/config';
+import {getContractTypeByAddress, getErc20Metadata as getErc20MetadataFromRpc} from '../lib/rpc';
+import type {TemplateAddress} from '../types/templateAddress';
 
 const DEFAULT_BLOCK_LIMIT = 5;
 let lambdaClient: AWS.Lambda | null = null;
+const contractTypeCache = new Map<string, string>();
+const erc20MetadataCache = new Map<string, { decimals: number; symbol: string; name: string }>();
 
 export function getChainConfigs(): ChainConfig[] {
     const config = loadEvmConfig();
@@ -73,11 +76,11 @@ export async function fetchChainEvents(
 
 export async function fetchTemplateAddresses(chainId: number): Promise<TemplateAddress[]> {
     if (!Number.isFinite(chainId)) {
-        console.error('EvmService: Invalid chainId for template addresses.', { chainId });
+        console.error('EvmService: Invalid chainId for template addresses.', {chainId});
         return [];
     }
 
-    const payload = { chainId };
+    const payload = {chainId};
 
     try {
         const response = await getLambdaClient()
@@ -151,3 +154,35 @@ function parseTemplateAddressPayload(payload: AWS.Lambda.Types.InvocationRespons
 
     return [];
 }
+
+// 带缓存的合约类型获取
+export async function getContractType(chainId: number, contractAddress: string): Promise<string> {
+    const key = `${chainId}:${contractAddress.toLowerCase()}`;
+    const cached = contractTypeCache.get(key);
+    if (cached) {
+        return cached;
+    }
+
+    const contractType = await getContractTypeByAddress(chainId, contractAddress);
+    contractTypeCache.set(key, contractType);
+    return contractType;
+}
+
+// 带缓存的 ERC20 元数据获取
+export async function getErc20Metadata(chainId: number, tokenAddress: string): Promise<{
+    decimals: number;
+    symbol: string;
+    name: string
+}> {
+    const key = `${chainId}:${tokenAddress.toLowerCase()}`;
+    const cached = erc20MetadataCache.get(key);
+    if (cached) {
+        return cached;
+    }
+
+    const metadata = await getErc20MetadataFromRpc(chainId, tokenAddress);
+    erc20MetadataCache.set(key, metadata);
+    return metadata;
+}
+
+
