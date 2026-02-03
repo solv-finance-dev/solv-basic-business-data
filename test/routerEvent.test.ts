@@ -57,6 +57,23 @@ describe('test router event', () => {
             throw error;
         }
     });
+    test('SftWrappedTokenInfoHandler', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+        try {
+            // case 1:handleSftWrappedTokenFactoryEvent
+            // const events = "[{\"id\": \"32\", \"eventId\": \"56_0xd615b4fc2ed682eb1b0a9d506d40846316cc46c1a93d36283f26ed1080615c5c_385\", \"chainId\": 56, \"blockNumber\": \"37391171\", \"blockHash\": \"0xe85d78e063e0611b8e33ed92f536d4ad09159174b850f7661b0d548f39fc2417\", \"blockTimestamp\": \"1711710737\", \"transactionHash\": \"0xd615b4fc2ed682eb1b0a9d506d40846316cc46c1a93d36283f26ed1080615c5c\", \"transactionIndex\": 149, \"logIndex\": 385, \"contractAddress\": \"0xf940230a3357971fe0f22e8c144bc70d9fa91d43\", \"eventSignature\": \"0xc8a272a7f3a153b04ab11279ddaf18e6b898f114aa17a8b329630d37e9a6c572\", \"indexedTopic1\": \"0x000000000000000000000000744697899058b32d84506ad05dc1f3266603ab8a\", \"indexedTopic2\": \"0xab88b344303677d25f209a36504f93d53d02ce009ac9303d753b87822c4e1f3b\", \"indexedTopic3\": \"0x0000000000000000000000004aae823a6a0b376de6a78e74ecc5b079d38cbcf7\", \"data\": \"0x000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000bfda88765a07f60b04619d1c95a3ec1e75f8b71e0000000000000000000000000000000000000000000000000000000000000008536f6c76204254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007536f6c7642544300000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2025-11-19T00:47:59.755Z\", \"updatedAt\": \"2026-01-30T07:56:32.868Z\"}]";
+            // case 2:handleSolvBTCMultiAssetPoolEvent
+            // const events = "[{\"id\": \"5407537\", \"eventId\": \"1_0xa59a196df77c3ae643d589a454c2c9887e4a6691bd9014395095a55fd6e1dd94_231\", \"chainId\": 1, \"blockNumber\": \"20634270\", \"blockHash\": \"0x1b325f9e804749d71a0b9ee59104f122c5297e7823f14b1062020554f21f5609\", \"blockTimestamp\": \"1724934863\", \"transactionHash\": \"0xa59a196df77c3ae643d589a454c2c9887e4a6691bd9014395095a55fd6e1dd94\", \"transactionIndex\": 87, \"logIndex\": 231, \"contractAddress\": \"0x1d5262919c4aab745a8c9dd56b80db9feaef86ba\", \"eventSignature\": \"0xc2532812ecf7eb4907c9cac96370c00bfb6064322750c6dd0bc97114ceeaa187\", \"indexedTopic1\": \"0x0000000000000000000000007d6c3860b71cf82e2e1e8d5d104cf77f5b84f93a\", \"indexedTopic2\": \"0xf0ab652c324b26e25af071b4d878745297bf7c7c1b7686617d7f61c301cc4f62\", \"indexedTopic3\": \"0x0000000000000000000000007a56e1c57c7475ccf742a1832b028f0456652f97\", \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-03T09:03:51.211Z\", \"updatedAt\": \"2026-02-03T09:03:51.211Z\"}]";
+            // case 3:handleSolvBTCYieldTokenMultiAssetPoolEvent
+            const events = "[{\"id\": \"5407558\", \"eventId\": \"42161_0x4ac3dd808a2c8d3c01d2ecdb0fd4c4279e887ff71d2b34de8689ff0cb7208c78_52\", \"chainId\": 42161, \"blockNumber\": \"361306611\", \"blockHash\": \"0xa77de4893a0a7a9cc8133eadf9e80f6975bfe5d9c6e27f70223cce73b7d1643d\", \"blockTimestamp\": \"1753419245\", \"transactionHash\": \"0x4ac3dd808a2c8d3c01d2ecdb0fd4c4279e887ff71d2b34de8689ff0cb7208c78\", \"transactionIndex\": 36, \"logIndex\": 52, \"contractAddress\": \"0x0679e96f5eeda5313099f812b558714717aec176\", \"eventSignature\": \"0xc2532812ecf7eb4907c9cac96370c00bfb6064322750c6dd0bc97114ceeaa187\", \"indexedTopic1\": \"0x00000000000000000000000022799daa45209338b7f938edf251bdfd1e6dcb32\", \"indexedTopic2\": \"0x2395f61b7ea25e8e074d69359967deac66f30b5ae0acb262bdd16093d933bdaa\", \"indexedTopic3\": \"0x0000000000000000000000004ca70811e831db42072cba1f0d03496ef126faad\", \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-03T09:06:36.978Z\", \"updatedAt\": \"2026-02-03T09:06:36.978Z\"}]";
+            await routerEvent(JSON.parse(events) as EventEvm[], ARBITRUM_TEMPLATE_ADDRESS_MAP, transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
     test('BtcRedeemRecordHandler', async () => {
         const sequelize = await initSequelize();
         const transaction = await sequelize.transaction();
