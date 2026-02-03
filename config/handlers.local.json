@@ -335,5 +335,35 @@
         ]
       }
     ]
+  },
+  {
+    "name": "RedeemSoltInfo",
+    "module": "poolInfo/RedeemSlotInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "CloseRedeemSlot(bytes32,uint256,uint256)",
+          "SetRedeemNav(bytes32,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleRedeemShareDelegateEvent",
+        "abi": "OpenFundRedemptionDelegate.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "CreateSlot(uint256,address,bytes)",
+          "MintValue(uint256,uint256,uint256)",
+          "Claim(address,uint256,uint256,address,uint256)",
+          "Repay(uint256,address,address,uint256)",
+          "SlotChanged(uint256,uint256,uint256)",
+          "BurnValue(uint256,uint256)"
+        ]
+      }
+    ]
   }
 ]
