@@ -427,7 +427,7 @@ async function getRedeemSlotInfo(
 
 /**
  * 从 tokenId 获取 slot
- * 优先从链上调用 slotOf，如果失败（token 已被 burn 等），则从数据库查找历史记录
+ * 优先从数据库查找，如果找不到，再从链上调用 slotOf
  */
 async function getSlotFromTokenId(
     chainId: number,
@@ -435,13 +435,8 @@ async function getSlotFromTokenId(
     tokenId: string,
     transaction: Transaction
 ): Promise<string | null> {
-    // 首先尝试从链上获取
-    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
-    if (slotFromChain) {
-        return slotFromChain;
-    }
-
-    // 如果链上获取失败（token 可能已被 burn），尝试从数据库查找历史记录
+    console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
+    // 首先尝试从数据库查找
     try {
         const tokenInfo = await OptRawErc3525TokenInfo.findOne({
             where: {
@@ -453,12 +448,6 @@ async function getSlotFromTokenId(
         });
 
         if (tokenInfo?.slot) {
-            console.log('RedeemSlotInfoHandler: Got slot from database for burned token', {
-                chainId,
-                contractAddress,
-                tokenId,
-                slot: tokenInfo.slot,
-            });
             return tokenInfo.slot;
         }
     } catch (error) {
@@ -468,6 +457,12 @@ async function getSlotFromTokenId(
             tokenId,
             error: error instanceof Error ? error.message : String(error),
         });
+    }
+
+    // 如果数据库中没有找到，尝试从链上获取
+    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+    if (slotFromChain) {
+        return slotFromChain;
     }
 
     // 如果都失败了，返回 null（不记录警告，由调用方决定如何处理）

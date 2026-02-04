@@ -169,6 +169,31 @@ export async function getOwnerOf(
 	return String(owner);
 }
 
+// 获取 ERC3525 token 的 balance
+export async function getBalanceOf(
+	chainId: number,
+	contractAddress: string,
+	tokenId: string
+): Promise<string> {
+	const provider = getRpcProvider(chainId);
+	const erc3525Abi = [
+		'function balanceOf(uint256 tokenId) view returns (uint256)',
+	];
+	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	try {
+		const balance = await contract.balanceOf(tokenId);
+		return String(balance);
+	} catch (error) {
+		console.warn('Rpc: Failed to get balanceOf', {
+			chainId,
+			contractAddress,
+			tokenId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		return '0';
+	}
+}
+
 // 获取 ERC3525 token 的 tokenURI
 export async function getTokenURI(
 	chainId: number,

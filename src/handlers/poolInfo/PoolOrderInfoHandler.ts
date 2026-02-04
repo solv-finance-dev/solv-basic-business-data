@@ -5,7 +5,6 @@ import CurrencyInfo from '../../models/CurrencyInfo';
 import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
 import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
 import { getTransactionInfo } from '../../lib/rpc';
-import { MarketContractInfo } from '@solvprotocol/models';
 
 // 常量定义
 const POOL_STATUS = {
