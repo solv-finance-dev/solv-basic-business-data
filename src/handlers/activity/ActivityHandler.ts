@@ -1,5 +1,5 @@
 import type { HandlerParam } from '../../types/handler';
-import { handleTransferValue, handleTransfer } from './erc3525';
+import { handleTransferValue, handleTransfer } from './subHandler/erc3525';
 
 // ==================== 事件签名常量 ====================
 
