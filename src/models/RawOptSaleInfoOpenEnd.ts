@@ -100,4 +100,11 @@ export default class RawOptSaleInfoOpenEnd extends Model {
         type: DataType.DATE,
     })
     declare updatedAt?: Date;
+
+    @Column({
+        field: 'last_updated',
+        allowNull: true,
+        type: DataType.INTEGER,
+    })
+    declare lastUpdated?: number;
 }

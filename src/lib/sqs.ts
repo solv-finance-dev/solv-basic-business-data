@@ -53,6 +53,10 @@ export async function sendQueueMessage(
     message: unknown,
     secretName?: string
 ): Promise<void> {
+    if (process.env.CONFIG_ENV === 'local') {
+        console.error('SQS message skipped in local environment:', {chainId, queueKey, message});
+        return;
+    }
     const region = process.env.CDK_DEPLOY_REGION!;
     const resolvedSecretName = secretName ?? process.env.SECRET_V35_QUEUE_ID;
     if (!resolvedSecretName) {

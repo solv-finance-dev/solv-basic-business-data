@@ -48,6 +48,16 @@ export async function handleSftWrappedTokenFactoryEvent(param: HandlerParam): Pr
     console.log('SftWrappedTokenInfoHandler: created record for sftWrappedToken ', sftWrappedToken, ' eventId ', event.eventId);
 }
 
+// Handle SolvBTCMultiAssetPool events.
+export async function handleSolvBTCMultiAssetPoolEvent(param: HandlerParam): Promise<void> {
+    await upsertMultiAssetPoolToken(param);
+}
+
+// Handle SolvBTCYieldTokenMultiAssetPool events.
+export async function handleSolvBTCYieldTokenMultiAssetPoolEvent(param: HandlerParam): Promise<void> {
+    await upsertMultiAssetPoolToken(param);
+}
+
 async function upsertMultiAssetPoolToken(param: HandlerParam): Promise<void> {
     const { event, args, transaction } = param;
 
@@ -89,14 +99,3 @@ async function upsertMultiAssetPoolToken(param: HandlerParam): Promise<void> {
 
     console.log('SftWrappedTokenInfoHandler: created record for erc20 ', tokenAddress, ' slot ', slot, ' eventId ', event.eventId);
 }
-
-// Handle SolvBTCMultiAssetPool events.
-export async function handleSolvBTCMultiAssetPoolEvent(param: HandlerParam): Promise<void> {
-    await upsertMultiAssetPoolToken(param);
-}
-
-// Handle SolvBTCYieldTokenMultiAssetPool events.
-export async function handleSolvBTCYieldTokenMultiAssetPoolEvent(param: HandlerParam): Promise<void> {
-    await upsertMultiAssetPoolToken(param);
-}
-
