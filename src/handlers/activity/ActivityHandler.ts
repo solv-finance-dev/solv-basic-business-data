@@ -12,6 +12,7 @@ import {
 } from './subHandler/openFundMarket';
 import { handleClaim, handleRepay } from './subHandler/openFundRedemption';
 import { handleClaim as handleShareClaim, handleRepay as handleShareRepay, handleSetInterestRate } from './subHandler/openFundShare';
+import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
 
 // ==================== 事件签名常量 ====================
 
@@ -41,6 +42,10 @@ const OPEN_FUND_SHARE_EVENT_SIGNATURES = {
 } as const;
 
 const SFT_WRAPPED_ROUTER_EVENT_SIGNATURES = {
+} as const;
+
+const SFT_WRAPPED_TOKEN_EVENT_SIGNATURES = {
+    TRANSFER: 'Transfer(address,address,uint256)',
 } as const;
 
 const SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES = {
@@ -265,6 +270,31 @@ export async function handleOpenFundShareEvent(param: HandlerParam): Promise<voi
 }
 
 export async function handleSftWrappedRouterEvent(param: HandlerParam): Promise<void> {
+}
+
+export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+    const {event, transaction, eventFunc, args} = param;
+
+    try {
+        switch (eventFunc) {
+            case SFT_WRAPPED_TOKEN_EVENT_SIGNATURES.TRANSFER:
+                await handleSftWrappedTokenTransfer(event, args, transaction);
+                break;
+
+            default:
+                console.warn('ActivityHandler: handleSftWrappedTokenEvent: unhandled event signature', {
+                    eventFunc,
+                    eventId: event.eventId,
+                });
+        }
+    } catch (error) {
+        console.error('ActivityHandler: handleSftWrappedTokenEvent failed', {
+            eventFunc,
+            eventId: event.eventId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+    }
 }
 
 export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {

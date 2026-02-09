@@ -5,14 +5,30 @@ import path from 'node:path';
 const configCache = new Map<string, unknown>();
 
 export function loadJsonConfig<T>(fileName: string): T {
-	if (configCache.has(fileName)) {
-		return configCache.get(fileName) as T;
-	}
+    const filePath = resolveConfigPath(fileName);
 
-	const filePath = path.resolve(process.cwd(), 'config', fileName);
-	const raw = fs.readFileSync(filePath, 'utf8');
-	const parsed = JSON.parse(raw) as T;
+    if (configCache.has(filePath)) {
+        return configCache.get(filePath) as T;
+    }
 
-	configCache.set(fileName, parsed);
-	return parsed;
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const parsed = JSON.parse(raw) as T;
+
+    configCache.set(filePath, parsed);
+    return parsed;
 }
+
+function resolveConfigPath(fileName: string): string {
+    const basePath = path.resolve(process.cwd(), 'config', fileName);
+    if (fs.existsSync(basePath)) {
+        return basePath;
+    }
+
+    const dottedPath = path.resolve(process.cwd(), 'config', `.${fileName}`);
+    if (fs.existsSync(dottedPath)) {
+        return dottedPath;
+    }
+
+    return basePath;
+}
+
