@@ -529,8 +529,8 @@
         "chainIds": null,
         "contractAddresses": null,
         "eventSignatures": [
-          "Claim(address,uint256,uint256)",
-          "Repay(uint256,address,uint256)"
+          "Claim(address,uint256,uint256,address,uint256)",
+          "Repay(uint256,address,address,uint256)"
         ]
       },
       {

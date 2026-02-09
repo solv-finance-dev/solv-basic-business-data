@@ -200,7 +200,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
 	}
 }
 
-export async function handleOpenFundRedemptionDelegateEvent(param: HandlerParam): Promise<void> {
+export async function handleOpenFundRedemptionEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc, args } = param;
 
 	try {
@@ -215,13 +215,13 @@ export async function handleOpenFundRedemptionDelegateEvent(param: HandlerParam)
 				break;
 
 			default:
-				console.warn('ActivityHandler: handleOpenFundRedemptionDelegateEvent: unhandled event signature', {
+				console.warn('ActivityHandler: handleOpenFundRedemptionEvent: unhandled event signature', {
 					eventFunc,
 					eventId: event.eventId,
 				});
 		}
 	} catch (error) {
-		console.error('ActivityHandler: handleOpenFundRedemptionDelegateEvent failed', {
+		console.error('ActivityHandler: handleOpenFundRedemptionEvent failed', {
 			eventFunc,
 			eventId: event.eventId,
 			error: error instanceof Error ? error.message : String(error),
@@ -230,7 +230,7 @@ export async function handleOpenFundRedemptionDelegateEvent(param: HandlerParam)
 	}
 }
 
-export async function handleOpenShareDelegateEvent(param: HandlerParam): Promise<void> {
+export async function handleOpenFundShareEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc, args } = param;
 
 	try {
@@ -249,13 +249,13 @@ export async function handleOpenShareDelegateEvent(param: HandlerParam): Promise
 				break;
 
 			default:
-				console.warn('ActivityHandler: handleOpenShareDelegateEvent: unhandled event signature', {
+				console.warn('ActivityHandler: handleOpenFundShareEvent: unhandled event signature', {
 					eventFunc,
 					eventId: event.eventId,
 				});
 		}
 	} catch (error) {
-		console.error('ActivityHandler: handleOpenShareDelegateEvent failed', {
+		console.error('ActivityHandler: handleOpenFundShareEvent failed', {
 			eventFunc,
 			eventId: event.eventId,
 			error: error instanceof Error ? error.message : String(error),
