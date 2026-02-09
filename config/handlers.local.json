@@ -532,6 +532,30 @@
           "Claim(address,uint256,uint256)",
           "Repay(uint256,address,uint256)"
         ]
+      },
+      {
+        "handler": "handleSftWrappedRouterEvent",
+        "abi": "SftWrappedRouter.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+        ]
+      },
+      {
+        "handler": "handleSolvBTCRouterV2Event",
+        "abi": "SolvBTCRouterV2.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+        ]
+      },
+      {
+        "handler": "handleXSolvBTCPoolEvent",
+        "abi": "XSolvBTCPool.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+        ]
       }
     ]
   }

@@ -187,3 +187,12 @@ export async function handleOpenShareDelegateEvent(param: HandlerParam): Promise
 		throw error;
 	}
 }
+
+export async function handleSftWrappedRouterEvent(param: HandlerParam): Promise<void> {
+}
+
+export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {
+}
+
+export async function handleXSolvBTCPoolEvent(param: HandlerParam): Promise<void> {
+}
