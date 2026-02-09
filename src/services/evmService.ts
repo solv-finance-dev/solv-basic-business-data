@@ -10,10 +10,21 @@ const DEFAULT_BLOCK_LIMIT = 5;
 let lambdaClient: AWS.Lambda | null = null;
 const contractTypeCache = new Map<string, string>();
 const erc20MetadataCache = new Map<string, { decimals: number; symbol: string; name: string }>();
+const chainConfigCache = new Map<number, ChainConfig | undefined>();
 
 export function getChainConfigs(): ChainConfig[] {
     const config = loadEvmConfig();
     return config.chains.map((chain) => normalizeChainConfig(chain));
+}
+
+export function getChainConfig(chainId: number): ChainConfig | undefined {
+    if (chainConfigCache.has(chainId)) {
+        return chainConfigCache.get(chainId);
+    }
+
+    const chain = getChainConfigs().find((item) => item.chainId === chainId);
+    chainConfigCache.set(chainId, chain);
+    return chain;
 }
 
 function loadEvmConfig(): EvmConfigFile {
@@ -34,6 +45,7 @@ function normalizeChainConfig(chain: ChainConfig): ChainConfig {
         chainId: chain.chainId,
         startBlockNumber: chain.startBlockNumber,
         blockLimit: chain.blockLimit ?? DEFAULT_BLOCK_LIMIT,
+        config: chain.config,
     };
 }
 

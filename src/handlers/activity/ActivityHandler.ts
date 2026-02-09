@@ -19,6 +19,7 @@ import {
 	handleStake,
 	handleUnstake,
 } from './subHandler/router';
+import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
 
 // ==================== 事件签名常量 ====================
 
@@ -53,6 +54,10 @@ const ROUTER_EVENT_SIGNATURES = {
 	CANCEL_REDEMPTION: 'CancelRedemption(bytes32,address,address,uint256,uint256)',
 	STAKE: 'Stake(address,address,address,uint256,uint256,uint256)',
 	UNSTAKE: 'Unstake(address,address,address,uint256,uint256,uint256)',
+} as const;
+
+const SFT_WRAPPED_TOKEN_EVENT_SIGNATURES = {
+    TRANSFER: 'Transfer(address,address,uint256)',
 } as const;
 
 const SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES = {
@@ -316,6 +321,31 @@ export async function handleRouterEvent(param: HandlerParam): Promise<void> {
 		});
 		throw error;
 	}
+}
+
+export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+    const {event, transaction, eventFunc, args} = param;
+
+    try {
+        switch (eventFunc) {
+            case SFT_WRAPPED_TOKEN_EVENT_SIGNATURES.TRANSFER:
+                await handleSftWrappedTokenTransfer(event, args, transaction);
+                break;
+
+            default:
+                console.warn('ActivityHandler: handleSftWrappedTokenEvent: unhandled event signature', {
+                    eventFunc,
+                    eventId: event.eventId,
+                });
+        }
+    } catch (error) {
+        console.error('ActivityHandler: handleSftWrappedTokenEvent failed', {
+            eventFunc,
+            eventId: event.eventId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+    }
 }
 
 export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {
