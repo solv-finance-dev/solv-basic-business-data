@@ -503,13 +503,13 @@
         "chainIds": null,
         "contractAddresses": null,
         "eventSignatures": [
-          "CreatePool(indexed bytes32,indexed address,indexed address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
-          "UpdateFundraisingEndTime(indexed bytes32,uint64,uint64)",
-          "Subscribe(indexed bytes32,indexed address,uint256,uint256,address,uint256,uint256)",
-          "CloseRedeemSlot(indexed bytes32,uint256,uint256)",
-          "RequestRedeem(indexed bytes32,indexed address,indexed uint256,uint256,uint256)",
-          "RevokeRedeem(indexed bytes32,indexed address,indexed uint256,uint256)",
-          "RevokeRedeem(indexed bytes32,indexed address,indexed uint256,uint256)"
+          "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
+          "UpdateFundraisingEndTime(bytes32,uint64,uint64)",
+          "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
+          "CloseRedeemSlot(bytes32,uint256,uint256)",
+          "RequestRedeem(bytes32,address,uint256,uint256,uint256)",
+          "RevokeRedeem(bytes32,address,uint256,uint256)",
+          "RevokeRedeem(bytes32,address,uint256,uint256)"
         ]
       },
       {
@@ -518,9 +518,9 @@
         "chainIds": null,
         "contractAddresses": null,
         "eventSignatures": [
-          "Claim(indexed address,indexed uint256,uint256)",
-          "Repay(indexed uint256,indexed address,uint256)",
-          "SetInterestRate(indexed uint256,int32)"
+          "Claim(address,uint256,uint256)",
+          "Repay(uint256,address,uint256)",
+          "SetInterestRate(uint256,int32)"
         ]
       },
       {
@@ -529,8 +529,8 @@
         "chainIds": null,
         "contractAddresses": null,
         "eventSignatures": [
-          "Claim(indexed address,indexed uint256,uint256)",
-          "Repay(indexed uint256,indexed address,uint256)"
+          "Claim(address,uint256,uint256)",
+          "Repay(uint256,address,uint256)"
         ]
       }
     ]
