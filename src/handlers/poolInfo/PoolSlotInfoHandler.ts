@@ -60,7 +60,7 @@ function addBigInt(a: string | undefined | null, b: string | undefined | null): 
 	try {
 		return (BigInt(aValue) + BigInt(bValue)).toString();
 	} catch (error) {
-		console.warn('PoolSoltInfoHandler: BigInt addition failed', {
+		console.warn('PoolSlotInfoHandler: BigInt addition failed', {
 			a: aValue,
 			b: bValue,
 			error: error instanceof Error ? error.message : String(error),
@@ -80,7 +80,7 @@ function subBigInt(a: string | undefined | null, b: string | undefined | null): 
 		// 确保结果不为负数
 		return result < 0 ? '0' : result.toString();
 	} catch (error) {
-		console.warn('PoolSoltInfoHandler: BigInt subtraction failed', {
+		console.warn('PoolSlotInfoHandler: BigInt subtraction failed', {
 			a: aValue,
 			b: bValue,
 			error: error instanceof Error ? error.message : String(error),
@@ -122,7 +122,7 @@ async function getPoolSlotInfo(
 			transaction,
 		});
 	} catch (error) {
-		console.error('PoolSoltInfoHandler: Failed to get PoolSlotInfo', {
+		console.error('PoolSlotInfoHandler: Failed to get PoolSlotInfo', {
 			chainId,
 			contractAddress,
 			slot,
@@ -152,7 +152,7 @@ async function findPoolIdBySlot(
 		});
 		return poolOrder?.poolId;
 	} catch (error) {
-		console.warn('PoolSoltInfoHandler: Failed to find PoolOrderInfo', {
+		console.warn('PoolSlotInfoHandler: Failed to find PoolOrderInfo', {
 			chainId,
 			contractAddress,
 			slot,
@@ -195,7 +195,7 @@ async function getOrCreatePoolSlotInfo(
 			{ transaction }
 		);
 	} catch (error) {
-		console.error('PoolSoltInfoHandler: Failed to create PoolSlotInfo', {
+		console.error('PoolSlotInfoHandler: Failed to create PoolSlotInfo', {
 			chainId,
 			contractAddress,
 			slot,
@@ -233,7 +233,7 @@ async function getSlotFromTokenId(
         });
 
         if (tokenInfo?.slot) {
-            console.log('PoolSoltInfoHandler: Got slot from database for burned token', {
+            console.log('PoolSlotInfoHandler: Got slot from database for burned token', {
                 chainId,
                 contractAddress,
                 tokenId,
@@ -242,7 +242,7 @@ async function getSlotFromTokenId(
             return tokenInfo.slot;
         }
     } catch (error) {
-        console.warn('PoolSoltInfoHandler: Failed to get slot from database', {
+        console.warn('PoolSlotInfoHandler: Failed to get slot from database', {
             chainId,
             contractAddress,
             tokenId,
@@ -265,7 +265,7 @@ async function getSlotURISafe(
     try {
         return await getSlotURI(chainId, contractAddress, slot);
     } catch (error) {
-        console.warn('PoolSoltInfoHandler: Failed to get slotURI', {
+        console.warn('PoolSlotInfoHandler: Failed to get slotURI', {
             chainId,
             contractAddress,
             slot,
@@ -318,7 +318,7 @@ async function getContractType(
 		});
 		return contractInfo?.contractType || null;
 	} catch (error) {
-		console.warn('PoolSoltInfoHandler: Failed to get ContractInfo', {
+		console.warn('PoolSlotInfoHandler: Failed to get ContractInfo', {
 			chainId,
 			contractAddress,
 			error: error instanceof Error ? error.message : String(error),
@@ -365,7 +365,7 @@ function decodeSlotInfoFromBytes(
 			return {};
 		}
 	} catch (error) {
-		console.warn('PoolSoltInfoHandler: Failed to decode slotInfo bytes', {
+		console.warn('PoolSlotInfoHandler: Failed to decode slotInfo bytes', {
 			contractType,
 			slotInfoBytesPrefix: slotInfoBytes?.substring(0, 50),
 			error: error instanceof Error ? error.message : String(error),
@@ -465,7 +465,7 @@ function extractFieldsFromSlotURI(slotURI: string): {
 
         return result;
     } catch (error) {
-        console.warn('PoolSoltInfoHandler: Failed to parse slotURI', {
+        console.warn('PoolSlotInfoHandler: Failed to parse slotURI', {
             error: error instanceof Error ? error.message : String(error),
         });
         return {};
@@ -490,7 +490,7 @@ async function getCurrencySymbol(
         });
         return currencyInfo?.symbol;
     } catch (error) {
-        console.warn('PoolSoltInfoHandler: Failed to get CurrencyInfo', {
+        console.warn('PoolSlotInfoHandler: Failed to get CurrencyInfo', {
             chainId,
             currencyAddress,
             error: error instanceof Error ? error.message : String(error),
@@ -509,7 +509,7 @@ async function handleCreateSlot(
 ): Promise<void> {
     const slot = toString(extractArg(args, '_slot', 'slot'));
     if (!slot) {
-        console.warn('PoolSoltInfoHandler: CreateSlot missing slot', {
+        console.warn('PoolSlotInfoHandler: CreateSlot missing slot', {
             eventId: event.eventId,
         });
         return;
@@ -520,7 +520,7 @@ async function handleCreateSlot(
     // 检查是否已存在
     const existing = await getPoolSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (existing) {
-        console.log('PoolSoltInfoHandler: CreateSlot record already exists', {
+        console.log('PoolSlotInfoHandler: CreateSlot record already exists', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -549,7 +549,7 @@ async function handleCreateSlot(
 			interestRate = interestRate !== undefined ? interestRate : bytesFields.interestRate;
 
 			if (bytesFields.currencyAddress || bytesFields.maturity || bytesFields.valueDate) {
-				console.log('PoolSoltInfoHandler: Extracted fields from slotInfo bytes', {
+				console.log('PoolSlotInfoHandler: Extracted fields from slotInfo bytes', {
 					eventId: event.eventId,
 					slot,
 					contractType,
@@ -616,13 +616,13 @@ async function handleCreateSlot(
             { transaction }
         );
 
-        console.log('PoolSoltInfoHandler: CreateSlot success', {
+        console.log('PoolSlotInfoHandler: CreateSlot success', {
             contractAddress,
             slot,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: CreateSlot failed', {
+        console.error('PoolSlotInfoHandler: CreateSlot failed', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -644,7 +644,7 @@ async function handleMintValue(
     const value = toString(extractArg(args, '_value', 'value'));
 
     if (!slot || !value) {
-        console.warn('PoolSoltInfoHandler: MintValue missing required fields', {
+        console.warn('PoolSlotInfoHandler: MintValue missing required fields', {
             eventId: event.eventId,
             hasSlot: !!slot,
             hasValue: !!value,
@@ -655,7 +655,7 @@ async function handleMintValue(
     const contractAddress = event.contractAddress.toLowerCase();
     const poolSlotInfo = await getOrCreatePoolSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSoltInfoHandler: MintValue poolSlotInfo not found', {
+        console.warn('PoolSlotInfoHandler: MintValue poolSlotInfo not found', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -678,14 +678,14 @@ async function handleMintValue(
             transaction
         );
 
-        console.log('PoolSoltInfoHandler: MintValue success', {
+        console.log('PoolSlotInfoHandler: MintValue success', {
             contractAddress,
             slot,
             value,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: MintValue failed', {
+        console.error('PoolSlotInfoHandler: MintValue failed', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -707,7 +707,7 @@ async function handleClaim(
     const claimValue = toString(args.claimValue);
 
     if (!tokenId || !claimValue) {
-        console.warn('PoolSoltInfoHandler: Claim missing required fields', {
+        console.warn('PoolSlotInfoHandler: Claim missing required fields', {
             eventId: event.eventId,
             hasTokenId: !!tokenId,
             hasClaimValue: !!claimValue,
@@ -720,7 +720,7 @@ async function handleClaim(
     // 从 tokenId 获取 slot
     const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
     if (!slot) {
-        console.warn('PoolSoltInfoHandler: Claim tokenInfo not found or missing slot', {
+        console.warn('PoolSlotInfoHandler: Claim tokenInfo not found or missing slot', {
             contractAddress,
             tokenId,
             eventId: event.eventId,
@@ -730,7 +730,7 @@ async function handleClaim(
 
     const poolSlotInfo = await getOrCreatePoolSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSoltInfoHandler: Claim poolSlotInfo not found', {
+        console.warn('PoolSlotInfoHandler: Claim poolSlotInfo not found', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -753,14 +753,14 @@ async function handleClaim(
             transaction
         );
 
-        console.log('PoolSoltInfoHandler: Claim success', {
+        console.log('PoolSlotInfoHandler: Claim success', {
             contractAddress,
             slot,
             claimValue,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: Claim failed', {
+        console.error('PoolSlotInfoHandler: Claim failed', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -782,7 +782,7 @@ async function handleRepay(
     const repayCurrencyAmount = toString(args.repayCurrencyAmount);
 
     if (!slot || !repayCurrencyAmount) {
-        console.warn('PoolSoltInfoHandler: Repay missing required fields', {
+        console.warn('PoolSlotInfoHandler: Repay missing required fields', {
             eventId: event.eventId,
             hasSlot: !!slot,
             hasRepayCurrencyAmount: !!repayCurrencyAmount,
@@ -793,7 +793,7 @@ async function handleRepay(
     const contractAddress = event.contractAddress.toLowerCase();
     const poolSlotInfo = await getOrCreatePoolSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSoltInfoHandler: Repay poolSlotInfo not found', {
+        console.warn('PoolSlotInfoHandler: Repay poolSlotInfo not found', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -816,14 +816,14 @@ async function handleRepay(
             transaction
         );
 
-        console.log('PoolSoltInfoHandler: Repay success', {
+        console.log('PoolSlotInfoHandler: Repay success', {
             contractAddress,
             slot,
             repayCurrencyAmount,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: Repay failed', {
+        console.error('PoolSlotInfoHandler: Repay failed', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -845,7 +845,7 @@ async function handleSetInterestRate(
     const interestRate = toNumber(args.interestRate);
 
     if (!slot || interestRate === undefined) {
-        console.warn('PoolSoltInfoHandler: SetInterestRate missing required fields', {
+        console.warn('PoolSlotInfoHandler: SetInterestRate missing required fields', {
             eventId: event.eventId,
             hasSlot: !!slot,
             hasInterestRate: interestRate !== undefined,
@@ -856,7 +856,7 @@ async function handleSetInterestRate(
     const contractAddress = event.contractAddress.toLowerCase();
     const poolSlotInfo = await getOrCreatePoolSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSoltInfoHandler: SetInterestRate poolSlotInfo not found', {
+        console.warn('PoolSlotInfoHandler: SetInterestRate poolSlotInfo not found', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -877,14 +877,14 @@ async function handleSetInterestRate(
             transaction
         );
 
-        console.log('PoolSoltInfoHandler: SetInterestRate success', {
+        console.log('PoolSlotInfoHandler: SetInterestRate success', {
             contractAddress,
             slot,
             interestRate,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: SetInterestRate failed', {
+        console.error('PoolSlotInfoHandler: SetInterestRate failed', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -906,7 +906,7 @@ async function handleBurnValue(
     const burnValue = toString(args.burnValue);
 
     if (!tokenId || !burnValue) {
-        console.warn('PoolSoltInfoHandler: BurnValue missing required fields', {
+        console.warn('PoolSlotInfoHandler: BurnValue missing required fields', {
             eventId: event.eventId,
             hasTokenId: !!tokenId,
             hasBurnValue: !!burnValue,
@@ -919,7 +919,7 @@ async function handleBurnValue(
     // 从 tokenId 获取 slot
     const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
     if (!slot) {
-        console.warn('PoolSoltInfoHandler: BurnValue tokenInfo not found or missing slot', {
+        console.warn('PoolSlotInfoHandler: BurnValue tokenInfo not found or missing slot', {
             contractAddress,
             tokenId,
             eventId: event.eventId,
@@ -929,7 +929,7 @@ async function handleBurnValue(
 
     const poolSlotInfo = await getOrCreatePoolSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSoltInfoHandler: BurnValue poolSlotInfo not found', {
+        console.warn('PoolSlotInfoHandler: BurnValue poolSlotInfo not found', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -952,14 +952,14 @@ async function handleBurnValue(
             transaction
         );
 
-        console.log('PoolSoltInfoHandler: BurnValue success', {
+        console.log('PoolSlotInfoHandler: BurnValue success', {
             contractAddress,
             slot,
             burnValue,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: BurnValue failed', {
+        console.error('PoolSlotInfoHandler: BurnValue failed', {
             contractAddress,
             slot,
             eventId: event.eventId,
@@ -997,7 +997,7 @@ async function handleCreatePoolSlot(
     const openFundShareSlot = toString(args.openFundShareSlot || args.slot);
 
     if (!poolId || !openFundShare || !openFundShareSlot) {
-        console.warn('PoolSoltInfoHandler: CreatePoolSlot missing required fields', {
+        console.warn('PoolSlotInfoHandler: CreatePoolSlot missing required fields', {
             eventId: event.eventId,
             hasPoolId: !!poolId,
             hasOpenFundShare: !!openFundShare,
@@ -1009,7 +1009,7 @@ async function handleCreatePoolSlot(
     // 查找 PoolSlotInfo
     const poolSlotInfo = await getPoolSlotInfo(event.chainId, openFundShare, openFundShareSlot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSoltInfoHandler: CreatePoolSlot poolSlotInfo not found', {
+        console.warn('PoolSlotInfoHandler: CreatePoolSlot poolSlotInfo not found', {
             contractAddress: openFundShare,
             slot: openFundShareSlot,
             poolId,
@@ -1027,14 +1027,14 @@ async function handleCreatePoolSlot(
             { transaction }
         );
 
-        console.log('PoolSoltInfoHandler: CreatePoolSlot success', {
+        console.log('PoolSlotInfoHandler: CreatePoolSlot success', {
             contractAddress: openFundShare,
             slot: openFundShareSlot,
             poolId,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSoltInfoHandler: CreatePoolSlot failed', {
+        console.error('PoolSlotInfoHandler: CreatePoolSlot failed', {
             contractAddress: openFundShare,
             slot: openFundShareSlot,
             poolId,
@@ -1056,13 +1056,13 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
                 break;
 
             default:
-                console.warn('PoolSoltInfoHandler: unhandled OpenFundMarket event signature', {
+                console.warn('PoolSlotInfoHandler: unhandled OpenFundMarket event signature', {
                     eventFunc,
                     eventId: event.eventId,
                 });
         }
     } catch (error) {
-        console.error('PoolSoltInfoHandler: handleOpenFundMarketEvent failed', {
+        console.error('PoolSlotInfoHandler: handleOpenFundMarketEvent failed', {
             eventFunc,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
@@ -1113,13 +1113,13 @@ export async function handleOpenShareDelegateEvent(param: HandlerParam): Promise
                 break;
 
             default:
-                console.warn('PoolSoltInfoHandler: unhandled event signature', {
+                console.warn('PoolSlotInfoHandler: unhandled event signature', {
                     eventFunc,
                     eventId: event.eventId,
                 });
         }
     } catch (error) {
-        console.error('PoolSoltInfoHandler: handleOpenShareDelegateEvent failed', {
+        console.error('PoolSlotInfoHandler: handleOpenShareDelegateEvent failed', {
             eventFunc,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),

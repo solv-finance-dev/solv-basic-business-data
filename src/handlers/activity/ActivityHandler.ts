@@ -62,17 +62,6 @@ export async function handleErc3525Event(param: HandlerParam): Promise<void> {
             case ERC3525_EVENT_SIGNATURES.TRANSFER:
                 await handleTransfer(event, args, transaction);
                 break;
-
-
-            case 'sftWrappedRouter.ts todo sth.':
-                // sftWrappedRouter
-                break;
-            case 'solvBTCrouterV2.ts todo sth.':
-                // solvBTCrouterV2
-                break;
-            case 'xSolvBTCPool.ts todo sth.':
-                // xSolvBTCPool
-                break;
             default:
                 console.warn('ActivityHandler: handleErc3525Event: unhandled event signature', {
                     eventFunc,

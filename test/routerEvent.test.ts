@@ -297,7 +297,7 @@ describe('test router event', () => {
             throw error;
         }
     });
-    test('PoolSoltInfoHandler', async () => {
+    test('PoolSlotInfoHandler', async () => {
         const sequelize = await initSequelize();
         const transaction = await sequelize.transaction();
 
