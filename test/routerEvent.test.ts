@@ -186,6 +186,24 @@ describe('test router event', () => {
             throw error;
         }
     });
+    test('RawOptSaleInfoOpenEndHandler.ts', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        // handleOpenFundMarketEvent router contract exists
+        // const events = "[{\"id\": \"5408044\", \"eventId\": \"1_0x2636c3999bcd23371169474778bc659422552d44f19385cb4293b2c89b60b667_104\", \"chainId\": 1, \"blockNumber\": \"24376333\", \"blockHash\": \"0x66cc68481924e7fa252e83db2eeb165b5effef11d991098790429092a041ffc0\", \"blockTimestamp\": \"1770121751\", \"transactionHash\": \"0x2636c3999bcd23371169474778bc659422552d44f19385cb4293b2c89b60b667\", \"transactionIndex\": 27, \"logIndex\": 104, \"contractAddress\": \"0x57bb6a8563a8e8478391c79f3f433c6ba077c567\", \"eventSignature\": \"0xc51cca244fc8e01ee10b07c39991abc0fcb99dd8650fa53b0797d3e8446451f6\", \"indexedTopic1\": \"0x8c30d7ea7c682f3f8ec65beaba1c21755fc5c6976f4c979da06abee7c5890e8f\", \"indexedTopic2\": \"0x0000000000000000000000003d93b9e8f0886358570646dad9421564c5fe6334\", \"indexedTopic3\": null, \"data\": \"0x00000000000000000000000000000000000000000000000000000000000014ff000000000000000000000000000000000000000000000000054277a930f5d2e20000000000000000000000007a56e1c57c7475ccf742a1832b028f0456652f970000000000000000000000000000000000000000000000000e0e57535e1d282c0000000000000000000000000000000000000000000000000553c294bc19e6cc\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-03T12:29:13.894Z\", \"updatedAt\": \"2026-02-03T12:29:13.894Z\"}]";
+        // handleSftWrappedRouterEvent
+        // const events = "[{\"id\": \"5413098\", \"eventId\": \"1_0x1184029996e11497beaf66b71a83bb1b73656a8bbdc3cf2f73c9c9a6b0227806_227\", \"chainId\": 1, \"blockNumber\": \"20546879\", \"blockHash\": \"0x7cfae131c413cea39df263f33ba88b32189f0fecf7775b4b60d4bf38adba02e5\", \"blockTimestamp\": \"1723880027\", \"transactionHash\": \"0x1184029996e11497beaf66b71a83bb1b73656a8bbdc3cf2f73c9c9a6b0227806\", \"transactionIndex\": 68, \"logIndex\": 227, \"contractAddress\": \"0x1ff7d7c0a7d8e94046708c611dec5056a9d2b823\", \"eventSignature\": \"0x4a29c2a0a0125871fb9cb0dcda775193070a8dd3a98e792b07eca515745de3bf\", \"indexedTopic1\": \"0x2dc130e46b5958208155546bd4049d5b3319798063a8c4180b4b2b82f3ebdc3d\", \"indexedTopic2\": \"0x000000000000000000000000794fcab3467f0788d3f9e96f435b1bed5119a9a7\", \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000007a56e1c57c7475ccf742a1832b028f0456652f9700000000000000000000000000000000000000000000000000018f3b56dee000000000000000000000000000c96de26018a54d51c097160568752c4e3bd6c364000000000000000000000000000000000000000000000000000000000000ab78\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-05T09:08:24.339Z\", \"updatedAt\": \"2026-02-05T09:08:24.339Z\"}]";
+        // handleSolvBTCRouterV2Event
+        const events = "[{\"id\": \"5408050\", \"eventId\": \"1_0x2636c3999bcd23371169474778bc659422552d44f19385cb4293b2c89b60b667_114\", \"chainId\": 1, \"blockNumber\": \"24376333\", \"blockHash\": \"0x66cc68481924e7fa252e83db2eeb165b5effef11d991098790429092a041ffc0\", \"blockTimestamp\": \"1770121751\", \"transactionHash\": \"0x2636c3999bcd23371169474778bc659422552d44f19385cb4293b2c89b60b667\", \"transactionIndex\": 27, \"logIndex\": 114, \"contractAddress\": \"0x3d93b9e8f0886358570646dad9421564c5fe6334\", \"eventSignature\": \"0x6937da7733b7e101e4ab6e3a3ec12fe857d7a7ca921348ef12feff7abfcee01a\", \"indexedTopic1\": \"0x000000000000000000000000cea2daf93617b97504e05affc5bcf9b3922d3034\", \"indexedTopic2\": \"0x0000000000000000000000007a56e1c57c7475ccf742a1832b028f0456652f97\", \"indexedTopic3\": \"0x000000000000000000000000aaf7f0b279e17d6c8b4f3ce18bc71477e1248ca7\", \"data\": \"0x000000000000000000000000000000000000000000000000054277a930f5d2e20000000000000000000000000000000000000000000000000553c294bc19e6cc000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018c30d7ea7c682f3f8ec65beaba1c21755fc5c6976f4c979da06abee7c5890e8f\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-03T12:29:13.894Z\", \"updatedAt\": \"2026-02-03T12:29:13.894Z\"}]";
+        try {
+            await routerEvent(JSON.parse(events) as EventEvm[], {}, transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    });
     test('MarketInfoHandler.ts', async () => {
         const sequelize = await initSequelize();
         const transaction = await sequelize.transaction();

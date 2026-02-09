@@ -27,6 +27,7 @@ import RawOptSaleInfoOpenEnd from '../models/RawOptSaleInfoOpenEnd';
 import RouterContractInfo from '../models/RouterContractInfo';
 import SftWrappedTokenInfo from '../models/SftWrappedTokenInfo';
 import XsolvbtcTransactionInfo from '../models/XsolvbtcTransactionInfo';
+import {RouterContractInfo, OptRawNavHistoryPool} from "@solvprotocol/models";
 
 let sequelizeInstance: Sequelize | null = null;
 let sequelizeInitPromise: Promise<Sequelize> | null = null;
@@ -91,6 +92,9 @@ export async function initSequelize(): Promise<Sequelize> {
 					RouterContractInfo,
 					SftWrappedTokenInfo,
 					XsolvbtcTransactionInfo,
+
+					RouterContractInfo,
+					OptRawNavHistoryPool
 				],
 				define: {
 					timestamps: false,
@@ -102,7 +106,8 @@ export async function initSequelize(): Promise<Sequelize> {
 					idle: 0,
 					acquire: 60000,
 				},
-				logging: false,
+				// 生产环境不打印SQL日志
+				logging: process.env.NODE_ENV !== 'prod' ? console.log : false,
 			});
 
 			sequelizeInstance = sequelize;
