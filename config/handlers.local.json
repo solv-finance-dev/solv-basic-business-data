@@ -534,11 +534,16 @@
         ]
       },
       {
-        "handler": "handleSftWrappedRouterEvent",
+        "handler": "handleRouterEvent",
         "abi": "SftWrappedRouter.json",
         "chainIds": null,
         "contractAddresses": null,
         "eventSignatures": [
+          "CancelRedemption(indexed bytes32,indexed address,indexed address,uint256,uint256)",
+          "CreateRedemption(indexed bytes32,indexed address,indexed address,uint256,uint256)",
+          "CreateSubscription(indexed bytes32,indexed address,address,uint256,address,uint256)",
+          "Stake(indexed address,indexed address,address,uint256,uint256,uint256)",
+          "Unstake(indexed address,indexed address,address,uint256,uint256,uint256)"
         ]
       },
       {

@@ -12,6 +12,13 @@ import {
 } from './subHandler/openFundMarket';
 import { handleClaim, handleRepay } from './subHandler/openFundRedemption';
 import { handleClaim as handleShareClaim, handleRepay as handleShareRepay, handleSetInterestRate } from './subHandler/openFundShare';
+import {
+	handleCreateSubscription,
+	handleCreateRedemption,
+	handleCancelRedemption,
+	handleStake,
+	handleUnstake,
+} from './subHandler/router';
 
 // ==================== 事件签名常量 ====================
 
@@ -40,7 +47,12 @@ const OPEN_FUND_SHARE_EVENT_SIGNATURES = {
 	SET_INTEREST_RATE: 'SetInterestRate(uint256,int32)',
 } as const;
 
-const SFT_WRAPPED_ROUTER_EVENT_SIGNATURES = {
+const ROUTER_EVENT_SIGNATURES = {
+	CREATE_SUBSCRIPTION: 'CreateSubscription(bytes32,address,address,uint256,address,uint256)',
+	CREATE_REDEMPTION: 'CreateRedemption(bytes32,address,address,uint256,uint256)',
+	CANCEL_REDEMPTION: 'CancelRedemption(bytes32,address,address,uint256,uint256)',
+	STAKE: 'Stake(address,address,address,uint256,uint256,uint256)',
+	UNSTAKE: 'Unstake(address,address,address,uint256,uint256,uint256)',
 } as const;
 
 const SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES = {
@@ -264,7 +276,46 @@ export async function handleOpenFundShareEvent(param: HandlerParam): Promise<voi
 	}
 }
 
-export async function handleSftWrappedRouterEvent(param: HandlerParam): Promise<void> {
+export async function handleRouterEvent(param: HandlerParam): Promise<void> {
+	const { event, transaction, eventFunc, args } = param;
+
+	try {
+		// 根据事件签名路由到对应的处理函数
+		switch (eventFunc) {
+			case ROUTER_EVENT_SIGNATURES.CREATE_SUBSCRIPTION:
+				await handleCreateSubscription(event, args, transaction);
+				break;
+
+			case ROUTER_EVENT_SIGNATURES.CREATE_REDEMPTION:
+				await handleCreateRedemption(event, args, transaction);
+				break;
+
+			case ROUTER_EVENT_SIGNATURES.CANCEL_REDEMPTION:
+				await handleCancelRedemption(event, args, transaction);
+				break;
+
+			case ROUTER_EVENT_SIGNATURES.STAKE:
+				await handleStake(event, args, transaction);
+				break;
+
+			case ROUTER_EVENT_SIGNATURES.UNSTAKE:
+				await handleUnstake(event, args, transaction);
+				break;
+
+			default:
+				console.warn('ActivityHandler: handleRouterEvent: unhandled event signature', {
+					eventFunc,
+					eventId: event.eventId,
+				});
+		}
+	} catch (error) {
+		console.error('ActivityHandler: handleRouterEvent failed', {
+			eventFunc,
+			eventId: event.eventId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		throw error;
+	}
 }
 
 export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {
