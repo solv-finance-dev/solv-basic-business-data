@@ -1,6 +1,5 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptActivity from '../../../models/RawOptActivity';
 import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
 import RawOptContractInfo from '../../../models/RawOptContractInfo';
 import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
@@ -11,6 +10,7 @@ import CarryInfo from '../../../models/CarryInfo';
 import ProtocolFeeInfo from '../../../models/ProtocolFeeInfo';
 import SftWrappedTokenInfo from '../../../models/SftWrappedTokenInfo';
 import { getOwnerOf, getBalanceOf } from '../../../lib/rpc';
+import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 
 // ==================== 常量定义 ====================
 
@@ -28,30 +28,6 @@ const NAV_TYPE_SUBSCRIBE = '申购';
 const ROUTER_CONTRACT_ADDRESSES: string[] = [];
 
 // ==================== 类型定义 ====================
-
-interface ActivityCreationParams {
-	chainId: number;
-	contractAddress: string;
-	tokenId: string;
-	txHash: string;
-	timestamp: number;
-	transactionIndex: number;
-	eventIndex: number;
-	fromAddress: string;
-	toAddress: string;
-	amount: string;
-	decimals: number;
-	currencyAddress: string;
-	currencySymbol: string;
-	currencyDecimals: number;
-	slot: string;
-	transactionType: string;
-	productType: string;
-	nav: string;
-	poolId: string;
-	blockNumber: number;
-	transaction: Transaction;
-}
 
 // ==================== 工具函数 ====================
 
@@ -359,47 +335,6 @@ async function getSftWrappedTokenInfo(
 }
 
 // ==================== Activity 创建相关函数 ====================
-
-/**
- * 创建 Activity 记录
- */
-async function createActivity(params: ActivityCreationParams): Promise<void> {
-	try {
-		await RawOptActivity.create(
-			{
-				chainId: params.chainId,
-				contractAddress: params.contractAddress.toLowerCase(),
-				tokenId: params.tokenId,
-				txHash: params.txHash,
-				blockTimestamp: params.timestamp,
-				transactionIndex: params.transactionIndex,
-				eventIndex: params.eventIndex,
-				fromAddress: params.fromAddress.toLowerCase(),
-				toAddress: params.toAddress.toLowerCase(),
-				amount: params.amount,
-				decimals: params.decimals,
-				currencySymbol: params.currencySymbol,
-				currencyDecimals: params.currencyDecimals,
-				slot: params.slot,
-				transactionType: params.transactionType,
-				nav: params.nav,
-				poolId: params.poolId.toLowerCase(),
-				blockNumber: params.blockNumber,
-				lastUpdated: params.timestamp,
-				productType: params.productType,
-			},
-			{ transaction: params.transaction }
-		);
-	} catch (error) {
-		console.error('ActivityHandler: Failed to create Activity', {
-			chainId: params.chainId,
-			contractAddress: params.contractAddress,
-			tokenId: params.tokenId,
-			error: error instanceof Error ? error.message : String(error),
-		});
-		throw error;
-	}
-}
 
 /**
  * 计算 NAV 值

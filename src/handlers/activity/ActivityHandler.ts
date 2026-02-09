@@ -1,4 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
+import type { Transaction } from 'sequelize';
+import RawOptActivity from '../../models/RawOptActivity';
 import { handleTransferValue, handleTransfer } from './subHandler/erc3525';
 import {
 	handleCreatePool,
@@ -19,12 +21,12 @@ const ERC3525_EVENT_SIGNATURES = {
 } as const;
 
 const OPEN_FUND_MARKET_EVENT_SIGNATURES = {
-	CREATE_POOL: 'CreatePool(indexed bytes32,indexed address,indexed address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))',
-	UPDATE_FUNDRAISING_END_TIME: 'UpdateFundraisingEndTime(indexed bytes32,uint64,uint64)',
-	SUBSCRIBE: 'Subscribe(indexed bytes32,indexed address,uint256,uint256,address,uint256,uint256)',
-	CLOSE_REDEEM_SLOT: 'CloseRedeemSlot(indexed bytes32,uint256,uint256)',
-	REQUEST_REDEEM: 'RequestRedeem(indexed bytes32,indexed address,indexed uint256,uint256,uint256)',
-	REVOKE_REDEEM: 'RevokeRedeem(indexed bytes32,indexed address,indexed uint256,uint256)',
+	CREATE_POOL: 'CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))',
+	UPDATE_FUNDRAISING_END_TIME: 'UpdateFundraisingEndTime(bytes32,uint64,uint64)',
+	SUBSCRIBE: 'Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)',
+	CLOSE_REDEEM_SLOT: 'CloseRedeemSlot(bytes32,uint256,uint256)',
+	REQUEST_REDEEM: 'RequestRedeem(bytes32,address,uint256,uint256,uint256)',
+	REVOKE_REDEEM: 'RevokeRedeem(bytes32,address,uint256,uint256)',
 } as const;
 
 const OPEN_FUND_REDEMPTION_EVENT_SIGNATURES = {
@@ -47,35 +49,109 @@ const SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES = {
 const X_SOLV_BTC_POOL_EVENT_SIGNATURES = {
 } as const;
 
+// ==================== 类型定义 ====================
+
+export interface ActivityCreationParams {
+	chainId: number;
+	contractAddress: string;
+	tokenId: string;
+	txHash: string;
+	timestamp: number;
+	transactionIndex: number;
+	eventIndex: number;
+	fromAddress: string;
+	toAddress: string;
+	amount: string;
+	decimals: number;
+	currencyAddress: string;
+	currencySymbol: string;
+	currencyDecimals: number;
+	slot: string;
+	transactionType: string;
+	productType: string;
+	nav: string;
+	poolId: string;
+	blockNumber: number;
+	transaction: Transaction;
+}
+
+// ==================== Activity 创建函数 ====================
+export async function createActivity(params: ActivityCreationParams): Promise<void> {
+	try {
+		const [activity, created] = await RawOptActivity.findOrCreate({
+			where: {
+				txHash: params.txHash,
+				transactionIndex: params.transactionIndex,
+				eventIndex: params.eventIndex,
+			},
+			defaults: {
+				chainId: params.chainId,
+				contractAddress: params.contractAddress.toLowerCase(),
+				tokenId: params.tokenId,
+				txHash: params.txHash,
+				blockTimestamp: params.timestamp,
+				transactionIndex: params.transactionIndex,
+				eventIndex: params.eventIndex,
+				fromAddress: params.fromAddress.toLowerCase(),
+				toAddress: params.toAddress.toLowerCase(),
+				amount: params.amount,
+				decimals: params.decimals,
+				currencySymbol: params.currencySymbol,
+				currencyDecimals: params.currencyDecimals,
+				slot: params.slot,
+				transactionType: params.transactionType,
+				nav: params.nav,
+				poolId: params.poolId.toLowerCase(),
+				blockNumber: params.blockNumber,
+				lastUpdated: params.timestamp,
+				productType: params.productType,
+			},
+			transaction: params.transaction,
+		});
+	} catch (error) {
+		console.error('ActivityHandler: Failed to create Activity', {
+			chainId: params.chainId,
+			contractAddress: params.contractAddress,
+			tokenId: params.tokenId,
+			transactionType: params.transactionType,
+			txHash: params.txHash,
+			transactionIndex: params.transactionIndex,
+			eventIndex: params.eventIndex,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		throw error;
+	}
+}
+
 // ==================== 主处理函数 ====================
 
 export async function handleErc3525Event(param: HandlerParam): Promise<void> {
-    const { event, transaction, eventFunc, args } = param;
+	const { event, transaction, eventFunc, args } = param;
 
-    try {
-        // 根据事件签名路由到对应的处理函数
-        switch (eventFunc) {
-            case ERC3525_EVENT_SIGNATURES.TRANSFER_VALUE:
-                await handleTransferValue(event, args, transaction);
-                break;
+	try {
+		// 根据事件签名路由到对应的处理函数
+		switch (eventFunc) {
+			case ERC3525_EVENT_SIGNATURES.TRANSFER_VALUE:
+				await handleTransferValue(event, args, transaction);
+				break;
 
-            case ERC3525_EVENT_SIGNATURES.TRANSFER:
-                await handleTransfer(event, args, transaction);
-                break;
-            default:
-                console.warn('ActivityHandler: handleErc3525Event: unhandled event signature', {
-                    eventFunc,
-                    eventId: event.eventId,
-                });
-        }
-    } catch (error) {
-        console.error('ActivityHandler: handleErc3525Event failed', {
-            eventFunc,
-            eventId: event.eventId,
-            error: error instanceof Error ? error.message : String(error),
-        });
-        throw error;
-    }
+			case ERC3525_EVENT_SIGNATURES.TRANSFER:
+				await handleTransfer(event, args, transaction);
+				break;
+			default:
+				console.warn('ActivityHandler: handleErc3525Event: unhandled event signature', {
+					eventFunc,
+					eventId: event.eventId,
+				});
+		}
+	} catch (error) {
+		console.error('ActivityHandler: handleErc3525Event failed', {
+			eventFunc,
+			eventId: event.eventId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		throw error;
+	}
 }
 
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {

@@ -501,7 +501,7 @@
         "handler": "handleOpenFundMarketEvent",
         "abi": "OpenFundMarket.json",
         "chainIds": null,
-        "contractAddresses": null,
+        "contractAddresses": ["0xaE050694c137aD777611286C316E5FDda58242F3"],
         "eventSignatures": [
           "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
           "UpdateFundraisingEndTime(bytes32,uint64,uint64)",
