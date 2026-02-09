@@ -436,5 +436,57 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Activity",
+    "module": "activity/ActivityHandler",
+    "handlers": [
+      {
+        "handler": "handleErc3525Event",
+        "abi": "Erc3525Token.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "TransferValue(uint256,uint256,uint256)",
+          "Transfer(address,address,uint256)"
+        ]
+      },
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "CreatePool(indexed bytes32,indexed address,indexed address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
+          "UpdateFundraisingEndTime(indexed bytes32,uint64,uint64)",
+          "Subscribe(indexed bytes32,indexed address,uint256,uint256,address,uint256,uint256)",
+          "CloseRedeemSlot(indexed bytes32,uint256,uint256)",
+          "RequestRedeem(indexed bytes32,indexed address,indexed uint256,uint256,uint256)",
+          "RevokeRedeem(indexed bytes32,indexed address,indexed uint256,uint256)",
+          "RevokeRedeem(indexed bytes32,indexed address,indexed uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleOpenFundShareEvent",
+        "abi": "OpenFundShareDelegate.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "Claim(indexed address,indexed uint256,uint256)",
+          "Repay(indexed uint256,indexed address,uint256)",
+          "SetInterestRate(indexed uint256,int32)"
+        ]
+      },
+      {
+        "handler": "handleOpenFundRedemptionEvent",
+        "abi": "OpenFundRedemptionDelegate.json",
+        "chainIds": null,
+        "contractAddresses": null,
+        "eventSignatures": [
+          "Claim(indexed address,indexed uint256,uint256)",
+          "Repay(indexed uint256,indexed address,uint256)"
+        ]
+      }
+    ]
   }
 ]

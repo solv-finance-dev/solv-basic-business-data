@@ -24,6 +24,7 @@ import RawOptPoolSlotInfo from '../models/RawOptPoolSlotInfo';
 import RawOptRedeemSlotInfo from '../models/RawOptRedeemSlotInfo';
 import RawOptRepayInfoOpenEnd from '../models/RawOptRepayInfoOpenEnd';
 import RawOptSaleInfoOpenEnd from '../models/RawOptSaleInfoOpenEnd';
+import RouterContractInfo from '../models/RouterContractInfo';
 import SftWrappedTokenInfo from '../models/SftWrappedTokenInfo';
 import XsolvbtcTransactionInfo from '../models/XsolvbtcTransactionInfo';
 
@@ -87,6 +88,7 @@ export async function initSequelize(): Promise<Sequelize> {
 					RawOptRedeemSlotInfo,
 					RawOptRepayInfoOpenEnd,
 					RawOptSaleInfoOpenEnd,
+					RouterContractInfo,
 					SftWrappedTokenInfo,
 					XsolvbtcTransactionInfo,
 				],
