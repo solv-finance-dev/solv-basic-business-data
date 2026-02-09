@@ -8,6 +8,15 @@ const ERC3525_EVENT_SIGNATURES = {
     TRANSFER: 'Transfer(address,address,uint256)',
 } as const;
 
+const SFT_WRAPPED_ROUTER_EVENT_SIGNATURES = {
+} as const;
+
+const SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES = {
+} as const;
+
+const X_SOLV_BTC_POOL_EVENT_SIGNATURES = {
+} as const;
+
 // ==================== 主处理函数 ====================
 
 export async function handleErc3525Event(param: HandlerParam): Promise<void> {
@@ -24,6 +33,16 @@ export async function handleErc3525Event(param: HandlerParam): Promise<void> {
                 await handleTransfer(event, args, transaction);
                 break;
 
+
+            case 'sftWrappedRouter.ts todo sth.':
+                // sftWrappedRouter
+                break;
+            case 'solvBTCrouterV2.ts todo sth.':
+                // solvBTCrouterV2
+                break;
+            case 'xSolvBTCPool.ts todo sth.':
+                // xSolvBTCPool
+                break;
             default:
                 console.warn('ActivityHandler: handleErc3525Event: unhandled event signature', {
                     eventFunc,
