@@ -20,6 +20,8 @@ import {
 	handleUnstake,
 } from './subHandler/router';
 import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
+import { handleSolvBTCRouterV2Deposit, handleSolvBTCRouterV2WithdrawRequest, handleSolvBTCRouterV2CancelWithdrawRequest } from './subHandler/solvBTCRouterV2';
+import { handleXSolvBTCPoolDeposit, handleXSolvBTCPoolWithdraw } from './subHandler/xSolvBTCPool';
 
 // ==================== 事件签名常量 ====================
 
@@ -61,9 +63,14 @@ const SFT_WRAPPED_TOKEN_EVENT_SIGNATURES = {
 } as const;
 
 const SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES = {
+    DEPOSIT: 'Deposit(address,address,address,uint256,uint256,address[],bytes32[])',
+    CANCEL_WITHDRAW_REQUEST: 'CancelWithdrawRequest(address,address,address,bytes32,uint256,uint256)',
+    WITHDRAW_REQUEST: 'WithdrawRequest(address,address,address,bytes32,uint256,uint256)',
 } as const;
 
 const X_SOLV_BTC_POOL_EVENT_SIGNATURES = {
+    DEPOSIT: 'Deposit(address,address,address,uint256,uint256)',
+    WITHDRAW: 'Withdraw(address,address,address,uint256,uint256)',
 } as const;
 
 // ==================== 类型定义 ====================
@@ -113,6 +120,7 @@ export async function createActivity(params: ActivityCreationParams): Promise<vo
 				toAddress: params.toAddress.toLowerCase(),
 				amount: params.amount,
 				decimals: params.decimals,
+				currencyAddress: params.currencyAddress.toLowerCase(),
 				currencySymbol: params.currencySymbol,
 				currencyDecimals: params.currencyDecimals,
 				slot: params.slot,
@@ -349,7 +357,63 @@ export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<v
 }
 
 export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {
+    const { event, transaction, eventFunc, args } = param;
+
+    try {
+        switch (eventFunc) {
+			case SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES.CANCEL_WITHDRAW_REQUEST:
+				await handleSolvBTCRouterV2CancelWithdrawRequest(event, args, transaction);
+				break;
+
+            case SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES.DEPOSIT:
+                await handleSolvBTCRouterV2Deposit(event, args, transaction);
+                break;
+
+            case SOLV_BTC_ROUTER_V2_EVENT_SIGNATURES.WITHDRAW_REQUEST:
+                await handleSolvBTCRouterV2WithdrawRequest(event, args, transaction);
+                break;
+
+            default:
+                console.warn('ActivityHandler: handleSolvBTCRouterV2Event: unhandled event signature', {
+                    eventFunc,
+                    eventId: event.eventId,
+                });
+        }
+    } catch (error) {
+        console.error('ActivityHandler: handleSolvBTCRouterV2Event failed', {
+            eventFunc,
+            eventId: event.eventId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+    }
 }
 
 export async function handleXSolvBTCPoolEvent(param: HandlerParam): Promise<void> {
+    const { event, transaction, eventFunc, args } = param;
+
+    try {
+        switch (eventFunc) {
+            case X_SOLV_BTC_POOL_EVENT_SIGNATURES.DEPOSIT:
+                await handleXSolvBTCPoolDeposit(event, args, transaction);
+                break;
+
+            case X_SOLV_BTC_POOL_EVENT_SIGNATURES.WITHDRAW:
+                await handleXSolvBTCPoolWithdraw(event, args, transaction);
+                break;
+
+            default:
+                console.warn('ActivityHandler: handleXSolvBTCPoolEvent: unhandled event signature', {
+                    eventFunc,
+                    eventId: event.eventId,
+                });
+        }
+    } catch (error) {
+        console.error('ActivityHandler: handleXSolvBTCPoolEvent failed', {
+            eventFunc,
+            eventId: event.eventId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+    }
 }

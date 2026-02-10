@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {loadJsonConfig} from '../lib/config';
-import {getEnv, eventSignature} from '../lib/utils';
+import {eventSignature, getEnv} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
 import type {
     ChainMatcher,
@@ -53,7 +53,13 @@ export async function routerEvent(
 
         // 顺序执行每个 handler，而不是并发执行
         for (const entry of matchedHandlers) {
-            const args = entry.abi ? decodeEventFromAbi(entry.abi, event) : {};
+            let args = {};
+            try {
+                args = entry.abi ? decodeEventFromAbi(entry.abi, event) : {};
+            } catch (e) {
+                console.error("MonitorService: Failed to decode event with ABI for handler", entry.name, " event.id ", event.id, e);
+                continue;
+            }
             const eventSignatureKey = event.eventSignature.toLowerCase();
             const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[eventSignatureKey] : '';
             try {

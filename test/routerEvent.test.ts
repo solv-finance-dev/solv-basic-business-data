@@ -25,7 +25,11 @@ const BNB_TEMPLATE_ADDRESS_MAP: Record<string, string[]> = {
     "0xc8a272a7f3a153b04ab11279ddaf18e6b898f114aa17a8b329630d37e9a6c572": ["0x1346b618dc92810ec74163e4c27004c921d446a5", "0x4aae823a6a0b376de6a78e74ecc5b079d38cbcf7", "0x53e63a31fd1077f949204b94f431bcab98f72bce"]
 };
 
-const ETH_TEMPLATE_ADDRESS_MAP: Record<string, string[]> = {"0x6ec857c6ca1ae8448b8fa03c99fffa6d43899fd913f1af415e37176918c1de7a": ["0x1d0db695f3033875d1b6a0155c38b3ee2aed3082", "0x66e6b4c8aa1b8ca548cc4ebcd6f3a8c6f4f3d04d", "0x7d6c3860b71cf82e2e1e8d5d104cf77f5b84f93a", "0x982d50f8557d57b748733a3fc3d55aef40c46756", "0xc9a8d31465a1d4bd9b95e0e80016f7b23f992ebf", "0xd3ba838b3e32654ad2ad1741d2483d807c49e6f9"]};
+const ETH_TEMPLATE_ADDRESS_MAP: Record<string, string[]> = {
+    "0x6ec857c6ca1ae8448b8fa03c99fffa6d43899fd913f1af415e37176918c1de7a": ["0x1d0db695f3033875d1b6a0155c38b3ee2aed3082", "0x66e6b4c8aa1b8ca548cc4ebcd6f3a8c6f4f3d04d", "0x7d6c3860b71cf82e2e1e8d5d104cf77f5b84f93a", "0x982d50f8557d57b748733a3fc3d55aef40c46756", "0xc9a8d31465a1d4bd9b95e0e80016f7b23f992ebf", "0xd3ba838b3e32654ad2ad1741d2483d807c49e6f9"],
+    "0xc30ce88f5e35e9e52ef522887407c7e48fc30575f887289cd41d63bbc665e7ec": ["0x325dc9ebcec31940c658acaca45f8293418d811e", "0x32bc653dbd08c70f4ddef2bab15915193a617d75", "0xcea2daf93617b97504e05affc5bcf9b3922d3034", "0xe7c253ead50976caf7b0c2cbca569146a7741b50"],
+    "0xc8a272a7f3a153b04ab11279ddaf18e6b898f114aa17a8b329630d37e9a6c572": ["0x7a56e1c57c7475ccf742a1832b028f0456652f97", "0xd9d920aa40f578ab794426f5c90f6c731d159def"]
+};
 
 describe('test router event', () => {
     // 测试结束后清理资源
@@ -335,5 +339,30 @@ describe('test router event', () => {
             await transaction.rollback();
             throw error;
         }
-    }, 120000); // 设置测试超时时间为 120 秒
+    }, 120000);
+
+    test('ActivityHandler Daniel test', async () => {
+        const sequelize = await initSequelize();
+        const transaction = await sequelize.transaction();
+
+        try {
+            // handleSftWrappedTokenEvent
+            const events = "[{\"id\": \"5426524\", \"eventId\": \"1_0x691c459265bd44ef14191e868f5f3917d58f8aa8c3acf7b7b57a03e1103cbb8c_184\", \"chainId\": 1, \"blockNumber\": \"24424549\", \"blockHash\": \"0x40db97cd176c77c623e49e036dbb52ec8952880c2fce67f74c06521813bb0a01\", \"blockTimestamp\": \"1770704483\", \"transactionHash\": \"0x691c459265bd44ef14191e868f5f3917d58f8aa8c3acf7b7b57a03e1103cbb8c\", \"transactionIndex\": 62, \"logIndex\": 184, \"contractAddress\": \"0x7a56e1c57c7475ccf742a1832b028f0456652f97\", \"eventSignature\": \"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef\", \"indexedTopic1\": \"0x000000000000000000000000337685fdab40d39bd02028545a4ffa7d287cc3e2\", \"indexedTopic2\": \"0x0000000000000000000000005738df8073ad05d0c0fcf60e358033268ebf16cc\", \"indexedTopic3\": null, \"data\": \"0x00000000000000000000000000000000000000000000000000003faa25226000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-10T06:21:30.366Z\", \"updatedAt\": \"2026-02-10T06:21:30.366Z\"}, {\"id\": \"5426523\", \"eventId\": \"1_0x691c459265bd44ef14191e868f5f3917d58f8aa8c3acf7b7b57a03e1103cbb8c_182\", \"chainId\": 1, \"blockNumber\": \"24424549\", \"blockHash\": \"0x40db97cd176c77c623e49e036dbb52ec8952880c2fce67f74c06521813bb0a01\", \"blockTimestamp\": \"1770704483\", \"transactionHash\": \"0x691c459265bd44ef14191e868f5f3917d58f8aa8c3acf7b7b57a03e1103cbb8c\", \"transactionIndex\": 62, \"logIndex\": 182, \"contractAddress\": \"0x7a56e1c57c7475ccf742a1832b028f0456652f97\", \"eventSignature\": \"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef\", \"indexedTopic1\": \"0x0000000000000000000000007033631ca6b67825dc2fad395f124309de00224d\", \"indexedTopic2\": \"0x000000000000000000000000337685fdab40d39bd02028545a4ffa7d287cc3e2\", \"indexedTopic3\": null, \"data\": \"0x00000000000000000000000000000000000000000000000000003faa25226000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-02-10T06:21:30.366Z\", \"updatedAt\": \"2026-02-10T06:21:30.366Z\"}]";
+            // handleSolvBTCRouterV2Event CancelWithdrawRequest
+            // const events = "";
+            // handleSolvBTCRouterV2Event Deposit
+            // const events = "";
+            // handleSolvBTCRouterV2Event WithdrawRequest
+            // const events = "";
+            // handleXSolvBTCPoolEvent Deposit
+            // const events = "";
+            // handleXSolvBTCPoolEvent Withdraw
+            // const events = "";
+            await routerEvent(JSON.parse(events) as EventEvm[], ETH_TEMPLATE_ADDRESS_MAP, transaction);
+            await transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    }, 240000);
 });

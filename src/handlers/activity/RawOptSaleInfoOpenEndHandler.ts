@@ -4,6 +4,7 @@ import {sendQueueMessage} from '../../lib/sqs';
 import {HandlerParam} from "../../types/handler";
 import {RouterContractInfo, OptRawNavHistoryPool} from "@solvprotocol/models";
 import {Op} from "sequelize";
+import {getSubscribeNav} from "../../services/activityService";
 
 // 处理 OpenFundMarket 的 Subscribe 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
@@ -60,26 +61,7 @@ export async function handleSftWrappedRouterEvent(param: HandlerParam): Promise<
         transaction,
     });
 
-    const subscribeNav = await OptRawNavHistoryPool.findOne({
-        where: {
-            navType: 'Investment',
-            poolId,
-            lastUpdated: {
-                [Op.lte]: event.blockTimestamp
-            }
-        },
-        limit: 1,
-        order: [['id', 'DESC']],
-        transaction
-    });
-
-    let nav;
-    if (subscribeNav) {
-        nav = subscribeNav.nav;
-    } else {
-        nav = resolveNav(currencyInfo?.decimals)
-    }
-
+    const nav= await getSubscribeNav(poolId, event.blockTimestamp, currencyInfo?.decimals);
     const amount = args.swtTokenAmount !== undefined ? String(args.swtTokenAmount) : undefined;
     await handleSaleEvent(param, poolId, buyer, currencyInfo, nav, amount);
 }
@@ -106,27 +88,7 @@ export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<v
         transaction,
     });
 
-
-    const subscribeNav = await OptRawNavHistoryPool.findOne({
-        where: {
-            navType: 'Investment',
-            poolId,
-            lastUpdated: {
-                [Op.lte]: event.blockTimestamp
-            }
-        },
-        limit: 1,
-        order: [['id', 'DESC']],
-        transaction
-    });
-
-    let nav;
-    if (subscribeNav) {
-        nav = subscribeNav.nav;
-    } else {
-        nav = resolveNav(currencyInfo?.decimals)
-    }
-
+    const nav = await getSubscribeNav(poolId, event.blockTimestamp, currencyInfo?.decimals);
     const amount = args.targetTokenAmount !== undefined ? String(args.targetTokenAmount) : undefined;
     await handleSaleEvent(param, poolId, buyer, currencyInfo, nav, amount);
 }
@@ -183,22 +145,4 @@ async function handleSaleEvent(
     });
 
     console.log('RawOptSaleInfoOpenEndHandler: created record for txHash ', event.transactionHash, ' eventId ', event.eventId);
-}
-
-function resolveNav(decimals?: number): string | undefined {
-    if (decimals === undefined || decimals === null) {
-        return undefined;
-    }
-
-    if (decimals === 18) {
-        return '1000000000000000000';
-    }
-
-    try {
-        const navValue = BigInt(10) ** BigInt(decimals);
-        return navValue.toString();
-    } catch (error) {
-        console.warn('RawOptSaleInfoOpenEndHandler: failed to calculate nav', {decimals, error});
-        return undefined;
-    }
 }
