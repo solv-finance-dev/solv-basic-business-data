@@ -547,6 +547,30 @@
         ]
       },
       {
+        "handler": "handleSftWrappedRouterEvent",
+        "abi": "SftWrappedRouter.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x1fF7d7C0A7D8E94046708C611DeC5056A9d2B823",
+          "0x01024AaeD5561fa6237C0ad4073417576C591261",
+          "0xa3C5e4d471DF75447dcb1256eF1Ada80EEb806B3",
+          "0xb8c587fd9529ebf50265023ec88cf70aa2b00878",
+          "0x5c1215712F174dF2Cbc653eDce8B53FA4CAF2201",
+          "0x8EC6Ef69a423045cEa97d2Bd0D768D042A130aA7",
+          "0xa83376174F44B06536B0f0DDBa6Da6F7e8FD3167",
+          "0xe9eD7530427Cb41A56C9e004e00e074cCc168C44",
+          "0x836bE4332347440995Bc06103aA740AdaFC0068a",
+          "0x6Ea88D4D0c4bC06F6A51f427eF295c93e10D0b36"
+        ],
+        "eventSignatures": [
+          "CancelRedemption(bytes32,address,address,uint256,uint256)",
+          "CreateRedemption(bytes32,address,address,uint256,uint256)",
+          "CreateSubscription(bytes32,address,address,uint256,address,uint256)",
+          "Stake(address,address,address,uint256,uint256,uint256)",
+          "Unstake(address,address,address,uint256,uint256,uint256)"
+        ]
+      },
+      {
         "handler": "handleSftWrappedTokenEvent",
         "abi": "SftWrappedToken.json",
         "chainIds": [1, 56, 42161],
@@ -559,17 +583,29 @@
       {
         "handler": "handleSolvBTCRouterV2Event",
         "abi": "SolvBTCRouterV2.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x3d93B9e8F0886358570646dAd9421564C5fE6334",
+          "0x67035877F5c12202c387d1698274C2aBF28F3678",
+          "0x92E8A4407FD1ae7a53a32f1f832184edF071080A"
+        ],
         "eventSignatures": [
+          "CancelWithdrawRequest(address,address,address,bytes32,uint256,uint256)",
+          "Deposit(address,address,address,uint256,uint256,address[],bytes32[])",
+          "WithdrawRequest(address,address,address,bytes32,uint256,uint256)"
         ]
       },
       {
         "handler": "handleXSolvBTCPoolEvent",
         "abi": "XSolvBTCPool.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56],
+        "contractAddresses": [
+          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86",
+          "0xF50860533D209E44dbe02F58B77EA85a8bfC28a3"
+        ],
         "eventSignatures": [
+          "Deposit(address,address,address,uint256,uint256)",
+          "Withdraw(address,address,address,uint256,uint256)"
         ]
       }
     ]
