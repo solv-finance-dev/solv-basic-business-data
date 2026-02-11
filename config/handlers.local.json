@@ -328,8 +328,9 @@
       {
         "handler": "handleErc3525TokenInfoEvent",
         "abi": "OpenFundShareDelegate.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [56],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
         "eventSignatures": [
           "TransferValue(uint256,uint256,uint256)",
           "Transfer(address,address,uint256)"
@@ -344,8 +345,12 @@
       {
         "handler": "handleErc20TokenInfoEvent",
         "abi": "SftWrappedToken.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x823160CC510b8DF4e6905dCA1C2f083A15A64436",
+          "0x014e6F6ba7a9f4C9a51a0Aa3189B5c0a21006869"
+        ],
+        "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
         "eventSignatures": [
           "Transfer(address,address,uint256)",
           "SetAlias(string,string)"
@@ -360,8 +365,8 @@
       {
         "handler": "handleMarketContractEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": ["0xaE050694c137aD777611286C316E5FDda58242F3"],
         "eventSignatures": [
           "AddSFT(address,address)",
           "RemoveSFT(address)"
@@ -376,8 +381,12 @@
       {
         "handler": "handleNavHistoryPoolEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
         "eventSignatures": [
           "SetRedeemNav(bytes32,uint256,uint256)",
           "SetSubscribeNav(bytes32,uint256,uint256)"
@@ -392,8 +401,12 @@
       {
         "handler": "handleOpenFundMarketEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
         "eventSignatures": [
           "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
           "RemovePool(bytes32)",
@@ -407,8 +420,12 @@
       {
         "handler": "handleOracleEvent",
         "abi": "NavOracle.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x6ec1fec6c6af53624733f671b490b8250ff251ed",
+          "0x9c491539aec346aafeb0bee9a1e9d9c02ab50889",
+          "0x8c29858319614380024093dbee553f9337665756"
+        ],
         "eventSignatures": [
           "UpdateAllTimeHighRedeemNav(bytes32,uint256,uint256)"
         ]
@@ -416,8 +433,12 @@
       {
         "handler": "handleWhitelistEvent",
         "abi": "Whitelist.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x8f694b722b32ab9fe7959d8398cd61b70cde58db",
+          "0x069c3bdf1b0083bb78652b6e1e1a68c481ae2ff5",
+          "0x2f5ce1a4ab04de1ce667e5ed2ec1a11ac20da732"
+        ],
         "eventSignatures": [
           "SetWhitelist(bytes32,bytes32,bool)"
         ]
@@ -431,8 +452,12 @@
       {
         "handler": "handleOpenFundMarketEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
         "eventSignatures": [
           "CreatePoolSlot(bytes32,address,uint256,uint256)"
         ]
@@ -440,8 +465,9 @@
       {
         "handler": "handleOpenShareDelegateEvent",
         "abi": "OpenFundShareDelegate.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
         "eventSignatures": [
           "CreateSlot(uint256,address,bytes)",
           "MintValue(uint256,uint256,uint256)",
@@ -460,8 +486,12 @@
       {
         "handler": "handleOpenFundMarketEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
         "eventSignatures": [
           "CloseRedeemSlot(bytes32,uint256,uint256)",
           "SetRedeemNav(bytes32,uint256,uint256)"
@@ -470,8 +500,9 @@
       {
         "handler": "handleRedeemShareDelegateEvent",
         "abi": "OpenFundRedemptionDelegate.json",
-        "chainIds": null,
+        "chainIds": [1, 56, 42161],
         "contractAddresses": null,
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
         "eventSignatures": [
           "CreateSlot(uint256,address,bytes)",
           "MintValue(uint256,uint256,uint256)",
@@ -490,8 +521,9 @@
       {
         "handler": "handleErc3525Event",
         "abi": "Erc3525Token.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
         "eventSignatures": [
           "TransferValue(uint256,uint256,uint256)",
           "Transfer(address,address,uint256)"
@@ -500,8 +532,12 @@
       {
         "handler": "handleOpenFundMarketEvent",
         "abi": "OpenFundMarket.json",
-        "chainIds": null,
-        "contractAddresses": ["0xaE050694c137aD777611286C316E5FDda58242F3"],
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
         "eventSignatures": [
           "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
           "UpdateFundraisingEndTime(bytes32,uint64,uint64)",
@@ -515,8 +551,9 @@
       {
         "handler": "handleOpenFundShareEvent",
         "abi": "OpenFundShareDelegate.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
         "eventSignatures": [
           "Claim(address,uint256,uint256)",
           "Repay(uint256,address,uint256)",
@@ -526,8 +563,9 @@
       {
         "handler": "handleOpenFundRedemptionEvent",
         "abi": "OpenFundRedemptionDelegate.json",
-        "chainIds": null,
-        "contractAddresses": null,
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
         "eventSignatures": [
           "Claim(address,uint256,uint256,address,uint256)",
           "Repay(uint256,address,address,uint256)"
@@ -535,19 +573,6 @@
       },
       {
         "handler": "handleRouterEvent",
-        "abi": "SftWrappedRouter.json",
-        "chainIds": null,
-        "contractAddresses": null,
-        "eventSignatures": [
-          "CancelRedemption(indexed bytes32,indexed address,indexed address,uint256,uint256)",
-          "CreateRedemption(indexed bytes32,indexed address,indexed address,uint256,uint256)",
-          "CreateSubscription(indexed bytes32,indexed address,address,uint256,address,uint256)",
-          "Stake(indexed address,indexed address,address,uint256,uint256,uint256)",
-          "Unstake(indexed address,indexed address,address,uint256,uint256,uint256)"
-        ]
-      },
-      {
-        "handler": "handleSftWrappedRouterEvent",
         "abi": "SftWrappedRouter.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [

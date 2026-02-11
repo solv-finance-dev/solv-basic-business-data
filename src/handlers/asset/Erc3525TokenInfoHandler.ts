@@ -174,22 +174,38 @@ async function handleMint(
     // 获取 tokenURI
     const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
 
-    // 创建新的 TokenInfo
-    await OptRawErc3525TokenInfo.create(
-        {
+    // 使用 findOrCreate 避免唯一约束冲突
+    const [tokenInfo, created] = await OptRawErc3525TokenInfo.findOrCreate({
+        where: {
             chainId,
             contractAddress: contractAddress.toLowerCase(),
             tokenId,
+        },
+        defaults: {
             slot,
             balance: '0',
             holder: to.toLowerCase(),
             mintTime: timestamp,
             isBurned: 0,
             lastUpdated: timestamp,
-            tokenURI,
+            tokenURI: tokenURI || '',
         },
-        { transaction }
-    );
+        transaction,
+    });
+
+    // 如果记录已存在，更新相关信息（但不覆盖 mintTime）
+    if (!created) {
+        await tokenInfo.update(
+            {
+                slot,
+                holder: to.toLowerCase(),
+                lastUpdated: timestamp,
+                tokenURI: tokenURI || tokenInfo.tokenURI || '',
+                isBurned: 0, // 如果是 mint 操作，确保 isBurned 为 0
+            },
+            { transaction }
+        );
+    }
 }
 
 // 处理普通转账或 Burn 操作

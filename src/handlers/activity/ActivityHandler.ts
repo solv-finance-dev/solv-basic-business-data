@@ -20,6 +20,7 @@ import {
 	handleUnstake,
 } from './subHandler/router';
 import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
+import RawOptContractInfo from 'src/models/RawOptContractInfo';
 
 // ==================== 事件签名常量 ====================
 
@@ -220,6 +221,18 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
 export async function handleOpenFundRedemptionEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc, args } = param;
 
+    const contractInfo = await RawOptContractInfo.findOne({
+        where: {
+            chainId: event.chainId,
+            contractAddress: event.contractAddress.toLowerCase(),
+            contractType: "Open Fund Redemptions",
+        },
+        transaction,
+    });
+    if (!contractInfo) {
+        console.log('handleOpenFundRedemptionEvent: contractInfo does not belong to Open Fund Redemptions', event.contractAddress);
+        return;
+    }
 	try {
 		// 根据事件签名路由到对应的处理函数
 		switch (eventFunc) {
@@ -249,7 +262,19 @@ export async function handleOpenFundRedemptionEvent(param: HandlerParam): Promis
 
 export async function handleOpenFundShareEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc, args } = param;
-
+    console.log('handleOpenFundShareEvent', event, eventFunc, args);
+    const contractInfo = await RawOptContractInfo.findOne({
+        where: {
+            chainId: event.chainId,
+            contractAddress: event.contractAddress.toLowerCase(),
+            contractType: "Open Fund Shares",
+        },
+        transaction,
+    });
+    if (!contractInfo) {
+        console.log('handleOpenFundShareEvent: contractInfo does not belong to Open Fund Shares', event.contractAddress);
+        return;
+    }
 	try {
 		// 根据事件签名路由到对应的处理函数
 		switch (eventFunc) {
