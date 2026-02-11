@@ -6,7 +6,7 @@ import RawOptPoolOrderInfo from '../../../models/RawOptPoolOrderInfo';
 import RawOptContractInfo from '../../../models/RawOptContractInfo';
 import CurrencyInfo from '../../../models/CurrencyInfo';
 import { createActivity } from '../ActivityHandler';
-import { getSubscribeNav } from '../../../services/activityService';
+import {getSubscribeNav} from '../../../services/activityService';
 
 const ZERO_VALUE = '0';
 const DEFAULT_DECIMALS = 18;

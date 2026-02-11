@@ -96,6 +96,13 @@ export default class OptRawActivity extends Model {
 	declare decimals?: number;
 
 	@Column({
+		field: 'currency_address',
+		allowNull: true,
+		type: DataType.STRING(64),
+	})
+	declare currencyAddress?: string;
+
+	@Column({
 		field: 'currency_symbol',
 		allowNull: true,
 		type: DataType.STRING,
