@@ -83,7 +83,7 @@ export class SolvBasicBusinessDataStack extends Construct {
 
         if (process.env.CONFIG_ENV !== 'local') {
             const runtimeManagedPolicy = new ManagedPolicy(this, 'OpenDataServiceRuntimePolicy', {
-                managedPolicyName: `${process.env.CONFIG_ENV}-open-data-service-runtime`,
+                managedPolicyName: `${process.env.CONFIG_ENV}-basic-business-data-runtime`,
                 statements: [
                     new PolicyStatement({
                         effect: Effect.ALLOW,
@@ -123,7 +123,7 @@ export class SolvBasicBusinessDataStack extends Construct {
         }
 
         // Create REST API
-        // const restApiName = process.env.CONFIG_ENV + '-open-data-service-api';
+        // const restApiName = process.env.CONFIG_ENV + '-basic-business-data-api';
         // const restApi = new RestApi(this, restApiName, {
         //     restApiName: restApiName,
         //     deployOptions: {
