@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/solv-basic-business-data.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/solv-basic-business-data-stack.ts",
   "watch": {
     "include": [
       "**"
