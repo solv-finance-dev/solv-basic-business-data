@@ -36,6 +36,9 @@ export async function handleSftWrappedTokenTransfer(event: EventEvm, args: Handl
         return;
     }
 
+    // 这里获取的 SftWrappedToken 信息有问题，Subgraph里是根据合约地址一对一，而从数据库里获取到多条。
+    // 因此后面如果用sftWrappedTokenInfo.slot可能会跟Subgraph的对不上，如果根据slot去查poolId也会对应不上
+    // 只是虎丘currency的symbol等一些信息是没有问题的
     const sftWrappedTokenInfo = await getSftWrappedTokenInfo(event.chainId, event.contractAddress, event.blockTimestamp, transaction);
     if (!sftWrappedTokenInfo) {
         console.warn('ActivityHandler: SftWrappedTokenInfo not found', {
@@ -171,10 +174,12 @@ async function getSftWrappedTokenInfo(
         where: {
             chainId,
             tokenAddress,
+            isDefaultSlot: true
         },
         transaction,
     });
     if (!info) {
+        console.log('getSftWrappedTokenInfo: info not found, chainId:', chainId, 'tokenAddress:', tokenAddress);
         return null;
     }
 

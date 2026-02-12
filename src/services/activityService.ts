@@ -1,8 +1,9 @@
-import {OptRawNavHistoryPool} from "@solvprotocol/models";
+// import {RawOptNavHistoryPool} from "@solvprotocol/models";
+import RawOptNavHistoryPool from '../models/RawOptNavHistoryPool';
 import {Op} from "sequelize";
 
 export async function getSubscribeNav(poolId: string | undefined, timestamp: number, decimals?: number): Promise<string | undefined> {
-    const subscribeNav = await OptRawNavHistoryPool.findOne({
+    const subscribeNav = await RawOptNavHistoryPool.findOne({
         where: {
             navType: 'Investment',
             poolId,

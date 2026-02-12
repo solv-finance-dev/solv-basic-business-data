@@ -98,9 +98,9 @@ export default class OptRawActivity extends Model {
 	@Column({
 		field: 'currency_address',
 		allowNull: true,
-		type: DataType.STRING(128),
+		type: DataType.STRING(64),
 	})
-	declare currencyAddress: string;
+	declare currencyAddress?: string;
 
 	@Column({
 		field: 'currency_symbol',
