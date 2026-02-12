@@ -1,8 +1,9 @@
-import {fetchChainEvents, getChainConfigs, getTemplateAddressesMap} from './services/evmService';
+import {fetchChainEvents, fetchTemplateAddresses, getChainConfigs} from './services/evmService';
 import {getLastSyncedBlock, setLastSyncedBlock} from './data/evmSyncState';
 import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
+import type {TemplateAddress} from './types/templateAddress';
 import {initSequelize} from './lib/db';
 
 // 轮询上游服务的默认间隔。 默认10秒
@@ -56,7 +57,8 @@ async function processChain(chain: ChainConfig): Promise<void> {
     const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit);
     console.log(`fetchChainEvents: Fetched ${events.length} events for chain ${chain.chainId} from block ${beginBlockNumber}`);
 
-    const templateAddressesMap = await getTemplateAddressesMap(chain.chainId);
+    const templateAddresses = await fetchTemplateAddresses(chain.chainId);
+    const templateAddressesMap = buildTemplateAddressMap(templateAddresses);
 
     if (!events.length) {
         return;
@@ -85,6 +87,26 @@ async function processChain(chain: ChainConfig): Promise<void> {
             throw error;
         }
     }
+}
+
+function buildTemplateAddressMap(templateAddresses: TemplateAddress[]): Record<string, string[]> {
+    const map: Record<string, string[]> = {};
+
+    for (const item of templateAddresses) {
+        const signature = String(item.eventSignature ?? '').toLowerCase();
+        const address = String(item.address ?? '').toLowerCase();
+        if (!signature || !address) {
+            continue;
+        }
+        if (!map[signature]) {
+            map[signature] = [];
+        }
+        if (!map[signature].includes(address)) {
+            map[signature].push(address);
+        }
+    }
+
+    return map;
 }
 
 function groupEventsByBlock(events: EventEvm[]): Map<number, EventEvm[]> {
