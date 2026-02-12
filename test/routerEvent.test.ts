@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import {routerEvent, routerEventByIds} from "../src/services/monitorService";
+import {routerEvent} from "../src/services/monitorService";
 import {EventEvm} from "../src/types/eventEvm";
 import {closeSequelize, initSequelize} from "../src/lib/db";
 
@@ -367,7 +367,4 @@ describe('test router event', () => {
             throw error;
         }
     }, 300000);
-    test('xxx', async () => {
-        routerEventByIds([5422036], {name: "Activity", handlerName: "handleXSolvBTCPoolEvent"});
-    })
 });

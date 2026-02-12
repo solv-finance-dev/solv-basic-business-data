@@ -1,4 +1,4 @@
-import {routerEventByIds} from '../services/monitorService';
+import {routerEventByIds} from '../../services/monitorService';
 
 interface RouterEventConfig {
     name: string;
