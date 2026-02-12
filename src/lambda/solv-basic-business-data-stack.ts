@@ -76,7 +76,7 @@ export class SolvBasicBusinessDataStack extends Construct {
 
         const runtimeLambdas = [];
 
-        const routerEventEntry = join(__dirname, './handlers/RouterEvent.ts');
+        const routerEventEntry = join(__dirname, '.../lambda/handlers/RouterEvent.ts');
         const routerEventByIds = createQueryLambda('routeEventByIds-handler', 'routeByIds', routerEventEntry);
         const routerEventByConfig = createQueryLambda('routeEventByConfig-handler', 'routeByConfig', routerEventEntry);
         runtimeLambdas.push(routerEventByIds, routerEventByConfig);
