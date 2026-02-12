@@ -352,6 +352,6 @@ async function getHandlerFunction(entry: HandlerEntry): Promise<HandlerFn> {
 }
 
 function resolveHandlerModulePath(moduleName: string): string {
-    const baseDir = path.resolve(__dirname, '..');
+    const baseDir = process.env.HANDLERS_DIR || path.resolve(__dirname, '..');
     return path.resolve(baseDir, 'handlers', moduleName);
 }

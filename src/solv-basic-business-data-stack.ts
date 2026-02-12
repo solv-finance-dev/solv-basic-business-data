@@ -71,7 +71,8 @@ export class SolvBasicBusinessDataStack extends Construct {
                         afterBundling(inputDir, outputDir) {
                             return [
                                 `cp -r ${inputDir}/config ${outputDir}/config`,
-                                `cp -r ${inputDir}/abis ${outputDir}/abis`
+                                `cp -r ${inputDir}/abis ${outputDir}/abis`,
+                                `cp -r ${inputDir}/build/handlers ${outputDir}/handlers`
                             ];
                         },
                         beforeBundling() { return []; },
@@ -81,13 +82,14 @@ export class SolvBasicBusinessDataStack extends Construct {
                 environment: {
                     ...sharedLambdaEnv,
                     ...extraEnv,
+                    HANDLERS_DIR: join(__dirname, './handlers'),
                 },
             });
         };
 
         const runtimeLambdas = [];
 
-        const routerEventEntry = join(__dirname, './handlers/RouterEvent.ts');
+        const routerEventEntry = join(__dirname, './lambda/RouterEvent.ts');
         const routerEventByIds = createQueryLambda('routeEventByIds-handler', 'routeByIds', routerEventEntry);
         const routerEventByConfig = createQueryLambda('routeEventByConfig-handler', 'routeByConfig', routerEventEntry);
         runtimeLambdas.push(routerEventByIds, routerEventByConfig);

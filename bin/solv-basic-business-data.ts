@@ -2,7 +2,7 @@
 import * as dotenv from 'dotenv';
 import {App} from 'aws-cdk-lib';
 import {resolve} from 'path';
-import {SolvBasicBusinessDataStackInstance} from '../src/lambda/solv-basic-business-data-stack';
+import {SolvBasicBusinessDataStackInstance} from '../src/solv-basic-business-data-stack';
 
 const app = new App();
 const envType = app.node.tryGetContext('config');
