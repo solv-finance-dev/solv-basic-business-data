@@ -29,7 +29,14 @@
 		"ts-jest": "^29.4.6",
 		"ts-node": "^10.9.2",
 		"ts-node-dev": "^2.0.0",
-		"typescript": "^5.5.3"
+		"typescript": "^5.5.3",
+		"@types/aws-lambda": "^8.10.147",
+		"@types/lodash": "^4.17.15",
+		"@types/uuid": "^10.0.0",
+		"aws-cdk": "2.1000.2",
+		"scripty": "^2.1.1",
+		"serverless": "^4.22.0",
+		"serverless-offline": "^14.4.0",
 	},
 	"dependencies": {
 		"@solvprotocol/service-utils": "^0.1.0",
@@ -47,7 +54,6 @@
 		"pg": "^8.11.5",
 		"pg-hstore": "^2.3.4",
 		"redis": "^5.10.0",
-		"scripty": "^2.1.1",
 		"sequelize": "^6.37.3",
 		"sequelize-typescript": "^2.1.6"
 	}
