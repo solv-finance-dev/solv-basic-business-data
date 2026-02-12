@@ -2,6 +2,7 @@ import type { HandlerParam } from '../../types/handler';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
 import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
 import { getSlotOf, getOwnerOf, getTokenURI } from '../../lib/rpc';
+import { sendQueueMessage } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO_TOKEN_ID = '0';
@@ -79,6 +80,72 @@ async function getTokenURISafe(
     }
 }
 
+// 统一更新 RawOptContractInfo 并发送 SQS
+async function updateContractInfoAndSendSQS(
+    contractInfo: RawOptContractInfo,
+    updateData: {
+        totalSupply?: string;
+        lastUpdated?: number;
+    },
+    transaction: any
+): Promise<void> {
+    await contractInfo.update(updateData, { transaction });
+
+    try {
+        await sendQueueMessage(contractInfo.chainId, 'configQueue', {
+            source: 'V3_5_Raw_Contract_Info',
+            data: {
+                id: Number(contractInfo.id),
+                chainId: String(contractInfo.chainId),
+                contractAddress: contractInfo.contractAddress,
+            },
+        });
+    } catch (error) {
+        console.error('Erc3525TokenInfoHandler: Failed to send SQS message for updated contract info', {
+            id: contractInfo.id,
+            chainId: contractInfo.chainId,
+            contractAddress: contractInfo.contractAddress,
+            error: error instanceof Error ? error.message : String(error),
+        });
+    }
+}
+
+// 统一更新 OptRawErc3525TokenInfo 并发送 SQS
+async function updateTokenInfoAndSendSQS(
+    erc3525tokenInfo: OptRawErc3525TokenInfo,
+    updateData: {
+        balance?: string;
+        slot?: string;
+        holder?: string;
+        tokenURI?: string;
+        lastUpdated?: number;
+        isBurned?: number;
+    },
+    chainId: number,
+    contractAddress: string,
+    transaction: any
+): Promise<void> {
+    await erc3525tokenInfo.update(updateData, { transaction });
+
+    try {
+        await sendQueueMessage(chainId, 'assetQueue', {
+            source: 'V3_5_Raw_Asset_Info',
+            data: {
+                id: Number(erc3525tokenInfo.id),
+                chainId: String(chainId),
+                contractAddress: contractAddress,
+            },
+        });
+    } catch (error) {
+        console.error('Erc3525TokenInfoHandler: Failed to send SQS message for updated token info', {
+            id: erc3525tokenInfo.id,
+            chainId,
+            contractAddress,
+            error: error instanceof Error ? error.message : String(error),
+        });
+    }
+}
+
 // 处理 TransferValue 事件
 async function handleTransferValue(
     event: any,
@@ -100,15 +167,18 @@ async function handleTransferValue(
             return;
         }
 
-        // 减少余额
+        // 减少余额并发送 SQS
         const balance = fromTokenInfo.balance || '0';
         const newBalance = subBigInt(balance, value);
-        await fromTokenInfo.update(
+        await updateTokenInfoAndSendSQS(
+            fromTokenInfo,
             {
                 balance: newBalance,
                 lastUpdated: timestamp,
             },
-            { transaction }
+            event.chainId,
+            contractAddress,
+            transaction
         );
 
         slot = fromTokenInfo.slot || '0';
@@ -138,22 +208,32 @@ async function handleTransferValue(
         // 获取 tokenURI
         const tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler');
 
-        // 准备更新数据
-        const updateData: any = {
-            balance: newBalance,
-            lastUpdated: timestamp,
-            slot,
-            holder: owner.toLowerCase(),
-            tokenURI,
-        };
+        // 更新目标 token 信息并发送 SQS
+        await updateTokenInfoAndSendSQS(
+            toTokenInfo,
+            {
+                balance: newBalance,
+                lastUpdated: timestamp,
+                slot,
+                holder: owner.toLowerCase(),
+                tokenURI,
+            },
+            event.chainId,
+            contractAddress,
+            transaction
+        );
 
-        await toTokenInfo.update(updateData, { transaction });
-
-        // 如果 fromTokenId 不为 0，也需要更新其 slot
+        // 如果 fromTokenId 不为 0，也需要更新其 slot 并发送 SQS
         if (fromTokenId !== ZERO_TOKEN_ID) {
             const fromTokenInfo = await findTokenInfo(event.chainId, contractAddress, fromTokenId, transaction);
             if (fromTokenInfo) {
-                await fromTokenInfo.update({ slot }, { transaction });
+                await updateTokenInfoAndSendSQS(
+                    fromTokenInfo,
+                    { slot },
+                    event.chainId,
+                    contractAddress,
+                    transaction
+                );
             }
         }
     }
@@ -193,9 +273,10 @@ async function handleMint(
         transaction,
     });
 
-    // 如果记录已存在，更新相关信息（但不覆盖 mintTime）
+    // 如果记录已存在，更新相关信息（但不覆盖 mintTime）并发送 SQS
     if (!created) {
-        await tokenInfo.update(
+        await updateTokenInfoAndSendSQS(
+            tokenInfo,
             {
                 slot,
                 holder: to.toLowerCase(),
@@ -203,8 +284,29 @@ async function handleMint(
                 tokenURI: tokenURI || tokenInfo.tokenURI || '',
                 isBurned: 0, // 如果是 mint 操作，确保 isBurned 为 0
             },
-            { transaction }
+            chainId,
+            contractAddress,
+            transaction
         );
+    } else {
+        // 如果是新创建的记录，也需要发送 SQS
+        try {
+            await sendQueueMessage(chainId, 'assetQueue', {
+                source: 'V3_5_Raw_Asset_Info',
+                data: {
+                    id: Number(tokenInfo.id),
+                    chainId: String(chainId),
+                    contractAddress: contractAddress,
+                },
+            });
+        } catch (error) {
+            console.error('Erc3525TokenInfoHandler: Failed to send SQS message for new token info', {
+                id: tokenInfo.id,
+                chainId,
+                contractAddress,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
     }
 }
 
@@ -243,7 +345,14 @@ async function handleTransferOrBurn(
         updateData.isBurned = 1;
     }
 
-    await tokenInfo.update(updateData, { transaction });
+    // 更新 token 信息并发送 SQS
+    await updateTokenInfoAndSendSQS(
+        tokenInfo,
+        updateData,
+        chainId,
+        contractAddress,
+        transaction
+    );
 
     return {
         supplyDelta: isBurned ? '1' : '0', // burn 时返回 '1' 表示需要减 1
@@ -285,13 +394,14 @@ async function handleTransfer(
         }
     }
 
-    // 更新合约信息
-    await contractInfo.update(
+    // 更新合约信息并发送 SQS
+    await updateContractInfoAndSendSQS(
+        contractInfo,
         {
             totalSupply,
             lastUpdated: timestamp,
         },
-        { transaction }
+        transaction
     );
 }
 
@@ -312,15 +422,16 @@ export async function handleErc3525TokenInfoEvent(param: HandlerParam): Promise<
         console.warn(`Erc3525TokenInfoHandler: ContractInfo not found for ${event.contractAddress}`);
         return;
     }
-    await contractInfo.update(
-        {
-            lastUpdated: event.blockTimestamp,
-        },
-        { transaction }
-    );
-
     if (eventFunc === 'TransferValue(uint256,uint256,uint256)') {
         await handleTransferValue(event, args, transaction);
+        // 更新合约信息并发送 SQS
+        await updateContractInfoAndSendSQS(
+            contractInfo,
+            {
+                lastUpdated: event.blockTimestamp,
+            },
+            transaction
+        );
     } else if (eventFunc === 'Transfer(address,address,uint256)') {
         await handleTransfer(event, args, contractInfo, transaction);
     }

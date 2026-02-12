@@ -7,6 +7,7 @@ import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
 import { getSlotURI, getSlotOf, getOwnerOf } from '../../lib/rpc';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
 import { AbiCoder } from 'ethers';
+import { sendQueueMessage } from '../../lib/sqs';
 
 // ==================== 类型定义 ====================
 
@@ -179,9 +180,9 @@ async function getOrCreatePoolSlotInfo(
 	// 尝试从 PoolOrderInfo 中查找关联的 poolId
 	const poolId = await findPoolIdBySlot(chainId, contractAddress, slot, transaction);
 
-	// 创建新记录（大部分字段会在 CreateSlot 事件中填充）
+	// 创建新记录（大部分字段会在 CreateSlot 事件中填充）并发送 SQS
 	try {
-		return await RawOptPoolSlotInfo.create(
+		return await createPoolSlotInfoAndSendSQS(
 			{
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),
@@ -192,7 +193,8 @@ async function getOrCreatePoolSlotInfo(
 				totalClaimedValue: '0',
 				lastUpdated: Math.floor(Date.now() / 1000),
 			},
-			{ transaction }
+			chainId,
+			transaction
 		);
 	} catch (error) {
 		console.error('PoolSlotInfoHandler: Failed to create PoolSlotInfo', {
@@ -276,6 +278,74 @@ async function getSlotURISafe(
 }
 
 /**
+ * 统一创建 RawOptPoolSlotInfo 并发送 SQS
+ */
+async function createPoolSlotInfoAndSendSQS(
+    createData: Parameters<typeof RawOptPoolSlotInfo.create>[0],
+    chainId: number,
+    transaction: Transaction
+): Promise<RawOptPoolSlotInfo> {
+    const poolSlotInfo = await RawOptPoolSlotInfo.create(createData, { transaction });
+
+    // 创建成功后发送 SQS 消息
+    if (poolSlotInfo && poolSlotInfo.id) {
+        try {
+            await sendQueueMessage(chainId, 'assetQueue', {
+                source: 'V3_5_Raw_Pool_Slot_Info',
+                data: {
+                    id: Number(poolSlotInfo.id),
+                    chainId: String(chainId),
+                    contractAddress: poolSlotInfo.contractAddress,
+                },
+            });
+        } catch (error) {
+            console.error('PoolSlotInfoHandler: Failed to send SQS message for new pool slot info', {
+                id: poolSlotInfo.id,
+                chainId,
+                contractAddress: poolSlotInfo.contractAddress,
+                slot: poolSlotInfo.slot,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
+
+    return poolSlotInfo;
+}
+
+/**
+ * 统一更新 RawOptPoolSlotInfo 并发送 SQS
+ */
+async function updatePoolSlotInfoAndSendSQS(
+    poolSlotInfo: RawOptPoolSlotInfo,
+    updateData: Parameters<typeof RawOptPoolSlotInfo.prototype.update>[0],
+    transaction: Transaction
+): Promise<void> {
+    await poolSlotInfo.update(updateData, { transaction });
+
+    // 确保 chainId 存在才发送 SQS
+    if (poolSlotInfo.chainId !== undefined && poolSlotInfo.chainId !== null) {
+        try {
+            await sendQueueMessage(poolSlotInfo.chainId, 'assetQueue', {
+                source: 'V3_5_Raw_Pool_Slot_Info',
+                data: {
+                    id: Number(poolSlotInfo.id),
+                    chainId: String(poolSlotInfo.chainId),
+                    contractAddress: poolSlotInfo.contractAddress,
+                },
+            });
+        } catch (error) {
+            console.error('PoolSlotInfoHandler: Failed to send SQS message for updated pool slot info', {
+                id: poolSlotInfo.id,
+                chainId: poolSlotInfo.chainId,
+                contractAddress: poolSlotInfo.contractAddress,
+                slot: poolSlotInfo.slot,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
+}
+
+/**
  * 更新 PoolSlotInfo 并刷新 slotURI
  */
 async function updatePoolSlotInfoWithURI(
@@ -290,13 +360,15 @@ async function updatePoolSlotInfoWithURI(
     // 获取最新的 slotURI
     const slotURI = await getSlotURISafe(chainId, contractAddress, slot);
 
-    await poolSlotInfo.update(
+    // 使用统一方法更新并发送 SQS
+    await updatePoolSlotInfoAndSendSQS(
+        poolSlotInfo,
         {
             ...updateData,
             slotURI,
             lastUpdated: timestamp,
         },
-        { transaction }
+        transaction
     );
 }
 
@@ -589,9 +661,9 @@ async function handleCreateSlot(
         ? await getCurrencySymbol(event.chainId, currencyAddress, transaction)
         : undefined;
 
-    // 创建 PoolSlotInfo 记录
+    // 创建 PoolSlotInfo 记录并发送 SQS
     try {
-        await RawOptPoolSlotInfo.create(
+        await createPoolSlotInfoAndSendSQS(
             {
                 chainId: event.chainId,
                 msgSender: creator || toAddressString(args.msgSender),
@@ -613,7 +685,8 @@ async function handleCreateSlot(
                 totalClaimedValue: '0',
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            event.chainId,
+            transaction
         );
 
         console.log('PoolSlotInfoHandler: CreateSlot success', {
@@ -1019,12 +1092,13 @@ async function handleCreatePoolSlot(
     }
 
     try {
-        await poolSlotInfo.update(
+        await updatePoolSlotInfoAndSendSQS(
+            poolSlotInfo,
             {
                 poolId,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('PoolSlotInfoHandler: CreatePoolSlot success', {

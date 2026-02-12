@@ -7,6 +7,7 @@ import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
 import { getSlotOf, getSlotURI } from '../../lib/rpc';
 import RawOptContractInfo from '../../models/RawOptContractInfo';
 import { AbiCoder } from 'ethers';
+import { sendQueueMessage } from '../../lib/sqs';
 
 // ==================== 类型定义 ====================
 
@@ -368,6 +369,74 @@ async function getSlotURISafe(
 }
 
 /**
+ * 统一创建 RawOptRedeemSlotInfo 并发送 SQS
+ */
+async function createRedeemSlotInfoAndSendSQS(
+	createData: Parameters<typeof RawOptRedeemSlotInfo.create>[0],
+	chainId: number,
+	transaction: Transaction
+): Promise<RawOptRedeemSlotInfo> {
+	const redeemSlotInfo = await RawOptRedeemSlotInfo.create(createData, { transaction });
+
+	// 创建成功后发送 SQS 消息
+	if (redeemSlotInfo && redeemSlotInfo.id) {
+		try {
+			await sendQueueMessage(chainId, 'assetQueue', {
+				source: 'V3_5_Raw_Redeem_Slot_Info',
+				data: {
+					id: Number(redeemSlotInfo.id),
+					chainId: String(chainId),
+					contractAddress: redeemSlotInfo.contractAddress,
+				},
+			});
+		} catch (error) {
+			console.error('RedeemSlotInfoHandler: Failed to send SQS message for new redeem slot info', {
+				id: redeemSlotInfo.id,
+				chainId,
+				contractAddress: redeemSlotInfo.contractAddress,
+				slot: redeemSlotInfo.slot,
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
+
+	return redeemSlotInfo;
+}
+
+/**
+ * 统一更新 RawOptRedeemSlotInfo 并发送 SQS
+ */
+async function updateRedeemSlotInfoAndSendSQS(
+	redeemSlotInfo: RawOptRedeemSlotInfo,
+	updateData: Parameters<typeof RawOptRedeemSlotInfo.prototype.update>[0],
+	transaction: Transaction
+): Promise<void> {
+	await redeemSlotInfo.update(updateData, { transaction });
+
+	// 确保 chainId 存在才发送 SQS
+	if (redeemSlotInfo.chainId !== undefined && redeemSlotInfo.chainId !== null) {
+		try {
+			await sendQueueMessage(redeemSlotInfo.chainId, 'assetQueue', {
+				source: 'V3_5_Raw_Redeem_Slot_Info',
+				data: {
+					id: Number(redeemSlotInfo.id),
+					chainId: String(redeemSlotInfo.chainId),
+					contractAddress: redeemSlotInfo.contractAddress,
+				},
+			});
+		} catch (error) {
+			console.error('RedeemSlotInfoHandler: Failed to send SQS message for updated redeem slot info', {
+				id: redeemSlotInfo.id,
+				chainId: redeemSlotInfo.chainId,
+				contractAddress: redeemSlotInfo.contractAddress,
+				slot: redeemSlotInfo.slot,
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
+}
+
+/**
  * 获取货币符号
  */
 async function getCurrencySymbol(
@@ -558,9 +627,9 @@ async function handleCreateSlot(
 	// 获取 currency symbol
 	const currencySymbol = await getCurrencySymbol(event.chainId, currencyAddress, transaction);
 
-    // 创建 RedeemSlotInfo 记录
+    // 创建 RedeemSlotInfo 记录并发送 SQS
     try {
-        await RawOptRedeemSlotInfo.create(
+        await createRedeemSlotInfoAndSendSQS(
             {
                 chainId: event.chainId,
                 msgSender: creator || toAddressString(args.msgSender),
@@ -580,7 +649,8 @@ async function handleCreateSlot(
                 lastUpdated: event.blockTimestamp,
                 blockTimestamp: event.blockTimestamp,
             },
-            { transaction }
+            event.chainId,
+            transaction
         );
 
         // 使用 console.debug 避免在测试中输出日志
@@ -636,12 +706,13 @@ async function handleMintValue(
     const currentRedeemAmount = redeemSlotInfo.redeemAmount || '0';
 
     try {
-        await redeemSlotInfo.update(
+        await updateRedeemSlotInfoAndSendSQS(
+            redeemSlotInfo,
             {
                 redeemAmount: addBigInt(currentRedeemAmount, value),
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('RedeemSlotInfoHandler: MintValue success', {
@@ -709,12 +780,13 @@ async function handleClaim(
     const currentClaimedAmount = redeemSlotInfo.claimedAmount || '0';
 
     try {
-        await redeemSlotInfo.update(
+        await updateRedeemSlotInfoAndSendSQS(
+            redeemSlotInfo,
             {
                 claimedAmount: addBigInt(currentClaimedAmount, claimValue),
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('RedeemSlotInfoHandler: Claim success', {
@@ -771,12 +843,13 @@ async function handleRepay(
     const currentRepaidValue = redeemSlotInfo.repaidValue || '0';
 
     try {
-        await redeemSlotInfo.update(
+        await updateRedeemSlotInfoAndSendSQS(
+            redeemSlotInfo,
             {
                 repaidValue: addBigInt(currentRepaidValue, repayCurrencyAmount),
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('RedeemSlotInfoHandler: Repay success', {
@@ -842,12 +915,13 @@ async function handleBurnValue(
     const currentRedeemAmount = redeemSlotInfo.redeemAmount || '0';
 
     try {
-        await redeemSlotInfo.update(
+        await updateRedeemSlotInfoAndSendSQS(
+            redeemSlotInfo,
             {
                 redeemAmount: subBigInt(currentRedeemAmount, burnValue),
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('RedeemSlotInfoHandler: BurnValue success', {
@@ -967,15 +1041,16 @@ async function handleSetRedeemNav(
         return;
     }
 
-    // 更新记录
+    // 更新记录并发送 SQS
     try {
-        await redeemSlotInfo.update(
+        await updateRedeemSlotInfoAndSendSQS(
+            redeemSlotInfo,
             {
                 nav,
                 navSetTime: event.blockTimestamp,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('RedeemSlotInfoHandler: SetRedeemNav success', {
@@ -1030,14 +1105,15 @@ async function handleCloseRedeemSlot(
         return;
     }
 
-    // 更新记录
+    // 更新记录并发送 SQS
     try {
-        await redeemSlotInfo.update(
+        await updateRedeemSlotInfoAndSendSQS(
+            redeemSlotInfo,
             {
                 state: 'Locked',
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('RedeemSlotInfoHandler: CloseRedeemSlot success', {

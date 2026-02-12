@@ -20,9 +20,10 @@ import {
 	handleUnstake,
 } from './subHandler/router';
 import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
-import RawOptContractInfo from 'src/models/RawOptContractInfo';
+import RawOptContractInfo from '../../models/RawOptContractInfo';
 import { handleSolvBTCRouterV2Deposit, handleSolvBTCRouterV2WithdrawRequest, handleSolvBTCRouterV2CancelWithdrawRequest } from './subHandler/solvBTCRouterV2';
 import { handleXSolvBTCPoolDeposit, handleXSolvBTCPoolWithdraw } from './subHandler/xSolvBTCPool';
+import { sendQueueMessage } from '../../lib/sqs';
 // ==================== 事件签名常量 ====================
 
 const ERC3525_EVENT_SIGNATURES = {
@@ -133,6 +134,25 @@ export async function createActivity(params: ActivityCreationParams): Promise<vo
 			},
 			transaction: params.transaction,
 		});
+
+		// 如果确认插入了新数据，打印插入的表的 id
+		if (created && activity && activity.id) {
+			console.log('ActivityHandler: Created new Activity record', {
+				id: activity.id,
+				txHash: params.txHash,
+				transactionIndex: params.transactionIndex,
+				eventIndex: params.eventIndex,
+				transactionType: params.transactionType,
+			});
+            await sendQueueMessage(params.chainId, 'activityQueue', {
+                source: 'V3_5_Raw_Activity',
+                data: {
+                    id: Number(activity.id),
+                    chainId: String(params.chainId),
+                    contractAddress: params.contractAddress,
+                },
+            });
+		}
 	} catch (error) {
 		console.error('ActivityHandler: Failed to create Activity', {
 			chainId: params.chainId,

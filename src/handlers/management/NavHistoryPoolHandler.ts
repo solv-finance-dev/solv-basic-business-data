@@ -1,6 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import OptRawNavHistoryPool from '../../models/RawOptNavHistoryPool';
 import NavRecords from '../../models/NavRecords';
+import { sendQueueMessage } from '../../lib/sqs';
 
 const NAV_TYPE = {
     INVESTMENT: 'Investment',
@@ -41,7 +42,9 @@ function validateEventData(poolId: string, nav: string, time?: number): void {
     }
 }
 
-async function createNavHistoryPool(
+// 统一创建或更新 NavHistoryPool 并发送 SQS
+async function upsertNavHistoryPoolAndSendSQS(
+    chainId: number,
     poolId: string,
     navType: string,
     time: number,
@@ -49,93 +52,55 @@ async function createNavHistoryPool(
     lastUpdated: number,
     transaction: any
 ): Promise<void> {
-    await OptRawNavHistoryPool.create(
-        {
+    const [navHistoryPool, created] = await OptRawNavHistoryPool.findOrCreate({
+        where: {
+            poolId,
+            navType,
+            time,
+        },
+        defaults: {
             poolId,
             navType,
             time,
             nav,
             lastUpdated,
         },
-        { transaction }
-    );
-}
-
-async function upsertNavHistoryPool(
-    poolId: string,
-    navType: string,
-    time: number,
-    nav: string,
-    lastUpdated: number,
-    transaction: any
-): Promise<void> {
-    const existing = await OptRawNavHistoryPool.findOne({
-        where: {
-            poolId,
-            navType,
-            time,
-        },
         transaction,
     });
 
-    if (existing) {
-        await existing.update(
+    // 如果记录已存在，更新相关信息
+    if (!created) {
+        await navHistoryPool.update(
             {
                 nav,
                 lastUpdated,
             },
             { transaction }
         );
-    } else {
-        await OptRawNavHistoryPool.create(
-            {
+    }
+
+    // 成功之后发送 SQS 消息
+    if (navHistoryPool && navHistoryPool.id) {
+        try {
+            await sendQueueMessage(chainId, 'assetQueue', {
+                source: 'V3_5_Raw_Nav_History_Pool',
+                data: {
+                    id: Number(navHistoryPool.id),
+                    chainId: String(chainId),
+                    poolId: poolId,
+                },
+            });
+        } catch (error) {
+            console.error('NavHistoryPoolHandler: Failed to send SQS message for nav history pool', {
+                id: navHistoryPool.id,
+                chainId,
                 poolId,
                 navType,
                 time,
-                nav,
-                lastUpdated,
-            },
-            { transaction }
-        );
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
     }
-}
-
-async function createNavRecord(
-    eventInfo: EventInfo,
-    navType: string,
-    time: number,
-    transaction: any
-): Promise<void> {
-    // 检查记录是否已存在（基于唯一约束：tx_hash, transaction_index, event_index, pool_id）
-    const existing = await NavRecords.findOne({
-        where: {
-            txHash: eventInfo.txHash,
-            transactionIndex: eventInfo.transactionIndex,
-            eventIndex: eventInfo.eventIndex,
-            poolId: eventInfo.poolId,
-        },
-        transaction,
-    });
-
-    // 如果记录已存在，跳过创建（避免唯一约束冲突）
-    if (existing) {
-        return;
-    }
-
-    await NavRecords.create(
-        {
-            chainId: eventInfo.chainId,
-            poolId: eventInfo.poolId,
-            navType,
-            time: time.toString(),
-            nav: eventInfo.nav,
-            txHash: eventInfo.txHash,
-            transactionIndex: eventInfo.transactionIndex,
-            eventIndex: eventInfo.eventIndex,
-            lastUpdated: eventInfo.timestamp,
-        },
-        { transaction }
-    );
 }
 
 async function handleSetRedeemNavEvent(param: HandlerParam): Promise<void> {
@@ -146,7 +111,8 @@ async function handleSetRedeemNavEvent(param: HandlerParam): Promise<void> {
 
     validateEventData(eventInfo.poolId, eventInfo.nav, timestamp);
 
-    await createNavHistoryPool(
+    await upsertNavHistoryPoolAndSendSQS(
+        eventInfo.chainId,
         eventInfo.poolId,
         NAV_TYPE.REDEMPTION,
         timestamp,
@@ -155,7 +121,8 @@ async function handleSetRedeemNavEvent(param: HandlerParam): Promise<void> {
         transaction
     );
 
-    await upsertNavHistoryPool(
+    await upsertNavHistoryPoolAndSendSQS(
+        eventInfo.chainId,
         eventInfo.poolId,
         NAV_TYPE.INVESTMENT,
         timestamp,
@@ -163,8 +130,6 @@ async function handleSetRedeemNavEvent(param: HandlerParam): Promise<void> {
         timestamp,
         transaction
     );
-
-    await createNavRecord(eventInfo, NAV_TYPE.REDEMPTION, timestamp, transaction);
 }
 
 async function handleSetSubscribeNavEvent(param: HandlerParam): Promise<void> {
@@ -175,7 +140,8 @@ async function handleSetSubscribeNavEvent(param: HandlerParam): Promise<void> {
 
     validateEventData(eventInfo.poolId, eventInfo.nav, time);
 
-    await upsertNavHistoryPool(
+    await upsertNavHistoryPoolAndSendSQS(
+        eventInfo.chainId,
         eventInfo.poolId,
         NAV_TYPE.INVESTMENT,
         time,
@@ -183,8 +149,6 @@ async function handleSetSubscribeNavEvent(param: HandlerParam): Promise<void> {
         eventInfo.timestamp,
         transaction
     );
-
-    await createNavRecord(eventInfo, NAV_TYPE.INVESTMENT, time, transaction);
 }
 
 export async function handleNavHistoryPoolEvent(param: HandlerParam): Promise<void> {

@@ -1,6 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import RawOptMarketContract from '../../models/RawOptMarketContract';
 import { getErc3525TokenMetadata } from '../../lib/rpc';
+import { sendQueueMessage } from '../../lib/sqs';
 
 async function getOrCreateMarketContract(
     chainId: number,
@@ -46,7 +47,61 @@ async function getOrCreateMarketContract(
         { transaction }
     );
 
+    // 创建成功后发送 SQS 消息
+    if (created && created.id) {
+        try {
+            await sendQueueMessage(chainId, 'configQueue', {
+                source: 'V3_5_Raw_Market_Contract',
+                data: {
+                    id: Number(created.id),
+                    chainId: String(chainId),
+                    contractAddress: lowerSftAddress,
+                },
+            });
+        } catch (error) {
+            console.error('MarketContractHandler: Failed to send SQS message for new market contract', {
+                id: created.id,
+                chainId,
+                marketContractAddress: lowerMarketAddress,
+                contractAddress: lowerSftAddress,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
+
     return created;
+}
+
+// 统一更新 RawOptMarketContract 并发送 SQS
+async function updateMarketContractAndSendSQS(
+    marketContract: RawOptMarketContract,
+    updateData: {
+        issuer?: string;
+        state?: string;
+        lastUpdated?: number;
+    },
+    transaction: any
+): Promise<void> {
+    await marketContract.update(updateData, { transaction });
+
+    try {
+        await sendQueueMessage(marketContract.chainId, 'configQueue', {
+            source: 'V3_5_Raw_Market_Contract',
+            data: {
+                id: Number(marketContract.id),
+                chainId: String(marketContract.chainId),
+                contractAddress: marketContract.contractAddress,
+            },
+        });
+    } catch (error) {
+        console.error('MarketContractHandler: Failed to send SQS message for updated market contract', {
+            id: marketContract.id,
+            chainId: marketContract.chainId,
+            marketContractAddress: marketContract.marketContractAddress,
+            contractAddress: marketContract.contractAddress,
+            error: error instanceof Error ? error.message : String(error),
+        });
+    }
 }
 
 async function handleAddSFTEvent(param: HandlerParam): Promise<void> {
@@ -66,12 +121,14 @@ async function handleAddSFTEvent(param: HandlerParam): Promise<void> {
         transaction
     );
 
-    await marketContract.update(
+    // 更新市场合约信息并发送 SQS
+    await updateMarketContractAndSendSQS(
+        marketContract,
         {
             issuer: manager,
             lastUpdated: timestamp,
         },
-        { transaction }
+        transaction
     );
 }
 
@@ -91,12 +148,14 @@ async function handleRemoveSFTEvent(param: HandlerParam): Promise<void> {
         transaction
     );
 
-    await marketContract.update(
+    // 更新市场合约信息并发送 SQS
+    await updateMarketContractAndSendSQS(
+        marketContract,
         {
             state: 'Suspended',
             lastUpdated: timestamp,
         },
-        { transaction }
+        transaction
     );
 }
 

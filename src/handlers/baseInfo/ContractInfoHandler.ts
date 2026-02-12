@@ -11,10 +11,13 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
         return;
     }
 
+    const contractAddress = beaconProxy.toLowerCase();
+
+    // 检查记录是否已存在
     const existing = await RawOptContractInfo.findOne({
         where: {
             chainId: event.chainId,
-            contractAddress: beaconProxy,
+            contractAddress,
         },
         transaction,
     });
@@ -29,17 +32,40 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
         return;
     }
     const { decimals, symbol, name, contractURI } = await getErc3525TokenMetadata(event.chainId, beaconProxy);
-    await RawOptContractInfo.create({
-        chainId: event.chainId,
-        contractAddress: beaconProxy.toLowerCase(),
-        contractType,
-        decimals,
-        symbol,
-        name,
-        totalSupply: '0',
-        lastUpdated: event.blockTimestamp,
-        contractURI,
-    }, { transaction });
+    
+    // 使用 findOrCreate 避免唯一约束冲突
+    const [contractInfo, created] = await RawOptContractInfo.findOrCreate({
+        where: {
+            chainId: event.chainId,
+            contractAddress,
+        },
+        defaults: {
+            contractType,
+            decimals,
+            symbol,
+            name,
+            totalSupply: '0',
+            lastUpdated: event.blockTimestamp,
+            contractURI,
+        },
+        transaction,
+    });
 
-    console.log('ContractInfoHandler: created record for beaconProxy ', beaconProxy, ' eventId ', event.eventId);
+    // 如果记录已存在，更新相关信息
+    if (!created) {
+        await contractInfo.update(
+            {
+                contractType,
+                decimals,
+                symbol,
+                name,
+                lastUpdated: event.blockTimestamp,
+                contractURI,
+            },
+            { transaction }
+        );
+        console.log('ContractInfoHandler: updated record for beaconProxy ', beaconProxy, ' eventId ', event.eventId);
+    } else {
+        console.log('ContractInfoHandler: created record for beaconProxy ', beaconProxy, ' eventId ', event.eventId);
+    }
 }

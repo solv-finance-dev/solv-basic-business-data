@@ -1,6 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import SftWrappedTokenInfo from '../../models/SftWrappedTokenInfo';
 import RawOptErc20AssetInfo from '../../models/RawOptErc20AssetInfo';
+import { sendQueueMessage } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -118,6 +119,27 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			},
 			{ transaction }
 		);
+
+		// 修改成功后发送 SQS 消息
+		if (fromAsset && fromAsset.id) {
+			try {
+				await sendQueueMessage(chainId, 'assetQueue', {
+					source: 'V3_5_Raw_Erc20_Asset',
+					data: {
+						id: Number(fromAsset.id),
+						chainId: String(chainId),
+						contractAddress: contractAddress.toLowerCase(),
+					},
+				});
+			} catch (error) {
+				console.error('Erc20TokenInfoHandler: Failed to send SQS message for updated asset (from)', {
+					id: fromAsset.id,
+					chainId,
+					contractAddress,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
+		}
 	}
 
 	if (to !== NULL_ADDRESS) {
@@ -142,6 +164,27 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			},
 			{ transaction }
 		);
+
+		// 修改成功后发送 SQS 消息
+		if (toAsset && toAsset.id) {
+			try {
+				await sendQueueMessage(chainId, 'assetQueue', {
+					source: 'V3_5_Raw_Erc20_Asset',
+					data: {
+						id: Number(toAsset.id),
+						chainId: String(chainId),
+						contractAddress: contractAddress.toLowerCase(),
+					},
+				});
+			} catch (error) {
+				console.error('Erc20TokenInfoHandler: Failed to send SQS message for updated asset (to)', {
+					id: toAsset.id,
+					chainId,
+					contractAddress,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			}
+		}
 	}
 }
 

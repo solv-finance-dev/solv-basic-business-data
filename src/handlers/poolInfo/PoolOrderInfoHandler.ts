@@ -5,6 +5,7 @@ import CurrencyInfo from '../../models/CurrencyInfo';
 import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
 import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
 import { getTransactionInfo } from '../../lib/rpc';
+import { sendQueueMessage } from '../../lib/sqs';
 
 // 常量定义
 const POOL_STATUS = {
@@ -132,6 +133,68 @@ function calculateInitialValues(decimals: number): { allTimeHighRedeemNav: strin
     };
 }
 
+// 统一创建 RawOptPoolOrderInfo 并发送 SQS
+async function createPoolOrderInfoAndSendSQS(
+    createData: Parameters<typeof RawOptPoolOrderInfo.create>[0],
+    chainId: number,
+    transaction: Transaction
+): Promise<RawOptPoolOrderInfo> {
+    const poolOrderInfo = await RawOptPoolOrderInfo.create(createData, { transaction });
+
+    // 创建成功后发送 SQS 消息
+    if (poolOrderInfo && poolOrderInfo.id) {
+        try {
+            await sendQueueMessage(chainId, 'assetQueue', {
+                source: 'V3_5_Raw_Pool_Order_Info',
+                data: {
+                    id: Number(poolOrderInfo.id),
+                    chainId: String(chainId),
+                    poolId: poolOrderInfo.poolId,
+                },
+            });
+        } catch (error) {
+            console.error('PoolOrderInfoHandler: Failed to send SQS message for new pool order info', {
+                id: poolOrderInfo.id,
+                chainId,
+                poolId: poolOrderInfo.poolId,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
+
+    return poolOrderInfo;
+}
+
+// 统一更新 RawOptPoolOrderInfo 并发送 SQS
+async function updatePoolOrderInfoAndSendSQS(
+    poolOrderInfo: RawOptPoolOrderInfo,
+    updateData: Parameters<typeof RawOptPoolOrderInfo.prototype.update>[0],
+    transaction: Transaction
+): Promise<void> {
+    await poolOrderInfo.update(updateData, { transaction });
+
+    // 确保 chainId 存在才发送 SQS
+    if (poolOrderInfo.chainId !== undefined && poolOrderInfo.chainId !== null) {
+        try {
+            await sendQueueMessage(poolOrderInfo.chainId, 'assetQueue', {
+                source: 'V3_5_Raw_Pool_Order_Info',
+                data: {
+                    id: Number(poolOrderInfo.id),
+                    chainId: String(poolOrderInfo.chainId),
+                    poolId: poolOrderInfo.poolId,
+                },
+            });
+        } catch (error) {
+            console.error('PoolOrderInfoHandler: Failed to send SQS message for updated pool order info', {
+                id: poolOrderInfo.id,
+                chainId: poolOrderInfo.chainId,
+                poolId: poolOrderInfo.poolId,
+                error: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
+}
+
 // 根据poolId查找PoolOrderInfo（必须存在）
 async function getPoolOrderInfo(
     chainId: number,
@@ -238,9 +301,9 @@ async function handleCreatePool(
 
     const msgSender = txInfo?.from || toAddressString(args.msgSender);
 
-    // 创建PoolOrderInfo记录
+    // 创建PoolOrderInfo记录并发送 SQS
     try {
-        await RawOptPoolOrderInfo.create(
+        await createPoolOrderInfoAndSendSQS(
             {
                 chainId: event.chainId,
                 msgSender: toAddressString(msgSender),
@@ -275,7 +338,8 @@ async function handleCreatePool(
                 highWatermark: allTimeHighRedeemNav,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            event.chainId,
+            transaction
         );
 
         console.log('PoolOrderInfoHandler: CreatePool success', {
@@ -289,38 +353,6 @@ async function handleCreatePool(
             error: error instanceof Error ? error.message : String(error),
         });
         throw error;
-    }
-}
-
-// 更新PoolSlotInfo的poolId
-async function updatePoolSlotInfo(
-    chainId: number,
-    contractAddress: string,
-    slot: string,
-    poolId: string,
-    transaction: Transaction
-): Promise<void> {
-    try {
-        const poolSlotInfo = await RawOptPoolSlotInfo.findOne({
-            where: {
-                chainId,
-                contractAddress: contractAddress.toLowerCase(),
-                slot,
-            },
-            transaction,
-        });
-
-        if (poolSlotInfo) {
-            await poolSlotInfo.update({ poolId }, { transaction });
-        }
-    } catch (error) {
-        console.warn('PoolOrderInfoHandler: Failed to update PoolSlotInfo', {
-            chainId,
-            contractAddress,
-            slot,
-            poolId,
-            error: error instanceof Error ? error.message : String(error),
-        });
     }
 }
 
@@ -340,12 +372,13 @@ async function handleRemovePool(
     }
 
     try {
-        await poolOrder.update(
+        await updatePoolOrderInfoAndSendSQS(
+            poolOrder,
             {
                 poolStatus: POOL_STATUS.REMOVE,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('PoolOrderInfoHandler: RemovePool success', {
@@ -391,13 +424,14 @@ async function handleUpdateFundraisingEndTime(
     const newStatus = newEndTime < event.blockTimestamp ? POOL_STATUS.CLOSE : POOL_STATUS.ACTIVE;
 
     try {
-        await poolOrder.update(
+        await updatePoolOrderInfoAndSendSQS(
+            poolOrder,
             {
                 fundraisingEndTime: newEndTime,
                 poolStatus: newStatus,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('PoolOrderInfoHandler: UpdateFundraisingEndTime success', {
@@ -449,13 +483,14 @@ async function handleSubscribe(
     const currentFundraisingAmount = poolOrder.fundraisingAmount || '0';
 
     try {
-        await poolOrder.update(
+        await updatePoolOrderInfoAndSendSQS(
+            poolOrder,
             {
                 totalValue: addBigInt(currentTotalValue, value),
                 fundraisingAmount: addBigInt(currentFundraisingAmount, payment),
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('PoolOrderInfoHandler: Subscribe success', {
@@ -502,13 +537,14 @@ async function handleCloseRedeemSlot(
     }
 
     try {
-        // 更新latestRedeemSlot
-        await poolOrder.update(
+        // 更新latestRedeemSlot并发送 SQS
+        await updatePoolOrderInfoAndSendSQS(
+            poolOrder,
             {
                 latestRedeemSlot: newRedeemSlot,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         // 如果存在previousRedeemSlot，更新其状态为Locked
@@ -596,7 +632,7 @@ async function handleUpdatePoolInfo(
     }
 
     try {
-        await poolOrder.update(updateData, { transaction });
+        await updatePoolOrderInfoAndSendSQS(poolOrder, updateData, transaction);
 
         console.log('PoolOrderInfoHandler: UpdatePoolInfo success', {
             poolId,
@@ -708,12 +744,13 @@ async function handleUpdateAllTimeHighRedeemNav(
     }
 
     try {
-        await poolOrder.update(
+        await updatePoolOrderInfoAndSendSQS(
+            poolOrder,
             {
                 highWatermark: newNav,
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('PoolOrderInfoHandler: UpdateAllTimeHighRedeemNav success', {
@@ -799,12 +836,13 @@ async function handleSetWhitelist(
     }
 
     try {
-        await poolOrder.update(
+        await updatePoolOrderInfoAndSendSQS(
+            poolOrder,
             {
                 permissionless: Boolean(permissionless),
                 lastUpdated: event.blockTimestamp,
             },
-            { transaction }
+            transaction
         );
 
         console.log('PoolOrderInfoHandler: SetWhitelist success', {
