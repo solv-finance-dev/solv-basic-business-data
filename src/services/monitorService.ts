@@ -1,5 +1,7 @@
 import path from 'node:path';
 import {loadJsonConfig} from '../lib/config';
+import {initSequelize} from '../lib/db';
+import {getEventByIds, getTemplateAddressesMap} from './evmService';
 import {eventSignature, getEnv} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
 import type {
@@ -18,6 +20,11 @@ import {decodeEventFromAbi} from "../lib/abi";
 
 type TemplateAddressMap = Record<string, string[]>;
 
+interface RouterEventConfig {
+    name: string;
+    handlerName?: string;
+}
+
 // 缓存 handler 函数，避免重复动态导入。
 const handlerCache = new Map<string, HandlerFn>();
 let handlerEntriesCache: HandlerEntry[] | null = null;
@@ -33,21 +40,33 @@ export function initHandlersConfig(): void {
 export async function routerEvent(
     events: EventEvm[],
     templateAddressesMap: TemplateAddressMap,
-    transaction: Transaction
+    transaction: Transaction,
+    handlerEntries?: HandlerEntry[]
 ): Promise<void> {
     if (!events.length) {
         return;
     }
 
-    const handlerEntries = getHandlerEntries();
-    if (!handlerEntries.length) {
+    if (handlerEntries && handlerEntries.length === 0) {
+        console.warn('MonitorService: No handler entries provided for routing.');
+        return;
+    }
+
+    const entries = handlerEntries ?? getHandlerEntries();
+    if (!entries.length) {
         console.warn('MonitorService: No handlers configured.');
         return;
     }
 
     for (const event of events) {
-        const matchedHandlers = handlerEntries.filter((entry) => isEventMatch(event, entry, templateAddressesMap));
+        const matchedHandlers = entries.filter((entry) => isEventMatch(event, entry, templateAddressesMap));
         if (!matchedHandlers.length) {
+            console.warn('MonitorService: No handler matched event.', {
+                id: event.id,
+                chainId: event.chainId,
+                eventSignature: event.eventSignature,
+                contractAddress: event.contractAddress,
+            });
             continue;
         }
 
@@ -73,6 +92,51 @@ export async function routerEvent(
 
 }
 
+export async function routerEventByIds(
+    ids: number[],
+    config?: RouterEventConfig,
+    transaction?: Transaction
+): Promise<void> {
+    const events = await getEventByIds(ids);
+    if (!events.length) {
+        return;
+    }
+
+    const chainIds = Array.from(new Set(events.map((event) => event.chainId)));
+    if (chainIds.length !== 1) {
+        throw new Error('MonitorService: routerEventByIds only supports single chain per call.');
+    }
+
+    const templateAddressesMap = await getTemplateAddressesMap(chainIds[0]);
+
+    let handlerEntries: HandlerEntry[] | undefined;
+    if (config) {
+        handlerEntries = getHandlerEntriesByConfig(config);
+        if (!handlerEntries.length) {
+            console.warn('MonitorService: No handler entries matched config.', {
+                name: config.name,
+                handlerName: config.handlerName,
+            });
+            return;
+        }
+    }
+
+    if (transaction) {
+        await routerEvent(events, templateAddressesMap, transaction, handlerEntries);
+        return;
+    }
+
+    const sequelize = await initSequelize();
+    const newTransaction = await sequelize.transaction();
+    try {
+        await routerEvent(events, templateAddressesMap, newTransaction, handlerEntries);
+        await newTransaction.commit();
+    } catch (error) {
+        await newTransaction.rollback();
+        throw error;
+    }
+}
+
 function getHandlerEntries(): HandlerEntry[] {
     if (!handlerEntriesCache) {
         handlerEntriesCache = loadHandlerEntries();
@@ -95,6 +159,35 @@ function loadHandlerEntries(): HandlerEntry[] {
     }
 
     return entries;
+}
+
+function getHandlerEntriesByConfig(config: RouterEventConfig): HandlerEntry[] {
+    const env = getEnv();
+    const configFile = loadJsonConfig<HandlerGroupConfig[]>(`handlers.${env}.json`);
+    if (!Array.isArray(configFile)) {
+        throw new Error('MonitorService: handlers config should be an array.');
+    }
+
+    const group = configFile.find((item) => item.name === config.name);
+    if (!group) {
+        return [];
+    }
+
+    let handlers = group.handlers;
+    if (config.handlerName) {
+        handlers = handlers.filter((handler) => handler.handler === config.handlerName);
+    }
+
+    if (!handlers.length) {
+        return [];
+    }
+
+    const filteredGroup: HandlerGroupConfig = {
+        ...group,
+        handlers,
+    };
+
+    return normalizeGroup(filteredGroup);
 }
 
 function normalizeGroup(group: HandlerGroupConfig): HandlerEntry[] {
