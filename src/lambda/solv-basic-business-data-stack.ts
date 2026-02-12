@@ -70,8 +70,7 @@ export class SolvBasicBusinessDataStack extends Construct {
                     commandHooks: {
                         afterBundling(inputDir, outputDir) {
                             return [
-                                `cp -r ${inputDir}/config ${outputDir}/config`,
-                                `cp -r ${inputDir}/abis ${outputDir}/abis`
+                                `cp -r ${inputDir}/config ${outputDir}/config`
                             ];
                         },
                         beforeBundling() { return []; },
