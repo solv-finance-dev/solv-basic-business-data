@@ -2,9 +2,23 @@
 	"name": "solv-basic-business-data",
 	"version": "1.0.0",
 	"description": "",
+	"bin": {
+		"solv-basic-business-data": "bin/solv-basic-business-data.js"
+	},
 	"scripts": {
 		"build": "tsc",
-		"test": "jest"
+		"clean": "rm -rf ./build",
+		"layers:i": "npm install --prefix aws/layers/nodejs",
+		"deploy": "npm run deploy:prod",
+		"deploy:local": "scripty",
+		"deploy:dev": "scripty",
+		"deploy:test": "scripty",
+		"deploy:prod": "scripty",
+		"watch": "tsc -w",
+		"test": "jest",
+		"cdk": "cdk",
+		"lint:fix": "tsc --noEmit & eslint ./src --ext .ts,.tsx,.js --fix",
+		"lint": "eslint . --ext .ts"
 	},
 	"license": "ISC",
 	"devDependencies": {
