@@ -19,6 +19,8 @@ export function loadJsonConfig<T>(fileName: string): T {
 }
 
 function resolveConfigPath(fileName: string): string {
+    console.log('cwd:', process.cwd());
+    console.log('files:', fs.readdirSync('/var/task'));
     const basePath = path.resolve(process.cwd(), 'config', fileName);
     if (fs.existsSync(basePath)) {
         return basePath;

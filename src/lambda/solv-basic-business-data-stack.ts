@@ -66,7 +66,17 @@ export class SolvBasicBusinessDataStack extends Construct {
                 vpcSubnets: privateSubnets,
                 securityGroups,
                 allowPublicSubnet: true,
-                bundling: {},
+                bundling: {
+                    commandHooks: {
+                        afterBundling(inputDir, outputDir) {
+                            return [
+                                `cp -r ${inputDir}/config ${outputDir}/config`
+                            ];
+                        },
+                        beforeBundling() { return []; },
+                        beforeInstall() { return []; },
+                    }
+                },
                 environment: {
                     ...sharedLambdaEnv,
                     ...extraEnv,
