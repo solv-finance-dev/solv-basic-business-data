@@ -86,6 +86,31 @@ export async function fetchChainEvents(
     }
 }
 
+export async function getEventByIds(eventIds: number[]): Promise<EventEvm[]> {
+    if (!Array.isArray(eventIds) || !eventIds.length) {
+        return [];
+    }
+
+    const ids = eventIds.filter((id) => Number.isFinite(id));
+    if (!ids.length) {
+        return [];
+    }
+
+    try {
+        const response = await getLambdaClient()
+            .invoke({
+                FunctionName: `${process.env.CONFIG_ENV}-infra-basic-event-evm-get-by-ids-handler`,
+                Payload: JSON.stringify(ids),
+            })
+            .promise();
+
+        return parseLambdaPayload(response.Payload);
+    } catch (error) {
+        console.error('EvmService: Failed to fetch events by ids.', error);
+        return [];
+    }
+}
+
 export async function fetchTemplateAddresses(chainId: number): Promise<TemplateAddress[]> {
     if (!Number.isFinite(chainId)) {
         console.error('EvmService: Invalid chainId for template addresses.', {chainId});
@@ -107,6 +132,27 @@ export async function fetchTemplateAddresses(chainId: number): Promise<TemplateA
         console.error('EvmService: Failed to fetch template addresses.', error);
         return [];
     }
+}
+
+export async function getTemplateAddressesMap(chainId: number): Promise<Record<string, string[]>> {
+    const templateAddresses = await fetchTemplateAddresses(chainId);
+    const map: Record<string, string[]> = {};
+
+    for (const item of templateAddresses) {
+        const signature = String(item.eventSignature ?? '').toLowerCase();
+        const address = String(item.address ?? '').toLowerCase();
+        if (!signature || !address) {
+            continue;
+        }
+        if (!map[signature]) {
+            map[signature] = [];
+        }
+        if (!map[signature].includes(address)) {
+            map[signature].push(address);
+        }
+    }
+
+    return map;
 }
 
 function getLambdaClient(): AWS.Lambda {
