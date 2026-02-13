@@ -80,16 +80,176 @@
     ]
   },
   {
-    "name": "BtcRedeemRecord",
-    "module": "redeem/BtcRedeemRecordHandler",
+    "name": "MarketInfo",
+    "module": "baseInfo/MarketInfoHandler",
     "handlers": [
       {
-        "handler": "handleMainnetRedeemerEvent",
-        "abi": "MainnetRedeemer.json",
-        "chainIds": [56],
-        "contractAddresses": ["0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"],
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3"
+        ],
         "eventSignatures": [
-          "Redeem(address,address,string,uint256,uint256,uint256)"
+          "SetProtocolFeeCollector(address,address)",
+          "SetProtocolFeeRate(uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PayableDelegateFactory",
+    "module": "baseInfo/ContractInfoHandler",
+    "handlers": [
+      {
+        "handler": "handlePayableDelegateFactoryEvent",
+        "abi": "PayableDelegateFactory.json",
+        "chainIds": [
+          56
+        ],
+        "contractAddresses": [
+          "0x5531f96bb9e9559ae9880cc0109e06ef477aef8e"
+        ],
+        "eventSignatures": [
+          "NewDelegateBeaconProxy(bytes32,bytes32,address)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "MarketContract",
+    "module": "baseInfo/MarketContractHandler",
+    "handlers": [
+      {
+        "handler": "handleMarketContractEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": ["0xaE050694c137aD777611286C316E5FDda58242F3"],
+        "eventSignatures": [
+          "AddSFT(address,address)",
+          "RemoveSFT(address)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PoolOrderInfo",
+    "module": "poolInfo/PoolOrderInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
+        "eventSignatures": [
+          "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
+          "RemovePool(bytes32)",
+          "UpdateFundraisingEndTime(bytes32,uint64,uint64)",
+          "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
+          "CloseRedeemSlot(bytes32,uint256,uint256)",
+          "SettleProtocolFee(bytes32,address,uint256)",
+          "UpdatePoolInfo(bytes32,uint16,address,uint256,uint256,address,address)"
+        ]
+      },
+      {
+        "handler": "handleOracleEvent",
+        "abi": "NavOracle.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x6ec1fec6c6af53624733f671b490b8250ff251ed",
+          "0x9c491539aec346aafeb0bee9a1e9d9c02ab50889",
+          "0x8c29858319614380024093dbee553f9337665756"
+        ],
+        "eventSignatures": [
+          "UpdateAllTimeHighRedeemNav(bytes32,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleWhitelistEvent",
+        "abi": "Whitelist.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x8f694b722b32ab9fe7959d8398cd61b70cde58db",
+          "0x069c3bdf1b0083bb78652b6e1e1a68c481ae2ff5",
+          "0x2f5ce1a4ab04de1ce667e5ed2ec1a11ac20da732"
+        ],
+        "eventSignatures": [
+          "SetWhitelist(bytes32,bytes32,bool)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PoolSlotInfo",
+    "module": "poolInfo/PoolSlotInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
+        "eventSignatures": [
+          "CreatePoolSlot(bytes32,address,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleOpenShareDelegateEvent",
+        "abi": "OpenFundShareDelegate.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "eventSignatures": [
+          "CreateSlot(uint256,address,bytes)",
+          "MintValue(uint256,uint256,uint256)",
+          "Claim(address,uint256,uint256)",
+          "Repay(uint256,address,uint256)",
+          "SetInterestRate(uint256,int32)",
+          "BurnValue(uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "RedeemSlotInfo",
+    "module": "poolInfo/RedeemSlotInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
+        "eventSignatures": [
+          "CloseRedeemSlot(bytes32,uint256,uint256)",
+          "SetRedeemNav(bytes32,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleRedeemShareDelegateEvent",
+        "abi": "OpenFundRedemptionDelegate.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": null,
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "eventSignatures": [
+          "CreateSlot(uint256,address,bytes)",
+          "MintValue(uint256,uint256,uint256)",
+          "Claim(address,uint256,uint256,address,uint256)",
+          "Repay(uint256,address,address,uint256)",
+          "SlotChanged(uint256,uint256,uint256)",
+          "BurnValue(uint256,uint256)"
         ]
       }
     ]
@@ -218,6 +378,41 @@
     ]
   },
   {
+    "name": "NavHistoryPool",
+    "module": "management/NavHistoryPoolHandler",
+    "handlers": [
+      {
+        "handler": "handleNavHistoryPoolEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
+        "eventSignatures": [
+          "SetRedeemNav(bytes32,uint256,uint256)",
+          "SetSubscribeNav(bytes32,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BtcRedeemRecord",
+    "module": "redeem/BtcRedeemRecordHandler",
+    "handlers": [
+      {
+        "handler": "handleMainnetRedeemerEvent",
+        "abi": "MainnetRedeemer.json",
+        "chainIds": [56],
+        "contractAddresses": ["0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF"],
+        "eventSignatures": [
+          "Redeem(address,address,string,uint256,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "XSolvBTCTransactionInfo",
     "module": "xpool/XSolvBTCTransactionInfoHandler",
     "handlers": [
@@ -232,6 +427,43 @@
         "eventSignatures": [
           "Deposit(address,address,address,uint256,uint256)",
           "Withdraw(address,address,address,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Erc3525TokenInfo",
+    "module": "asset/Erc3525TokenInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleErc3525TokenInfoEvent",
+        "abi": "OpenFundShareDelegate.json",
+        "chainIds": [56],
+        "contractAddresses": [],
+        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "eventSignatures": [
+          "TransferValue(uint256,uint256,uint256)",
+          "Transfer(address,address,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Erc20TokenInfo",
+    "module": "asset/Erc20TokenInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleErc20TokenInfoEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [1, 56, 42161],
+        "contractAddresses": [
+          "0x823160CC510b8DF4e6905dCA1C2f083A15A64436",
+          "0x014e6F6ba7a9f4C9a51a0Aa3189B5c0a21006869"
+        ],
+        "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)",
+          "SetAlias(string,string)"
         ]
       }
     ]
@@ -278,238 +510,6 @@
         ],
         "eventSignatures": [
           "Deposit(address,address,address,uint256,uint256,address[],bytes32[])"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "MarketInfo",
-    "module": "baseInfo/MarketInfoHandler",
-    "handlers": [
-      {
-        "handler": "handleOpenFundMarketEvent",
-        "abi": "OpenFundMarket.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
-          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
-          "0xaE050694c137aD777611286C316E5FDda58242F3"
-        ],
-        "eventSignatures": [
-          "SetProtocolFeeCollector(address,address)",
-          "SetProtocolFeeRate(uint256,uint256)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "PayableDelegateFactory",
-    "module": "baseInfo/ContractInfoHandler",
-    "handlers": [
-      {
-        "handler": "handlePayableDelegateFactoryEvent",
-        "abi": "PayableDelegateFactory.json",
-        "chainIds": [
-          56
-        ],
-        "contractAddresses": [
-          "0x5531f96bb9e9559ae9880cc0109e06ef477aef8e"
-        ],
-        "eventSignatures": [
-          "NewDelegateBeaconProxy(bytes32,bytes32,address)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "Erc3525TokenInfo",
-    "module": "asset/Erc3525TokenInfoHandler",
-    "handlers": [
-      {
-        "handler": "handleErc3525TokenInfoEvent",
-        "abi": "OpenFundShareDelegate.json",
-        "chainIds": [56],
-        "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
-        "eventSignatures": [
-          "TransferValue(uint256,uint256,uint256)",
-          "Transfer(address,address,uint256)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "Erc20TokenInfo",
-    "module": "asset/Erc20TokenInfoHandler",
-    "handlers": [
-      {
-        "handler": "handleErc20TokenInfoEvent",
-        "abi": "SftWrappedToken.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x823160CC510b8DF4e6905dCA1C2f083A15A64436",
-          "0x014e6F6ba7a9f4C9a51a0Aa3189B5c0a21006869"
-        ],
-        "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
-        "eventSignatures": [
-          "Transfer(address,address,uint256)",
-          "SetAlias(string,string)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "MarketContract",
-    "module": "baseInfo/MarketContractHandler",
-    "handlers": [
-      {
-        "handler": "handleMarketContractEvent",
-        "abi": "OpenFundMarket.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": ["0xaE050694c137aD777611286C316E5FDda58242F3"],
-        "eventSignatures": [
-          "AddSFT(address,address)",
-          "RemoveSFT(address)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "NavHistoryPool",
-    "module": "management/NavHistoryPoolHandler",
-    "handlers": [
-      {
-        "handler": "handleNavHistoryPoolEvent",
-        "abi": "OpenFundMarket.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
-          "0xaE050694c137aD777611286C316E5FDda58242F3",
-          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
-        ],
-        "eventSignatures": [
-          "SetRedeemNav(bytes32,uint256,uint256)",
-          "SetSubscribeNav(bytes32,uint256,uint256)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "PoolOrderInfo",
-    "module": "poolInfo/PoolOrderInfoHandler",
-    "handlers": [
-      {
-        "handler": "handleOpenFundMarketEvent",
-        "abi": "OpenFundMarket.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
-          "0xaE050694c137aD777611286C316E5FDda58242F3",
-          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
-        ],
-        "eventSignatures": [
-          "CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))",
-          "RemovePool(bytes32)",
-          "UpdateFundraisingEndTime(bytes32,uint64,uint64)",
-          "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
-          "CloseRedeemSlot(bytes32,uint256,uint256)",
-          "SettleProtocolFee(bytes32,address,uint256)",
-          "UpdatePoolInfo(bytes32,uint16,address,uint256,uint256,address,address)"
-        ]
-      },
-      {
-        "handler": "handleOracleEvent",
-        "abi": "NavOracle.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x6ec1fec6c6af53624733f671b490b8250ff251ed",
-          "0x9c491539aec346aafeb0bee9a1e9d9c02ab50889",
-          "0x8c29858319614380024093dbee553f9337665756"
-        ],
-        "eventSignatures": [
-          "UpdateAllTimeHighRedeemNav(bytes32,uint256,uint256)"
-        ]
-      },
-      {
-        "handler": "handleWhitelistEvent",
-        "abi": "Whitelist.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x8f694b722b32ab9fe7959d8398cd61b70cde58db",
-          "0x069c3bdf1b0083bb78652b6e1e1a68c481ae2ff5",
-          "0x2f5ce1a4ab04de1ce667e5ed2ec1a11ac20da732"
-        ],
-        "eventSignatures": [
-          "SetWhitelist(bytes32,bytes32,bool)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "PoolSlotInfo",
-    "module": "poolInfo/PoolSlotInfoHandler",
-    "handlers": [
-      {
-        "handler": "handleOpenFundMarketEvent",
-        "abi": "OpenFundMarket.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
-          "0xaE050694c137aD777611286C316E5FDda58242F3",
-          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
-        ],
-        "eventSignatures": [
-          "CreatePoolSlot(bytes32,address,uint256,uint256)"
-        ]
-      },
-      {
-        "handler": "handleOpenShareDelegateEvent",
-        "abi": "OpenFundShareDelegate.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
-        "eventSignatures": [
-          "CreateSlot(uint256,address,bytes)",
-          "MintValue(uint256,uint256,uint256)",
-          "Claim(address,uint256,uint256)",
-          "Repay(uint256,address,uint256)",
-          "SetInterestRate(uint256,int32)",
-          "BurnValue(uint256,uint256)"
-        ]
-      }
-    ]
-  },
-  {
-    "name": "RedeemSlotInfo",
-    "module": "poolInfo/RedeemSlotInfoHandler",
-    "handlers": [
-      {
-        "handler": "handleOpenFundMarketEvent",
-        "abi": "OpenFundMarket.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": [
-          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
-          "0xaE050694c137aD777611286C316E5FDda58242F3",
-          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
-        ],
-        "eventSignatures": [
-          "CloseRedeemSlot(bytes32,uint256,uint256)",
-          "SetRedeemNav(bytes32,uint256,uint256)"
-        ]
-      },
-      {
-        "handler": "handleRedeemShareDelegateEvent",
-        "abi": "OpenFundRedemptionDelegate.json",
-        "chainIds": [1, 56, 42161],
-        "contractAddresses": null,
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
-        "eventSignatures": [
-          "CreateSlot(uint256,address,bytes)",
-          "MintValue(uint256,uint256,uint256)",
-          "Claim(address,uint256,uint256,address,uint256)",
-          "Repay(uint256,address,address,uint256)",
-          "SlotChanged(uint256,uint256,uint256)",
-          "BurnValue(uint256,uint256)"
         ]
       }
     ]
