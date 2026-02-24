@@ -108,9 +108,7 @@
       {
         "handler": "handlePayableDelegateFactoryEvent",
         "abi": "PayableDelegateFactory.json",
-        "chainIds":, 11155111 [
-          56
-        ],
+        "chainIds": [56, 11155111],
         "contractAddresses": [
           "0x5531f96bb9e9559ae9880cc0109e06ef477aef8e"
         ],
