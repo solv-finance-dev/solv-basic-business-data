@@ -44,6 +44,7 @@ export async function routerEvent(
     handlerEntries?: HandlerEntry[]
 ): Promise<void> {
     if (!events.length) {
+        console.warn('MonitorService: No events to route.');
         return;
     }
 

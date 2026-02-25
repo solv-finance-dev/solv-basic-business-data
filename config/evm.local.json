@@ -14,6 +14,11 @@
       "chainId": 42161,
       "startBlockNumber": 84104000,
       "blockLimit": 5
+    },
+    {
+      "chainId": 11155111,
+      "startBlockNumber": 5469100,
+      "blockLimit": 5
     }
   ]
 }

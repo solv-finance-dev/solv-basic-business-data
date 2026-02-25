@@ -37,6 +37,18 @@
         "isCrossChain": false,
         "saveSftWrappedTokenTimestamp": {}
       }
+    },
+    {
+      "chainId": 11155111,
+      "startBlockNumber": 5469100,
+      "blockLimit": 5,
+      "config": {
+        "openFundMarketAddress": "0x109198eb8bd3064efa5d0711b505f59cfd77de18",
+        "navOracleAddress": "0x6255a8d0485659e7f45d97c3d61e532b3fb01877",
+        "whitelistAddress": "0x17b92a03ea16667f3deaefff8279d59361f004dd",
+        "isCrossChain": false,
+        "saveSftWrappedTokenTimestamp": {}
+      }
     }
   ]
 }
