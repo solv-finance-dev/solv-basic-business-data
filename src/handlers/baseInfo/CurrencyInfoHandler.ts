@@ -1,6 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import CurrencyInfo from '../../models/CurrencyInfo';
 import {getErc20Metadata} from "../../services/evmService";
+import {isStablecoin} from "../../lib/utils";
 
 // 处理 OpenFundMarket 的 SetCurrency 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
@@ -34,6 +35,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
             currencyAddress: currency,
             symbol: metadata.symbol,
             decimals: metadata.decimals,
+            isStablecoin: isStablecoin(metadata.symbol)
         },
         { transaction },
     );
