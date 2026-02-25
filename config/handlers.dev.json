@@ -420,7 +420,7 @@
         "chainIds": [56, 11155111],
         "contractAddresses": [
           "0x30A61591c5bD3b5ae00d26f6b51C8eF0B9945bAF",
-          "0x3b3d8f75040b38f8bf8a5bb40b5a4dad1e328244"
+          "0x1b67191154a94945b1a82a9be32bbc679c0c08fa"
         ],
         "eventSignatures": [
           "Redeem(address,address,string,uint256,uint256,uint256)"
