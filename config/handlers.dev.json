@@ -441,7 +441,8 @@
         "chainIds": [1, 56, 11155111],
         "contractAddresses": [
           "0xF50860533D209E44dbe02F58B77EA85a8bfC28a3",
-          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86"
+          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86",
+          "0x5e8bdbdf95687391328b1215fe36ea6f00117a13"
         ],
         "eventSignatures": [
           "Deposit(address,address,address,uint256,uint256)",
