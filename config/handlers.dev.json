@@ -514,7 +514,8 @@
           "0x1fF7d7C0A7D8E94046708C611DeC5056A9d2B823",
           "0x01024AaeD5561fa6237C0ad4073417576C591261",
           "0xa3C5e4d471DF75447dcb1256eF1Ada80EEb806B3",
-          "0xb8c587fd9529ebf50265023ec88cf70aa2b00878"
+          "0xb8c587fd9529ebf50265023ec88cf70aa2b00878",
+          "0xb1b1dc971e7f3cd44b03c29381c4775498ad0434"
         ],
         "eventSignatures": [
           "CreateSubscription(bytes32,address,address,uint256,address,uint256)"
@@ -527,7 +528,8 @@
         "contractAddresses": [
           "0x3d93B9e8F0886358570646dAd9421564C5fE6334",
           "0x67035877F5c12202c387d1698274C2aBF28F3678",
-          "0x92E8A4407FD1ae7a53a32f1f832184edF071080A"
+          "0x92E8A4407FD1ae7a53a32f1f832184edF071080A",
+          "0x666c510c737023652ec66f7926c80576886e3379"
         ],
         "eventSignatures": [
           "Deposit(address,address,address,uint256,uint256,address[],bytes32[])"
