@@ -207,7 +207,7 @@
         "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "CreateSlot(uint256,address,bytes)",
           "MintValue(uint256,uint256,uint256)",
@@ -242,7 +242,7 @@
         "abi": "OpenFundRedemptionDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": null,
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "CreateSlot(uint256,address,bytes)",
           "MintValue(uint256,uint256,uint256)",
@@ -440,7 +440,7 @@
         "abi": "OpenFundShareDelegate.json",
         "chainIds": [56],
         "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "TransferValue(uint256,uint256,uint256)",
           "Transfer(address,address,uint256)"
@@ -523,7 +523,7 @@
         "abi": "Erc3525Token.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "TransferValue(uint256,uint256,uint256)",
           "Transfer(address,address,uint256)"
@@ -553,7 +553,7 @@
         "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "Claim(address,uint256,uint256)",
           "Repay(uint256,address,uint256)",
@@ -565,7 +565,7 @@
         "abi": "OpenFundRedemptionDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [],
-        "templateSignature": "NewDelegateBeaconProxy(indexed bytes32,indexed bytes32,address)",
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
           "Claim(address,uint256,uint256,address,uint256)",
           "Repay(uint256,address,address,uint256)"
