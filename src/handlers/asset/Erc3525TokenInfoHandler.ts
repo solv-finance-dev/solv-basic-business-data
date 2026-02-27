@@ -254,6 +254,16 @@ async function handleMint(
     // 获取 tokenURI
     const tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint');
 
+    // 从 RawOptContractInfo 中获取 productType（即合约的 contractType）
+    const contractInfo = await RawOptContractInfo.findOne({
+        where: {
+            chainId,
+            contractAddress: contractAddress.toLowerCase(),
+        },
+        transaction,
+    });
+    const productType = contractInfo?.contractType || '';
+
     // 使用 findOrCreate 避免唯一约束冲突
     const [tokenInfo, created] = await OptRawErc3525TokenInfo.findOrCreate({
         where: {
@@ -269,6 +279,7 @@ async function handleMint(
             isBurned: 0,
             lastUpdated: timestamp,
             tokenURI: tokenURI || '',
+            productType,
         },
         transaction,
     });
