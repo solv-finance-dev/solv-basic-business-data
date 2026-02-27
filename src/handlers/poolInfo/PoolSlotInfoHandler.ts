@@ -1053,42 +1053,75 @@ const OPEN_SHARE_DELEGATE_EVENT_SIGNATURES = {
 } as const;
 
 const OPEN_FUND_MARKET_EVENT_SIGNATURES = {
-    CREATE_POOL_SLOT: 'CreatePoolSlot(bytes32,address,uint256,uint256)',
+    CREATE_POOL: 'CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))',
 } as const;
 
 /**
- * 处理 CreatePoolSlot 事件
- * 更新 PoolSlotInfo 的 poolId 字段
+ * 处理 CreatePool 事件
+ * 更新 PoolSlotInfo 的 poolId 和 lastUpdated 字段
  */
-async function handleCreatePoolSlot(
+async function handleCreatePool(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
     transaction: Transaction
 ): Promise<void> {
-    const poolId = toString(args.poolId)?.toLowerCase();
-    const openFundShare = toAddressString(args.openFundShare || args.sft);
-    const openFundShareSlot = toString(args.openFundShareSlot || args.slot);
-
-    if (!poolId || !openFundShare || !openFundShareSlot) {
-        console.warn('PoolSlotInfoHandler: CreatePoolSlot missing required fields', {
+    const poolId = toString(extractArg(args, 'poolId', '_poolId'))?.toLowerCase();
+    if (!poolId) {
+        console.warn('PoolSlotInfoHandler: CreatePool missing poolId', {
             eventId: event.eventId,
-            hasPoolId: !!poolId,
+        });
+        return;
+    }
+
+    // 从 poolInfo_ 中提取 poolSFTInfo
+    const poolInfo = args.poolInfo_ as {
+        poolSFTInfo?: {
+            openFundShare?: unknown;
+            openFundShareSlot?: unknown;
+        };
+    } | undefined;
+
+    if (!poolInfo?.poolSFTInfo) {
+        console.warn('PoolSlotInfoHandler: CreatePool missing poolSFTInfo', {
+            eventId: event.eventId,
+            poolId,
+        });
+        return;
+    }
+
+    const openFundShare = toAddressString(poolInfo.poolSFTInfo.openFundShare);
+    const openFundShareSlot = toString(poolInfo.poolSFTInfo.openFundShareSlot);
+
+    if (!openFundShare || !openFundShareSlot) {
+        console.warn('PoolSlotInfoHandler: CreatePool missing openFundShare or openFundShareSlot', {
+            eventId: event.eventId,
+            poolId,
             hasOpenFundShare: !!openFundShare,
             hasOpenFundShareSlot: !!openFundShareSlot,
         });
         return;
     }
 
-    // 查找 PoolSlotInfo
-    const poolSlotInfo = await getPoolSlotInfo(event.chainId, openFundShare, openFundShareSlot, transaction);
+    // 查找或创建 PoolSlotInfo（如果不存在则创建，确保 poolId 能够被更新）
+    let poolSlotInfo = await getPoolSlotInfo(event.chainId, openFundShare, openFundShareSlot, transaction);
     if (!poolSlotInfo) {
-        console.warn('PoolSlotInfoHandler: CreatePoolSlot poolSlotInfo not found', {
+        // 如果 PoolSlotInfo 不存在，创建一个基本记录
+        console.log('PoolSlotInfoHandler: CreatePool poolSlotInfo not found, creating new record', {
             contractAddress: openFundShare,
             slot: openFundShareSlot,
             poolId,
             eventId: event.eventId,
         });
-        return;
+        poolSlotInfo = await getOrCreatePoolSlotInfo(event.chainId, openFundShare, openFundShareSlot, transaction);
+        if (!poolSlotInfo) {
+            console.error('PoolSlotInfoHandler: CreatePool failed to create poolSlotInfo', {
+                contractAddress: openFundShare,
+                slot: openFundShareSlot,
+                poolId,
+                eventId: event.eventId,
+            });
+            return;
+        }
     }
 
     try {
@@ -1101,14 +1134,14 @@ async function handleCreatePoolSlot(
             transaction
         );
 
-        console.log('PoolSlotInfoHandler: CreatePoolSlot success', {
+        console.log('PoolSlotInfoHandler: CreatePool success', {
             contractAddress: openFundShare,
             slot: openFundShareSlot,
             poolId,
             eventId: event.eventId,
         });
     } catch (error) {
-        console.error('PoolSlotInfoHandler: CreatePoolSlot failed', {
+        console.error('PoolSlotInfoHandler: CreatePool failed', {
             contractAddress: openFundShare,
             slot: openFundShareSlot,
             poolId,
@@ -1125,8 +1158,8 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
     try {
         // 根据事件签名路由到对应的处理函数
         switch (eventFunc) {
-            case OPEN_FUND_MARKET_EVENT_SIGNATURES.CREATE_POOL_SLOT:
-                await handleCreatePoolSlot(event, args, transaction);
+            case OPEN_FUND_MARKET_EVENT_SIGNATURES.CREATE_POOL:
+                await handleCreatePool(event, args, transaction);
                 break;
 
             default:
