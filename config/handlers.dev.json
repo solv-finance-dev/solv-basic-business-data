@@ -610,7 +610,8 @@
           "0xa83376174F44B06536B0f0DDBa6Da6F7e8FD3167",
           "0xe9eD7530427Cb41A56C9e004e00e074cCc168C44",
           "0x836bE4332347440995Bc06103aA740AdaFC0068a",
-          "0x6Ea88D4D0c4bC06F6A51f427eF295c93e10D0b36"
+          "0x6Ea88D4D0c4bC06F6A51f427eF295c93e10D0b36",
+          "0xb1b1dc971e7f3cd44b03c29381c4775498ad0434"
         ],
         "eventSignatures": [
           "CancelRedemption(bytes32,address,address,uint256,uint256)",
