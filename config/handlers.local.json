@@ -520,7 +520,7 @@
     "handlers": [
       {
         "handler": "handleErc3525Event",
-        "abi": "Erc3525Token.json",
+        "abi": "OpenFundShareDelegate.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [],
         "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
