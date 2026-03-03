@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import {RawOptContractInfo} from "@solvprotocol/models";
 import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
 import {CurrencyInfo} from "@solvprotocol/models";
@@ -72,9 +72,9 @@ async function getTokenInfo(
 	contractAddress: string,
 	tokenId: string,
 	transaction: Transaction
-): Promise<OptRawErc3525TokenInfo | null> {
+): Promise<RawOptErc3525TokenInfo | null> {
 	try {
-		return await OptRawErc3525TokenInfo.findOne({
+		return await RawOptErc3525TokenInfo.findOne({
 			where: {
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),

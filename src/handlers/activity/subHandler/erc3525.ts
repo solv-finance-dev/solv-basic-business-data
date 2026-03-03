@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import {RawOptContractInfo} from "@solvprotocol/models";
 import {RawOptPoolSlotInfo} from "@solvprotocol/models";
 import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
@@ -94,9 +94,9 @@ async function getTokenInfo(
 	contractAddress: string,
 	tokenId: string,
 	transaction: Transaction
-): Promise<OptRawErc3525TokenInfo | null> {
+): Promise<RawOptErc3525TokenInfo | null> {
 	try {
-		return await OptRawErc3525TokenInfo.findOne({
+		return await RawOptErc3525TokenInfo.findOne({
 			where: {
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),
@@ -434,7 +434,7 @@ async function determineTransactionType(
 async function handleOpenFundSharesActivity(
 	event: HandlerParam['event'],
 	contractInfo: RawOptContractInfo,
-	tokenInfo: OptRawErc3525TokenInfo,
+	tokenInfo: RawOptErc3525TokenInfo,
 	fromAddress: string,
 	toAddress: string,
 	amount: string,
@@ -498,7 +498,7 @@ async function handleOpenFundSharesActivity(
 async function handleOpenFundRedemptionsActivity(
 	event: HandlerParam['event'],
 	contractInfo: RawOptContractInfo,
-	tokenInfo: OptRawErc3525TokenInfo,
+	tokenInfo: RawOptErc3525TokenInfo,
 	fromAddress: string,
 	toAddress: string,
 	amount: string,

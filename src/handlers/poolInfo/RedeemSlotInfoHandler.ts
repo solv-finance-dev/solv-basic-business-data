@@ -2,7 +2,7 @@ import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
 import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
 import {CurrencyInfo} from "@solvprotocol/models";
-import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import {RawOptPoolOrderInfo} from "@solvprotocol/models";
 import {RawOptContractInfo} from "@solvprotocol/models";
 import { getSlotOf, getSlotURI } from '../../lib/rpc';
@@ -507,7 +507,7 @@ async function getSlotFromTokenId(
     console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
     // 首先尝试从数据库查找
     try {
-        const tokenInfo = await OptRawErc3525TokenInfo.findOne({
+        const tokenInfo = await RawOptErc3525TokenInfo.findOne({
             where: {
                 chainId,
                 contractAddress: contractAddress.toLowerCase(),
