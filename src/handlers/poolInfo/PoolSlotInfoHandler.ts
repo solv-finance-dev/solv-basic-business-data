@@ -1,11 +1,11 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
 import { getSlotURI, getSlotOf, getOwnerOf } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { AbiCoder } from 'ethers';
 import { sendQueueMessage } from '../../lib/sqs';
 

@@ -1,9 +1,9 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
+import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
 import { getTransactionInfo } from '../../../lib/rpc';
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 

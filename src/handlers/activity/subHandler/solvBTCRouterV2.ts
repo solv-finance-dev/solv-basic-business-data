@@ -1,10 +1,10 @@
 import type { Transaction } from 'sequelize';
 import type { EventEvm } from '../../../types/eventEvm';
 import type { HandlerParam } from '../../../types/handler';
-import RawOptActivity from '../../../models/RawOptActivity';
-import RawOptPoolOrderInfo from '../../../models/RawOptPoolOrderInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
+import {RawOptActivity} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
 import { createActivity } from '../ActivityHandler';
 import {getSubscribeNav} from '../../../services/activityService';
 

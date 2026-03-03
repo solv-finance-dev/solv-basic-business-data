@@ -1,5 +1,5 @@
-import CurrencyInfo from '../../models/CurrencyInfo';
-import RawOptSaleInfoOpenEnd from '../../models/RawOptSaleInfoOpenEnd';
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptSaleInfoOpenEnd} from "@solvprotocol/models";
 import {sendQueueMessage} from '../../lib/sqs';
 import {HandlerParam} from "../../types/handler";
 import {RouterContractInfo, OptRawNavHistoryPool} from "@solvprotocol/models";

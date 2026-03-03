@@ -1,14 +1,14 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
-import RawOptRedeemSlotInfo from '../../../models/RawOptRedeemSlotInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
-import NavRecords from '../../../models/NavRecords';
-import CarryInfo from '../../../models/CarryInfo';
-import ProtocolFeeInfo from '../../../models/ProtocolFeeInfo';
-import SftWrappedTokenInfo from '../../../models/SftWrappedTokenInfo';
+import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {NavRecords} from "@solvprotocol/models";
+import {CarryInfo} from "@solvprotocol/models";
+import {ProtocolFeeInfo} from "@solvprotocol/models";
+import {SftWrappedTokenInfo} from "@solvprotocol/models";
 import { getOwnerOf, getBalanceOf } from '../../../lib/rpc';
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 

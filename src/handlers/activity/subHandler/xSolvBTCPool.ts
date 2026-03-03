@@ -1,8 +1,8 @@
 import type { Transaction } from 'sequelize';
 import type { EventEvm } from '../../../types/eventEvm';
 import type { HandlerParam } from '../../../types/handler';
-import RawOptActivity from '../../../models/RawOptActivity';
-import CurrencyInfo from '../../../models/CurrencyInfo';
+import {RawOptActivity} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
 import { createActivity } from '../ActivityHandler';
 import { resolveNav } from '../../../services/activityService';
 

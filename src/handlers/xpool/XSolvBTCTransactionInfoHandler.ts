@@ -1,5 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import XSolvBTCTransactionInfo from '../../models/XsolvbtcTransactionInfo';
+import {XSolvBTCTransactionInfo} from "@solvprotocol/models";
 
 // 处理 XSolvBTCPool 的 Deposit/Withdraw 事件。
 export async function handleXSolvBTCPoolEvent(param: HandlerParam): Promise<void> {

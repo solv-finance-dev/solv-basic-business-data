@@ -1,9 +1,9 @@
 import type {HandlerParam} from '../../types/handler';
 import {getContractType, getErc20Metadata} from '../../services/evmService';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
-import RawOptRepayInfoOpenEnd from '../../models/RawOptRepayInfoOpenEnd';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {RawOptRepayInfoOpenEnd} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
 import { sendQueueMessage } from '../../lib/sqs';
 
 // Handle OpenFundRedemptionDelegate Repay event.

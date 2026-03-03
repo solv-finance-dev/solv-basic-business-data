@@ -1,9 +1,9 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
 import { getTransactionInfo } from '../../lib/rpc';
 import { sendQueueMessage } from '../../lib/sqs';
 

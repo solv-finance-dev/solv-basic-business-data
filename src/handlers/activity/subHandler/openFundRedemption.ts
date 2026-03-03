@@ -1,10 +1,10 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import RawOptRedeemSlotInfo from '../../../models/RawOptRedeemSlotInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
-import NavRecords from '../../../models/NavRecords';
+import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {NavRecords} from "@solvprotocol/models";
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 
 // ==================== 常量定义 ====================

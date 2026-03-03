@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
-import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
 import { getSlotOf, getOwnerOf, getTokenURI } from '../../lib/rpc';
 import { sendQueueMessage } from '../../lib/sqs';
 
