@@ -52,6 +52,7 @@ async function runCycle(): Promise<void> {
 async function processChain(chain: ChainConfig): Promise<void> {
     const redisClient = await getRedisClient();
     const isStop = await redisClient.get('StopMonitorChainId_' + chain.chainId);
+    console.log("StopMonitorChainId_" + chain.chainId + ":", isStop);
     if (isStop === '1') {
         console.log('EVM Event Monitor: Monitor is stopped for chainId', chain.chainId, ', skipping this cycle.');
         return;

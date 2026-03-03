@@ -63,8 +63,8 @@ export async function main(task: string) {
             return;
         }
         const value = action === 'stop' ? '1' : '0';
-        redisClient.set('StopMonitorChainId_' + chainId, value)
-        console.log('Monitor switch set for chainId', chainId, 'action:', action)
+        const res = await redisClient.set('StopMonitorChainId_' + chainId, value);
+        console.log(`Monitor switch set for chainId:${chainId} action:${action} result:${res}`);
     } else if (task === 'chainHeightSet') {
         // node build/fix.js chainHeightSet 1 12345678
         // node build/fix.js chainHeightSet {chainId} {height}
