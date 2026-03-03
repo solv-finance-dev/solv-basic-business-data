@@ -17,7 +17,7 @@ export async function main() {
 
     setInterval(() => {
         if (running) {
-            console.warn('EVM Event Monitor: Previous cycle still running, skip.');
+            console.info('EVM Event Monitor: Previous cycle still running, skip.');
             return;
         }
 

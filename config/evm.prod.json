@@ -1,0 +1,16 @@
+{
+  "chains": [
+    {
+      "chainId": 42161,
+      "startBlockNumber": 84104000,
+      "blockLimit": 5,
+      "config": {
+        "openFundMarketAddress": "0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8",
+        "navOracleAddress": "0x6ec1fec6c6af53624733f671b490b8250ff251ed",
+        "whitelistAddress": "0x8f694b722b32ab9fe7959d8398cd61b70cde58db",
+        "isCrossChain": false,
+        "saveSftWrappedTokenTimestamp": {}
+      }
+    }
+  ]
+}

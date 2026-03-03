@@ -638,7 +638,7 @@
           "0x3d93B9e8F0886358570646dAd9421564C5fE6334",
           "0x67035877F5c12202c387d1698274C2aBF28F3678",
           "0x92E8A4407FD1ae7a53a32f1f832184edF071080A",
-          "0x666c510c737023652Ec66F7926C80576886E3379"
+          "0x666c510c737023652ec66f7926c80576886e3379"
         ],
         "eventSignatures": [
           "CancelWithdrawRequest(address,address,address,bytes32,uint256,uint256)",
