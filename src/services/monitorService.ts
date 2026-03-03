@@ -1,6 +1,5 @@
 import path from 'node:path';
 import {loadJsonConfig} from '../lib/config';
-import {initSequelize} from '../lib/db';
 import {getEventByIds, getTemplateAddressesMap} from './evmService';
 import {eventSignature, getEnv} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
@@ -17,6 +16,7 @@ import type {
 } from '../types/handler';
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
+import {getOrCreateSequelize} from "../lib/dbClient";
 
 type TemplateAddressMap = Record<string, string[]>;
 
@@ -44,6 +44,7 @@ export async function routerEvent(
     handlerEntries?: HandlerEntry[]
 ): Promise<void> {
     if (!events.length) {
+        console.warn('MonitorService: No events to route.');
         return;
     }
 
@@ -126,7 +127,7 @@ export async function routerEventByIds(
         return;
     }
 
-    const sequelize = await initSequelize();
+    const sequelize = await getOrCreateSequelize();
     const newTransaction = await sequelize.transaction();
     try {
         await routerEvent(events, templateAddressesMap, newTransaction, handlerEntries);

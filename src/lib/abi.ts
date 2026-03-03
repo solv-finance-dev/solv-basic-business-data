@@ -11,7 +11,7 @@ function getAbiInterface(fileName: string): Interface {
         return cached;
     }
 
-    const filePath = path.resolve(process.cwd(), 'abis', fileName);
+    const filePath = path.resolve(__dirname, '../abis', fileName);
     const raw = fs.readFileSync(filePath, 'utf8');
     const parsed = JSON.parse(raw) as unknown;
     const iface = new Interface(parsed as Interface['fragments']);

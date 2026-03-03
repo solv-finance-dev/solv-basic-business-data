@@ -12,6 +12,13 @@ export function getEnv(): string {
     return 'dev';
 }
 
+// 判断稳定币
+export function isStablecoin(symbol: string): boolean {
+    let stablecoinList = ["USDC", "USDT", "BUSD", "DAI", "GUSD", "HUSD"];
+
+    return stablecoinList.indexOf(symbol) != -1;
+}
+
 // 判断是否为 0x 开头的事件签名。
 export function isHexSignature(signature: string): boolean {
     return signature.startsWith('0x') && signature.length === 66;

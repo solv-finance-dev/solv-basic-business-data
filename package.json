@@ -3,7 +3,8 @@
 	"version": "1.0.0",
 	"description": "",
 	"scripts": {
-		"build": "tsc",
+		"build": "tsc && npm run copy-assets",
+		"copy-assets": "cp -r config build/ && cp -r abis build/",
 		"test": "jest"
 	},
 	"license": "ISC",

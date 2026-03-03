@@ -3,7 +3,7 @@ import {getLastSyncedBlock, setLastSyncedBlock} from './data/evmSyncState';
 import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
-import {initSequelize} from './lib/db';
+import {getOrCreateSequelize} from "./lib/dbClient";
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -17,7 +17,7 @@ export async function main() {
 
     setInterval(() => {
         if (running) {
-            console.warn('EVM Event Monitor: Previous cycle still running, skip.');
+            console.info('EVM Event Monitor: Previous cycle still running, skip.');
             return;
         }
 
@@ -71,7 +71,7 @@ async function processChain(chain: ChainConfig): Promise<void> {
             continue;
         }
 
-        const sequelize = await initSequelize();
+        const sequelize = await getOrCreateSequelize();
         const transaction = await sequelize.transaction();
 
         try {

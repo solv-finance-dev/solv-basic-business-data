@@ -19,12 +19,12 @@ export function loadJsonConfig<T>(fileName: string): T {
 }
 
 function resolveConfigPath(fileName: string): string {
-    const basePath = path.resolve(process.cwd(), 'config', fileName);
+    const basePath = path.resolve(__dirname, '../config', fileName);
     if (fs.existsSync(basePath)) {
         return basePath;
     }
 
-    const dottedPath = path.resolve(process.cwd(), 'config', `.${fileName}`);
+    const dottedPath = path.resolve(__dirname, '../config', `.${fileName}`);
     if (fs.existsSync(dottedPath)) {
         return dottedPath;
     }

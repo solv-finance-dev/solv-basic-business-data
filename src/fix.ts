@@ -38,7 +38,12 @@ export async function main(task: string) {
     }
 }
 
-main(task).catch(err => {
-    console.error(err)
-    process.exit(1)
-})
+main(task)
+    .then(() => {
+        console.log("Fix task completed")
+        process.exit(0)
+    })
+    .catch(err => {
+        console.error(err)
+        process.exit(1)
+    });
