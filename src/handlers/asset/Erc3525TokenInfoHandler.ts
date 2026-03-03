@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
 import {RawOptContractInfo} from "@solvprotocol/models";
-import {Erc3525TokenInfo as OptRawErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import { getSlotOf, getOwnerOf, getTokenURI } from '../../lib/rpc';
 import { sendQueueMessage } from '../../lib/sqs';
 
@@ -22,8 +22,8 @@ async function findTokenInfo(
     contractAddress: string,
     tokenId: string,
     transaction: any
-): Promise<OptRawErc3525TokenInfo | null> {
-    return await OptRawErc3525TokenInfo.findOne({
+): Promise<RawOptErc3525TokenInfo | null> {
+    return await RawOptErc3525TokenInfo.findOne({
         where: {
             chainId,
             contractAddress: contractAddress.toLowerCase(),
@@ -110,9 +110,9 @@ async function updateContractInfoAndSendSQS(
     }
 }
 
-// 统一更新 OptRawErc3525TokenInfo 并发送 SQS
+// 统一更新 RawOptErc3525TokenInfo 并发送 SQS
 async function updateTokenInfoAndSendSQS(
-    erc3525tokenInfo: OptRawErc3525TokenInfo,
+    erc3525tokenInfo: RawOptErc3525TokenInfo,
     updateData: {
         balance?: string;
         slot?: string;
@@ -265,7 +265,7 @@ async function handleMint(
     const productType = contractInfo?.contractType || '';
 
     // 使用 findOrCreate 避免唯一约束冲突
-    const [tokenInfo, created] = await OptRawErc3525TokenInfo.findOrCreate({
+    const [tokenInfo, created] = await RawOptErc3525TokenInfo.findOrCreate({
         where: {
             chainId,
             contractAddress: contractAddress.toLowerCase(),
