@@ -3,7 +3,7 @@ import {initSequelize} from './db';
 
 let cachedSequelize: Sequelize | null = null;
 let lastInitTime: number | null = null; // 记录上次初始化的时间戳
-const CACHE_EXPIRY_TIME = 13 * 60 * 1000; // 13分钟的毫秒数
+const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10分钟的毫秒数
 
 export async function getOrCreateSequelize(): Promise<Sequelize> {
     const now = Date.now();

@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize-typescript';
 import * as pg from 'pg';
 import { Dialect } from 'sequelize/types/sequelize';
 import 'reflect-metadata';
+import {getOrCreateSequelize} from "./dbClient";
 import { getToken } from './token';
 import { getSecretValue } from './secret';
 import BondCurrencyInfo from '../models/BondCurrencyInfo';
@@ -28,103 +29,81 @@ import SftWrappedTokenInfo from '../models/SftWrappedTokenInfo';
 import XsolvbtcTransactionInfo from '../models/XsolvbtcTransactionInfo';
 import {RouterContractInfo, OptRawNavHistoryPool} from "@solvprotocol/models";
 
-let sequelizeInstance: Sequelize | null = null;
-let sequelizeInitPromise: Promise<Sequelize> | null = null;
-
 export async function initSequelize(): Promise<Sequelize> {
-	if (sequelizeInstance) {
-		return sequelizeInstance;
-	}
-	if (sequelizeInitPromise) {
-		return sequelizeInitPromise;
-	}
+    try {
+        const token = await getToken();
+        const secretString = (await getSecretValue(process.env.SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '';
+        const {
+            username,
+            password,
+            engine,
+            host,
+        }: {
+            username: string;
+            password: string;
+            engine: Dialect | undefined;
+            host: string;
+        } = JSON.parse(secretString!);
+        const localFlag = process.env.CONFIG_ENV === 'local';
 
-	sequelizeInitPromise = (async () => {
-		try {
-			const token = await getToken();
-			const secretString = (await getSecretValue(process.env.SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '';
-			const {
-				username,
-				password,
-				engine,
-				host,
-			}: {
-				username: string;
-				password: string;
-				engine: Dialect | undefined;
-				host: string;
-			} = JSON.parse(secretString!);
-			const localFlag = process.env.CONFIG_ENV === 'local';
-			console.log('localFlag:', localFlag)
+        return new Sequelize({
+            host: localFlag ? host : process.env.DB_PROXY_HOSTNAME,
+            dialectModule: pg,
+            dialect: engine,
+            database: process.env.DATABASE_NAME,
+            username,
+            password: localFlag ? password : token,
+            dialectOptions: {
+                ssl: !localFlag,
+            },
+            models: [
+                BondCurrencyInfo,
+                BtcRedeemRecord,
+                CarryCollectoHistory,
+                CarryInfo,
+                CurrencyInfo,
+                MarketInfo,
+                NavRecords,
+                ProtocolFeeCollectoHistory,
+                ProtocolFeeInfo,
+                RawOptActivity,
+                RawOptContractInfo,
+                RawOptErc20AssetInfo,
+                RawOptErc3525TokenInfo,
+                RawOptMarketContract,
+                RawOptNavHistoryPool,
+                RawOptPoolOrderInfo,
+                RawOptPoolSlotInfo,
+                RawOptRedeemSlotInfo,
+                RawOptRepayInfoOpenEnd,
+                RawOptSaleInfoOpenEnd,
+                SftWrappedTokenInfo,
+                XsolvbtcTransactionInfo,
 
-			const sequelize = new Sequelize({
-				host: localFlag ? host : process.env.DB_PROXY_HOSTNAME,
-				dialectModule: pg,
-				dialect: engine,
-				database: process.env.DATABASE_NAME,
-				username,
-				password: localFlag ? password : token,
-				dialectOptions: {
-					ssl: !localFlag,
-				},
-				models: [
-					BondCurrencyInfo,
-					BtcRedeemRecord,
-					CarryCollectoHistory,
-					CarryInfo,
-					CurrencyInfo,
-					MarketInfo,
-					NavRecords,
-					ProtocolFeeCollectoHistory,
-					ProtocolFeeInfo,
-					RawOptActivity,
-					RawOptContractInfo,
-					RawOptErc20AssetInfo,
-					RawOptErc3525TokenInfo,
-					RawOptMarketContract,
-					RawOptNavHistoryPool,
-					RawOptPoolOrderInfo,
-					RawOptPoolSlotInfo,
-					RawOptRedeemSlotInfo,
-					RawOptRepayInfoOpenEnd,
-					RawOptSaleInfoOpenEnd,
-					SftWrappedTokenInfo,
-					XsolvbtcTransactionInfo,
+                RouterContractInfo,
+                OptRawNavHistoryPool
+            ],
+            define: {
+                timestamps: false,
+                freezeTableName: true,
+            },
+            pool: {
+                max: 10,
+                min: 1,
+                idle: 0,
+                acquire: 60000,
+            },
+            // 生产环境不打印SQL日志
+            logging: process.env.NODE_ENV !== 'prod' ? console.log : false,
+        });
 
-					RouterContractInfo,
-					OptRawNavHistoryPool
-				],
-				define: {
-					timestamps: false,
-					freezeTableName: true,
-				},
-				pool: {
-					max: 10,
-					min: 1,
-					idle: 0,
-					acquire: 60000,
-				},
-				// 生产环境不打印SQL日志
-				logging: process.env.NODE_ENV !== 'prod' ? console.log : false,
-			});
-
-			sequelizeInstance = sequelize;
-			return sequelize;
-		} catch (err: any) {
-			sequelizeInitPromise = null;
-            console.error('Init Sequelize Error:', err);
-			throw new Error('Set Up DB Connection Failed.');
-		}
-	})();
-
-	return sequelizeInitPromise;
+    } catch (err: any) {
+        console.error('Init Sequelize Error:', err);
+        throw new Error('Set Up DB Connection Failed.');
+    }
 }
 
 export async function closeSequelize(): Promise<void> {
-	if (sequelizeInstance) {
-		await sequelizeInstance.close();
-	}
-
-	sequelizeInstance = null;
-	sequelizeInitPromise = null;
+    const sequelize = await getOrCreateSequelize();
+    await sequelize.close();
 }
