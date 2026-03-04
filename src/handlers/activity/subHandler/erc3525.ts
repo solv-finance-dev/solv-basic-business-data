@@ -354,6 +354,7 @@ async function calculateNav(
 
 /**
  * 获取 token 的 owner 地址（优先从链上获取，失败则从数据库获取）
+ * 如果 token 已被 burn，直接返回 NULL_ADDRESS，不进行链上调用
  */
 async function getTokenOwner(
 	chainId: number,
@@ -361,6 +362,14 @@ async function getTokenOwner(
 	tokenId: string,
 	transaction: Transaction
 ): Promise<string> {
+	// 先从数据库获取 token 信息，检查 isBurned 状态
+	const tokenInfo = await getTokenInfo(chainId, contractAddress, tokenId, transaction);
+	
+	// 如果 token 已被标记为 burned，直接返回 NULL_ADDRESS，避免无效的链上调用
+	if (tokenInfo && tokenInfo.isBurned === 1) {
+		return tokenInfo.holder || NULL_ADDRESS;
+	}
+
 	// 优先从链上获取
 	try {
 		const owner = await getOwnerOf(chainId, contractAddress, tokenId);
@@ -376,7 +385,6 @@ async function getTokenOwner(
 	}
 
 	// 从数据库获取
-	const tokenInfo = await getTokenInfo(chainId, contractAddress, tokenId, transaction);
 	if (tokenInfo?.holder) {
 		return tokenInfo.holder;
 	}
@@ -693,13 +701,22 @@ export async function handleTransfer(
 		return;
 	}
 
+	// 如果 token 已被标记为 burned，跳过处理，避免无效的链上调用
+	if (tokenInfo.isBurned === 1) {
+		console.warn('ActivityHandler: Token is already burned, skipping Transfer activity', {
+			contractAddress,
+			tokenId,
+		});
+		return;
+	}
+
 	// 获取合约信息
 	const contractInfo = await getContractInfo(event.chainId, contractAddress, transaction);
 	if (!contractInfo) {
 		return;
 	}
 
-	// 获取 balance
+	// 获取 balance（仅在 token 未被 burn 时调用）
 	let balance = '0';
 	try {
 		balance = await getBalanceOf(event.chainId, contractAddress, tokenId);
