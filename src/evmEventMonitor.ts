@@ -4,6 +4,7 @@ import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
 import {getOrCreateSequelize} from "./lib/dbClient";
+import {getRedisClient} from "./lib/redis";
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -49,6 +50,14 @@ async function runCycle(): Promise<void> {
 }
 
 async function processChain(chain: ChainConfig): Promise<void> {
+    const redisClient = await getRedisClient();
+    const isStop = await redisClient.get('StopMonitorChainId_' + chain.chainId);
+    // console.log("StopMonitorChainId_" + chain.chainId + ":", isStop)
+    if (isStop === '1') {
+        console.log('EVM Event Monitor: Monitor is stopped for chainId', chain.chainId, ', skipping this cycle.');
+        return;
+    }
+
     const lastSyncedBlock = await getLastSyncedBlock(chain.chainId);
     console.log('getLastSyncedBlock:', lastSyncedBlock, 'chainId:', chain.chainId);
     const beginBlockNumber = lastSyncedBlock === null ? chain.startBlockNumber : lastSyncedBlock + 1;

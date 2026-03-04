@@ -1,5 +1,5 @@
-import { sendSQSMessage } from '@solvprotocol/service-utils';
-import { getSecretValue } from './secret';
+import {sendSQSMessage} from '@solvprotocol/service-utils';
+import {getSecretValue} from './secret';
 
 interface QueueConfig {
     QUEUE_URL: string;
@@ -43,7 +43,7 @@ async function resolveQueueInfo(
 
     const queueUrl = chainConfig[queueKey].QUEUE_URL;
     const queueGroup = chainConfig[queueKey].QUEUE_GROUP_ID;
-    return { queueUrl, queueGroup };
+    return {queueUrl, queueGroup};
 }
 
 // Send message to SQS by chainId and queueKey.
@@ -63,7 +63,16 @@ export async function sendQueueMessage(
         throw new Error('SQS: SECRET_V35_QUEUE_ID is not set.');
     }
 
-    const { queueUrl, queueGroup } = await resolveQueueInfo(chainId, queueKey, resolvedSecretName, region);
+    let queueUrl = '';
+    let queueGroup = '';
+    try {
+        const queueConfig = await resolveQueueInfo(chainId, queueKey, resolvedSecretName, region);
+        queueUrl = queueConfig.queueUrl;
+        queueGroup = queueConfig.queueGroup;
+    } catch (e) {
+        console.error(`SQS: Failed to resolve queue info. chainId:${chainId},queueKey:${queueKey},error:${e}`);
+        return;
+    }
     const payload = typeof message === 'string' ? message : JSON.stringify(message);
     await sendSQSMessage(queueUrl, queueGroup, payload, region);
 }
