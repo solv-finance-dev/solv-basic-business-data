@@ -80,6 +80,9 @@ async function processChain(chain: ChainConfig): Promise<void> {
             continue;
         }
 
+        // 按 logIndex 升序排序
+        blockEvents.sort((a, b) => a.logIndex - b.logIndex);
+
         const sequelize = await getOrCreateSequelize();
         const transaction = await sequelize.transaction();
 
