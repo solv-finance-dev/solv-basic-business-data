@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
-import OptRawNavHistoryPool from '../../models/RawOptNavHistoryPool';
-import NavRecords from '../../models/NavRecords';
+import {OptRawNavHistoryPool} from "@solvprotocol/models";
+import {NavRecords} from "@solvprotocol/models";
 import { sendQueueMessage } from '../../lib/sqs';
 
 const NAV_TYPE = {

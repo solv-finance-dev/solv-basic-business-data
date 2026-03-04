@@ -1,8 +1,8 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptPoolOrderInfo from '../../../models/RawOptPoolOrderInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
 import { RouterContractInfo } from '@solvprotocol/models';
 import { getTransactionInfo } from '../../../lib/rpc';
 import { createActivity } from '../ActivityHandler';

@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
-import SftWrappedTokenInfo from '../../models/SftWrappedTokenInfo';
-import RawOptErc20AssetInfo from '../../models/RawOptErc20AssetInfo';
+import {SftWrappedTokenInfo} from "@solvprotocol/models";
+import {RawOptErc20AssetInfo} from "@solvprotocol/models";
 import { sendQueueMessage } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';

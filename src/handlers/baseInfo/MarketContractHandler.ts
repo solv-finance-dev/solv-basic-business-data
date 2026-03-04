@@ -1,5 +1,5 @@
 import type { HandlerParam } from '../../types/handler';
-import RawOptMarketContract from '../../models/RawOptMarketContract';
+import {RawOptMarketContract} from "@solvprotocol/models";
 import { getErc3525TokenMetadata } from '../../lib/rpc';
 import { sendQueueMessage } from '../../lib/sqs';
 

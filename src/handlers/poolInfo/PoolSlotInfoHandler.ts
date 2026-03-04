@@ -1,11 +1,11 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
 import { getSlotURI, getSlotOf, getOwnerOf } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { AbiCoder } from 'ethers';
 import { sendQueueMessage } from '../../lib/sqs';
 
@@ -225,7 +225,7 @@ async function getSlotFromTokenId(
 
     // 如果链上获取失败（token 可能已被 burn），尝试从数据库查找历史记录
     try {
-        const tokenInfo = await OptRawErc3525TokenInfo.findOne({
+        const tokenInfo = await RawOptErc3525TokenInfo.findOne({
             where: {
                 chainId,
                 contractAddress: contractAddress.toLowerCase(),

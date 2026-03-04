@@ -1,5 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import BondCurrencyInfo from '../../models/BondCurrencyInfo';
+import {BondCurrencyInfo} from "@solvprotocol/models";
 
 export async function handleOpenFundShareDelegateEvent(param: HandlerParam): Promise<void> {
     const {event, args, transaction} = param;

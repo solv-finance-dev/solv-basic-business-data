@@ -1,8 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import { getErc3525TokenMetadata } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import {getContractType} from "../../services/evmService";
-// import {RawOptContractInfo} from "@solvprotocol/models"; 
 
 export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Promise<void> {
     const { event, args, transaction } = param;

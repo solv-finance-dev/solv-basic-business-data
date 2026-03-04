@@ -1,5 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import CarryInfo from '../../models/CarryInfo';
+import {CarryInfo} from "@solvprotocol/models";
 
 // 处理 OpenFundMarket 的 SettleCarry 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {

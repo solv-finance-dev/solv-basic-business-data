@@ -1,6 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import BtcRedeemRecord from '../../models/BtcRedeemRecord';
-// import {BtcRedeemRecord} from "@solvprotocol/models";
+import {BtcRedeemRecord} from "@solvprotocol/models";
 
 export async function handleMainnetRedeemerEvent(param: HandlerParam): Promise<void> {
     const {event, args, transaction} = param;

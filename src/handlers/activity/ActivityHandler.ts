@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptActivity from '../../models/RawOptActivity';
+import {RawOptActivity} from "@solvprotocol/models";
 import { handleTransferValue, handleTransfer } from './subHandler/erc3525';
 import {
 	handleCreatePool,
@@ -20,7 +20,7 @@ import {
 	handleUnstake,
 } from './subHandler/router';
 import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { handleSolvBTCRouterV2Deposit, handleSolvBTCRouterV2WithdrawRequest, handleSolvBTCRouterV2CancelWithdrawRequest } from './subHandler/solvBTCRouterV2';
 import { handleXSolvBTCPoolDeposit, handleXSolvBTCPoolWithdraw } from './subHandler/xSolvBTCPool';
 import { sendQueueMessage } from '../../lib/sqs';

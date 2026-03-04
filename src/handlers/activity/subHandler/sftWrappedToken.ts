@@ -3,11 +3,11 @@ import {Op} from 'sequelize';
 import type {EventEvm} from '../../../types/eventEvm';
 import type {HandlerParam} from '../../../types/handler';
 import {RouterContractInfo} from '@solvprotocol/models';
-import RawOptActivity from '../../../models/RawOptActivity';
-import RawOptPoolOrderInfo from '../../../models/RawOptPoolOrderInfo';
-import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import SftWrappedTokenInfo from '../../../models/SftWrappedTokenInfo';
+import {RawOptActivity} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {SftWrappedTokenInfo} from "@solvprotocol/models";
 import {getChainConfig, getErc20Metadata} from '../../../services/evmService';
 import {createActivity} from '../ActivityHandler';
 

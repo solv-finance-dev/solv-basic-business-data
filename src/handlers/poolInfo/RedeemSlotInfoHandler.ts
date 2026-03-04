@@ -1,11 +1,11 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { getSlotOf, getSlotURI } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
 import { AbiCoder } from 'ethers';
 import { sendQueueMessage } from '../../lib/sqs';
 
@@ -507,7 +507,7 @@ async function getSlotFromTokenId(
     console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
     // 首先尝试从数据库查找
     try {
-        const tokenInfo = await OptRawErc3525TokenInfo.findOne({
+        const tokenInfo = await RawOptErc3525TokenInfo.findOne({
             where: {
                 chainId,
                 contractAddress: contractAddress.toLowerCase(),
