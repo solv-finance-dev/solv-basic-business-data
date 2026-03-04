@@ -40,7 +40,7 @@ async function getSlotSafe(
     contractAddress: string,
     tokenId: string,
     logPrefix: string,
-    tokenInfo?: OptRawErc3525TokenInfo | null
+    tokenInfo?: RawOptErc3525TokenInfo | null
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回 '0'，避免无效的链上调用
     if (tokenInfo && tokenInfo.isBurned === 1) {
@@ -64,7 +64,7 @@ async function getOwnerSafe(
     contractAddress: string,
     tokenId: string,
     logPrefix: string,
-    tokenInfo?: OptRawErc3525TokenInfo | null
+    tokenInfo?: RawOptErc3525TokenInfo | null
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回 NULL_ADDRESS，避免无效的链上调用
     if (tokenInfo && tokenInfo.isBurned === 1) {
@@ -86,7 +86,7 @@ async function getTokenURISafe(
     contractAddress: string,
     tokenId: string,
     logPrefix: string,
-    tokenInfo?: OptRawErc3525TokenInfo | null
+    tokenInfo?: RawOptErc3525TokenInfo | null
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回空字符串，避免无效的链上调用
     if (tokenInfo && tokenInfo.isBurned === 1) {
