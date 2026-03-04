@@ -402,6 +402,8 @@ async function getContractType(
 /**
  * 从 ABI 编码的 bytes 中解码 slotInfo
  * 根据合约类型使用不同的 ABI 结构
+ * 
+ * 注意：如果 slotInfoBytes 包含 ABI 编码的长度前缀（前 32 字节），需要先移除
  */
 function decodeSlotInfoFromBytes(
 	slotInfoBytes: string,
@@ -414,6 +416,44 @@ function decodeSlotInfoFromBytes(
 	supervisor?: string;
 } {
 	try {
+		// 检查并移除 ABI 编码的长度前缀（如果存在）
+		// Solidity bytes 类型的 ABI 编码格式：前 32 字节是长度（uint256），后续是实际数据
+		let actualBytes = slotInfoBytes;
+		
+		// 如果 bytes 长度足够，检查前 32 字节是否是长度前缀
+		// 需要至少 66 个字符（0x + 64 hex chars = 32 bytes）才能有前缀
+		if (actualBytes.length > 66 && actualBytes.startsWith('0x')) {
+			const lengthPrefix = actualBytes.substring(0, 66); // 前 32 字节（64 hex chars + 0x）
+			
+			try {
+				const lengthValue = BigInt(lengthPrefix);
+				
+				// 计算总数据长度（字节数）
+				const totalBytes = (actualBytes.length - 2) / 2; // 减去 0x
+				// 计算剩余数据长度（字节数），减去 32 字节前缀
+				const remainingBytes = totalBytes - 32;
+				
+				// 如果长度前缀的值合理（大于 0 且小于等于剩余数据长度），则移除前缀
+				// 同时检查长度前缀的值不能太大（比如超过 100KB），避免误判
+				if (lengthValue > 0n && lengthValue <= BigInt(remainingBytes) && lengthValue <= 100000n) {
+					// 移除长度前缀，只保留实际数据
+					actualBytes = '0x' + actualBytes.substring(66);
+					console.log('PoolSlotInfoHandler: Removed ABI length prefix from slotInfo bytes', {
+						originalLength: slotInfoBytes.length,
+						lengthPrefix: lengthPrefix,
+						lengthValue: lengthValue.toString(),
+						remainingBytes,
+						actualBytesLength: actualBytes.length,
+					});
+				}
+			} catch (prefixError) {
+				// 如果无法解析长度前缀，说明可能不是长度前缀，直接使用原始数据
+				console.debug('PoolSlotInfoHandler: Could not parse length prefix, using original bytes', {
+					prefixError: prefixError instanceof Error ? prefixError.message : String(prefixError),
+				});
+			}
+		}
+
 		const abiCoder = AbiCoder.defaultAbiCoder();
 		let decoded: unknown[];
 
@@ -422,7 +462,7 @@ function decodeSlotInfoFromBytes(
 			// bytes: (address,address,uint256,uint8,int32,uint64,uint64,uint64,bool,string)
 			// struct: currency,supervisor,issueQuota,interestType,interestRate,valueDate,maturity,createTime,transferable,externalURI
 			const types = ['address', 'address', 'uint256', 'uint8', 'int32', 'uint64', 'uint64', 'uint64', 'bool', 'string'];
-			decoded = abiCoder.decode(types, slotInfoBytes);
+			decoded = abiCoder.decode(types, actualBytes);
 			const [currency, supervisor, , , interestRateInt32, valueDateUint64, maturityUint64] = decoded;
 
 			return {
@@ -440,6 +480,7 @@ function decodeSlotInfoFromBytes(
 		console.warn('PoolSlotInfoHandler: Failed to decode slotInfo bytes', {
 			contractType,
 			slotInfoBytesPrefix: slotInfoBytes?.substring(0, 50),
+			slotInfoBytesLength: slotInfoBytes?.length,
 			error: error instanceof Error ? error.message : String(error),
 		});
 		return {};
