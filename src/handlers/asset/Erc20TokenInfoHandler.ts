@@ -94,6 +94,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	const to = String(args.to ?? '').toLowerCase();
 	const valueStr = String(args.value ?? '0');
 	const value = valueStr || '0';
+	console.log('Erc20TokenInfoHandler: handleTransferEvent', {from, to, value: args.value, valueStr: valueStr});
 
 	const timestamp = event.blockTimestamp;
 
