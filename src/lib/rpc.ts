@@ -225,9 +225,11 @@ export async function getTokenURI(
 	const contract = new Contract(contractAddress, erc3525Abi, provider);
 	try {
 		const tokenURI = await contract.tokenURI(tokenId);
+		console.debug('Rpc: getTokenURI: tokenURI', { chainId, contractAddress, tokenId, tokenURI });
 		return String(tokenURI);
 	} catch (error) {
 		// 如果调用失败，返回空字符串
+		console.error('Rpc: Failed to get tokenURI', { chainId, contractAddress, tokenId, error: error instanceof Error ? error.message : String(error) });
 		return '';
 	}
 }
