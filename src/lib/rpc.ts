@@ -220,7 +220,7 @@ export async function getTokenURI(
 ): Promise<string> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Abi = [
-		'function tokenURI(uint256 tokenId) view returns (string)',
+		'function tokenURI(uint256 tokenId_) view returns (string)',
 	];
 	const contract = new Contract(contractAddress, erc3525Abi, provider);
 	try {

@@ -91,12 +91,15 @@ async function getTokenURISafe(
     tokenInfo?: RawOptErc3525TokenInfo | null
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回空字符串，避免无效的链上调用
+    console.debug('Erc3525TokenInfoHandler: getTokenURISafe', { tokenInfo, tokenId });
     if (tokenInfo && tokenInfo.isBurned === 1) {
         return tokenInfo.tokenURI || '';
     }
-
+    console.debug('Erc3525TokenInfoHandler: getTokenURISafe: getTokenURI start', { chainId, contractAddress, tokenId });
     try {
-        return await getTokenURI(chainId, contractAddress, tokenId);
+        const tokenURI = await getTokenURI(chainId, contractAddress, tokenId);
+        console.debug('Erc3525TokenInfoHandler: getTokenURISafe: getTokenURI end', { chainId, contractAddress, tokenId, tokenURI });
+        return tokenURI || '';
     } catch (error) {
         console.error(`${logPrefix}: Failed to get tokenURI`, { contractAddress, tokenId, error });
         return '';
