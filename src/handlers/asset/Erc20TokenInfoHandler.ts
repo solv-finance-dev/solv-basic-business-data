@@ -110,16 +110,42 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			transaction
 		);
 
+		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
+		await fromAsset.reload({ transaction });
 		const currentBalance = fromAsset.balance ?? '0';
 		const newBalance = subBigInt(currentBalance, value);
-		console.debug('Erc20TokenInfoHandler: handleTransferEvent: fromAsset', {fromAsset, currentBalance, newBalance});
+		
+		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
+		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
+		
+		console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset update', {
+			assetId: fromAsset.id,
+			chainId,
+			contractAddress,
+			holder: from,
+			currentBalance,
+			value,
+			newBalance,
+			balanceValue,
+		});
+
+		// 更新 balance，确保使用字符串格式
 		await fromAsset.update(
 			{
-				balance: newBalance,
+				balance: balanceValue,
 				lastUpdated: timestamp,
 			},
 			{ transaction }
 		);
+
+		// 重新加载以验证更新是否成功
+		await fromAsset.reload({ transaction });
+		console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset after update', {
+			assetId: fromAsset.id,
+			balance: fromAsset.balance,
+			expectedBalance: balanceValue,
+			balanceMatch: fromAsset.balance === balanceValue || (fromAsset.balance && String(fromAsset.balance) === balanceValue),
+		});
 
 		// 修改成功后发送 SQS 消息
 		if (fromAsset && fromAsset.id) {
@@ -155,16 +181,45 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			transaction
 		);
 
+		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
+		await toAsset.reload({ transaction });
 		const currentBalance = toAsset.balance ?? '0';
 		const newBalance = addBigInt(currentBalance, value);
-		console.debug('Erc20TokenInfoHandler: handleTransferEvent: toAsset', {toAsset, currentBalance, newBalance});
+		
+		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
+		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
+		
+		console.log('Erc20TokenInfoHandler: handleTransferEvent: toAsset update', {
+			assetId: toAsset.id,
+			chainId,
+			contractAddress,
+			holder: to,
+			currentBalance,
+			value,
+			newBalance,
+			balanceValue,
+			valueType: typeof value,
+			currentBalanceType: typeof currentBalance,
+			newBalanceType: typeof newBalance,
+		});
+
+		// 更新 balance，确保使用字符串格式
 		await toAsset.update(
 			{
-				balance: newBalance,
+				balance: balanceValue,
 				lastUpdated: timestamp,
 			},
 			{ transaction }
 		);
+
+		// 重新加载以验证更新是否成功
+		await toAsset.reload({ transaction });
+		console.log('Erc20TokenInfoHandler: handleTransferEvent: toAsset after update', {
+			assetId: toAsset.id,
+			balance: toAsset.balance,
+			expectedBalance: balanceValue,
+			balanceMatch: toAsset.balance === balanceValue || (toAsset.balance && String(toAsset.balance) === balanceValue),
+		});
 
 		// 修改成功后发送 SQS 消息
 		if (toAsset && toAsset.id) {

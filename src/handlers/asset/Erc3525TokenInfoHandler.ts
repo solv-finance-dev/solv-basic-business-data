@@ -112,7 +112,29 @@ async function updateContractInfoAndSendSQS(
     },
     transaction: any
 ): Promise<void> {
-    await contractInfo.update(updateData, { transaction });
+    // 如果更新 totalSupply，确保值是有效的字符串格式
+    const normalizedUpdateData: typeof updateData = { ...updateData };
+    if (normalizedUpdateData.totalSupply !== undefined) {
+        // 确保 totalSupply 是有效的数字字符串
+        const totalSupplyValue = normalizedUpdateData.totalSupply && normalizedUpdateData.totalSupply.trim() !== '' 
+            ? String(normalizedUpdateData.totalSupply) 
+            : '0';
+        normalizedUpdateData.totalSupply = totalSupplyValue;
+    }
+
+    await contractInfo.update(normalizedUpdateData, { transaction });
+
+    // 如果更新了 totalSupply，重新加载并验证
+    if (normalizedUpdateData.totalSupply !== undefined) {
+        await contractInfo.reload({ transaction });
+        console.log('Erc3525TokenInfoHandler: updateContractInfoAndSendSQS totalSupply updated', {
+            contractAddress: contractInfo.contractAddress,
+            expectedTotalSupply: normalizedUpdateData.totalSupply,
+            actualTotalSupply: contractInfo.totalSupply,
+            totalSupplyMatch: contractInfo.totalSupply === normalizedUpdateData.totalSupply || 
+                             (contractInfo.totalSupply && String(contractInfo.totalSupply) === normalizedUpdateData.totalSupply),
+        });
+    }
 
     try {
         await sendQueueMessage(contractInfo.chainId, 'configQueue', {
@@ -148,7 +170,29 @@ async function updateTokenInfoAndSendSQS(
     contractAddress: string,
     transaction: any
 ): Promise<void> {
-    await erc3525tokenInfo.update(updateData, { transaction });
+    // 如果更新 balance，确保值是有效的字符串格式
+    const normalizedUpdateData: typeof updateData = { ...updateData };
+    if (normalizedUpdateData.balance !== undefined) {
+        // 确保 balance 是有效的数字字符串
+        const balanceValue = normalizedUpdateData.balance && normalizedUpdateData.balance.trim() !== '' 
+            ? String(normalizedUpdateData.balance) 
+            : '0';
+        normalizedUpdateData.balance = balanceValue;
+    }
+
+    await erc3525tokenInfo.update(normalizedUpdateData, { transaction });
+
+    // 如果更新了 balance，重新加载并验证
+    if (normalizedUpdateData.balance !== undefined) {
+        await erc3525tokenInfo.reload({ transaction });
+        console.log('Erc3525TokenInfoHandler: updateTokenInfoAndSendSQS balance updated', {
+            tokenId: erc3525tokenInfo.tokenId,
+            expectedBalance: normalizedUpdateData.balance,
+            actualBalance: erc3525tokenInfo.balance,
+            balanceMatch: erc3525tokenInfo.balance === normalizedUpdateData.balance || 
+                         (erc3525tokenInfo.balance && String(erc3525tokenInfo.balance) === normalizedUpdateData.balance),
+        });
+    }
 
     try {
         await sendQueueMessage(chainId, 'assetQueue', {
@@ -190,9 +234,20 @@ async function handleTransferValue(
             return;
         }
 
+        // 重新加载以确保获取最新的 balance 值
+        await fromTokenInfo.reload({ transaction });
+        
         // 减少余额并发送 SQS
         const balance = fromTokenInfo.balance || '0';
         const newBalance = subBigInt(balance, value);
+        
+        console.log('Erc3525TokenInfoHandler: handleTransferValue fromTokenInfo update', {
+            tokenId: fromTokenId,
+            currentBalance: balance,
+            value,
+            newBalance,
+        });
+        
         await updateTokenInfoAndSendSQS(
             fromTokenInfo,
             {
@@ -230,12 +285,22 @@ async function handleTransferValue(
         // 获取 owner（传入 tokenInfo 以检查 isBurned）
         const owner = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
 
+        // 重新加载以确保获取最新的 balance 值
+        await toTokenInfo.reload({ transaction });
+
         // 增加余额
         const balance = toTokenInfo.balance || '0';
         const newBalance = addBigInt(balance, value);
 
         // 获取 tokenURI（传入 tokenInfo 以检查 isBurned）
         const tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
+
+        console.log('Erc3525TokenInfoHandler: handleTransferValue toTokenInfo update', {
+            tokenId: toTokenId,
+            currentBalance: balance,
+            value,
+            newBalance,
+        });
 
         // 更新目标 token 信息并发送 SQS
         await updateTokenInfoAndSendSQS(
@@ -431,6 +496,8 @@ async function handleTransfer(
     const to = String(args._to ?? '').toLowerCase();
     const timestamp = event.blockTimestamp;
 
+    // 重新加载以确保获取最新的 totalSupply 值
+    await contractInfo.reload({ transaction });
     let totalSupply = contractInfo.totalSupply || '0';
 
     // 根据 from 地址判断操作类型
