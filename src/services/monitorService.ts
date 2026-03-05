@@ -17,6 +17,7 @@ import type {
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
 import {getOrCreateSequelize} from "../lib/dbClient";
+import {SqsParam} from "../types/sqsParam";
 
 type TemplateAddressMap = Record<string, string[]>;
 
@@ -327,9 +328,9 @@ function isEventMatch(event: EventEvm, config: HandlerEntry, templateAddressesMa
     return true;
 }
 
-async function invokeHandler(entry: HandlerEntry, param: HandlerParam): Promise<void> {
+async function invokeHandler(entry: HandlerEntry, param: HandlerParam): Promise<SqsParam | void> {
     const handler = await getHandlerFunction(entry);
-    await handler(param);
+    return await handler(param);
 }
 
 async function getHandlerFunction(entry: HandlerEntry): Promise<HandlerFn> {
