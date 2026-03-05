@@ -144,7 +144,7 @@ export async function getSlotByIndex(
 		const slot = await contract.slotByIndex(tokenId);
 		return String(slot);
 	} catch (error) {
-		console.warn('Rpc: Failed to get slotByIndex', {
+		console.error('Rpc: Failed to get slotByIndex', {
 			chainId,
 			contractAddress,
 			tokenId,
@@ -159,14 +159,25 @@ export async function getOwnerOf(
 	chainId: number,
 	contractAddress: string,
 	tokenId: string
-): Promise<string> {
+): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Abi = [
 		'function ownerOf(uint256 tokenId) view returns (address)',
 	];
 	const contract = new Contract(contractAddress, erc3525Abi, provider);
-	const owner = await contract.ownerOf(tokenId);
-	return String(owner);
+	try {
+		const owner = await contract.ownerOf(tokenId);
+		return String(owner);
+	} catch (error) {
+		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
+			// 不记录警告，因为这是正常情况（token 可能已被 burn），调用方会从数据库查找
+			return null;
+		}
+		// 其他错误继续抛出
+		throw error;
+	}
 }
 
 // 获取 ERC3525 token 的 balance
@@ -184,7 +195,7 @@ export async function getBalanceOf(
 		const balance = await contract.balanceOf(tokenId);
 		return String(balance);
 	} catch (error) {
-		console.warn('Rpc: Failed to get balanceOf', {
+		console.error('Rpc: Failed to get balanceOf', {
 			chainId,
 			contractAddress,
 			tokenId,
@@ -266,7 +277,7 @@ export async function getTransactionInfo(
 	try {
 		const tx = await provider.getTransaction(txHash);
 		if (!tx) {
-			console.warn('Rpc: Transaction not found', { chainId, txHash });
+			console.log('Rpc: Transaction not found', { chainId, txHash });
 			return null;
 		}
 
@@ -285,7 +296,7 @@ export async function getTransactionInfo(
 			transactionIndex: tx.index !== null ? tx.index : null,
 		};
 	} catch (error) {
-		console.warn('Rpc: Failed to get transaction info', {
+		console.error('Rpc: Failed to get transaction info', {
 			chainId,
 			txHash,
 			error: error instanceof Error ? error.message : String(error),

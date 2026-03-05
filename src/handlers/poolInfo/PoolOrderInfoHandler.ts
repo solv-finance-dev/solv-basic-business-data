@@ -58,7 +58,7 @@ function addBigInt(a: string | undefined | null, b: string | undefined | null): 
     try {
         return (BigInt(aValue) + BigInt(bValue)).toString();
     } catch (error) {
-        console.warn('PoolOrderInfoHandler: BigInt addition failed', { a: aValue, b: bValue, error });
+        console.error('PoolOrderInfoHandler: BigInt addition failed', { a: aValue, b: bValue, error });
         return '0';
     }
 }
@@ -107,7 +107,7 @@ async function getCurrencyDecimals(
             return currencyInfo.decimals;
         }
     } catch (error) {
-        console.warn('PoolOrderInfoHandler: Failed to get CurrencyInfo', {
+        console.error('PoolOrderInfoHandler: Failed to get CurrencyInfo', {
             chainId,
             currencyAddress,
             error: error instanceof Error ? error.message : String(error),

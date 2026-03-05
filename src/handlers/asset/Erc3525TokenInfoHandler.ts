@@ -52,7 +52,7 @@ async function getSlotSafe(
         // getSlotOf 在 token 无效时会返回 null
         return slot || '0';
     } catch (error) {
-        console.warn(`${logPrefix}: Failed to get slotOf`, { contractAddress, tokenId, error });
+        console.error(`${logPrefix}: Failed to get slotOf`, { contractAddress, tokenId, error });
         return '0';
     }
 }
@@ -72,9 +72,11 @@ async function getOwnerSafe(
     }
 
     try {
-        return await getOwnerOf(chainId, contractAddress, tokenId);
+        const owner = await getOwnerOf(chainId, contractAddress, tokenId);
+        // getOwnerOf 现在可能返回 null（token 无效时），需要处理
+        return owner || NULL_ADDRESS;
     } catch (error) {
-        console.warn(`${logPrefix}: Failed to get ownerOf`, { contractAddress, tokenId, error });
+        console.error(`${logPrefix}: Failed to get ownerOf`, { contractAddress, tokenId, error });
         return NULL_ADDRESS;
     }
 }
@@ -96,7 +98,7 @@ async function getTokenURISafe(
     try {
         return await getTokenURI(chainId, contractAddress, tokenId);
     } catch (error) {
-        console.warn(`${logPrefix}: Failed to get tokenURI`, { contractAddress, tokenId, error });
+        console.error(`${logPrefix}: Failed to get tokenURI`, { contractAddress, tokenId, error });
         return '';
     }
 }

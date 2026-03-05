@@ -61,7 +61,7 @@ function addBigInt(a: string | undefined | null, b: string | undefined | null): 
 	try {
 		return (BigInt(aValue) + BigInt(bValue)).toString();
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: BigInt addition failed', {
+		console.error('PoolSlotInfoHandler: BigInt addition failed', {
 			a: aValue,
 			b: bValue,
 			error: error instanceof Error ? error.message : String(error),
@@ -81,7 +81,7 @@ function subBigInt(a: string | undefined | null, b: string | undefined | null): 
 		// 确保结果不为负数
 		return result < 0 ? '0' : result.toString();
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: BigInt subtraction failed', {
+		console.error('PoolSlotInfoHandler: BigInt subtraction failed', {
 			a: aValue,
 			b: bValue,
 			error: error instanceof Error ? error.message : String(error),
@@ -153,7 +153,7 @@ async function findPoolIdBySlot(
 		});
 		return poolOrder?.poolId;
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: Failed to find PoolOrderInfo', {
+		console.error('PoolSlotInfoHandler: Failed to find PoolOrderInfo', {
 			chainId,
 			contractAddress,
 			slot,
@@ -209,7 +209,8 @@ async function getOrCreatePoolSlotInfo(
 
 /**
  * 从 tokenId 获取 slot
- * 优先从链上调用 slotOf，如果失败（token 已被 burn 等），则从数据库查找历史记录
+ * 优先从数据库检查 isBurned 状态，如果已被 burn，直接返回数据库中的 slot
+ * 如果未被 burn 或数据库中不存在，再从链上调用 slotOf
  */
 async function getSlotFromTokenId(
     chainId: number,
@@ -217,13 +218,7 @@ async function getSlotFromTokenId(
     tokenId: string,
     transaction: Transaction
 ): Promise<string | null> {
-    // 首先尝试从链上获取
-    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
-    if (slotFromChain) {
-        return slotFromChain;
-    }
-
-    // 如果链上获取失败（token 可能已被 burn），尝试从数据库查找历史记录
+    // 首先从数据库查找 token 信息，检查 isBurned 状态
     try {
         const tokenInfo = await RawOptErc3525TokenInfo.findOne({
             where: {
@@ -234,22 +229,59 @@ async function getSlotFromTokenId(
             transaction,
         });
 
+        // 如果 token 已被标记为 burned，直接返回数据库中的 slot，避免无效的链上调用
+        if (tokenInfo && tokenInfo.isBurned === 1) {
+            if (tokenInfo.slot) {
+                console.log('PoolSlotInfoHandler: Got slot from database for burned token', {
+                    chainId,
+                    contractAddress,
+                    tokenId,
+                    slot: tokenInfo.slot,
+                });
+                return tokenInfo.slot;
+            }
+            // 如果已被 burn 但没有 slot 信息，返回 null
+            return null;
+        }
+
+        // 如果数据库中有记录且未被 burn，但 slot 为空，尝试从链上获取
+        if (tokenInfo && !tokenInfo.slot) {
+            const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+            if (slotFromChain) {
+                return slotFromChain;
+            }
+        }
+
+        // 如果数据库中有记录且有 slot，直接返回
         if (tokenInfo?.slot) {
-            console.log('PoolSlotInfoHandler: Got slot from database for burned token', {
-                chainId,
-                contractAddress,
-                tokenId,
-                slot: tokenInfo.slot,
-            });
             return tokenInfo.slot;
         }
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to get slot from database', {
+        console.debug('PoolSlotInfoHandler: Failed to get token info from database', {
             chainId,
             contractAddress,
             tokenId,
             error: error instanceof Error ? error.message : String(error),
         });
+    }
+
+    // 如果数据库中没有记录或记录中没有 slot，尝试从链上获取
+    try {
+        const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+        if (slotFromChain) {
+            return slotFromChain;
+        }
+    } catch (error) {
+        // getSlotOf 已经处理了 invalid token ID 错误，这里只记录其他错误
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (!errorMessage.includes('invalid token ID') && !errorMessage.includes('token ID')) {
+            console.debug('PoolSlotInfoHandler: Failed to get slot from chain', {
+                chainId,
+                contractAddress,
+                tokenId,
+                error: errorMessage,
+            });
+        }
     }
 
     // 如果都失败了，返回 null（不记录警告，由调用方决定如何处理）
@@ -267,7 +299,7 @@ async function getSlotURISafe(
     try {
         return await getSlotURI(chainId, contractAddress, slot);
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to get slotURI', {
+        console.debug('PoolSlotInfoHandler: Failed to get slotURI', {
             chainId,
             contractAddress,
             slot,
@@ -390,7 +422,7 @@ async function getContractType(
 		});
 		return contractInfo?.contractType || null;
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: Failed to get ContractInfo', {
+		console.error('PoolSlotInfoHandler: Failed to get ContractInfo', {
 			chainId,
 			contractAddress,
 			error: error instanceof Error ? error.message : String(error),
@@ -477,7 +509,7 @@ function decodeSlotInfoFromBytes(
 			return {};
 		}
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: Failed to decode slotInfo bytes', {
+		console.error('PoolSlotInfoHandler: Failed to decode slotInfo bytes', {
 			contractType,
 			slotInfoBytesPrefix: slotInfoBytes?.substring(0, 50),
 			slotInfoBytesLength: slotInfoBytes?.length,
@@ -578,7 +610,7 @@ function extractFieldsFromSlotURI(slotURI: string): {
 
         return result;
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to parse slotURI', {
+        console.error('PoolSlotInfoHandler: Failed to parse slotURI', {
             error: error instanceof Error ? error.message : String(error),
         });
         return {};
@@ -603,7 +635,7 @@ async function getCurrencySymbol(
         });
         return currencyInfo?.symbol;
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to get CurrencyInfo', {
+        console.error('PoolSlotInfoHandler: Failed to get CurrencyInfo', {
             chainId,
             currencyAddress,
             error: error instanceof Error ? error.message : String(error),
