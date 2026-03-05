@@ -94,7 +94,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	const to = String(args.to ?? '').toLowerCase();
 	const valueStr = String(args.value ?? '0');
 	const value = valueStr || '0';
-	console.log('Erc20TokenInfoHandler: handleTransferEvent', {from, to, value: args.value, valueStr: valueStr});
+	console.debug('Erc20TokenInfoHandler: handleTransferEvent', {from, to, value: args.value, valueStr: valueStr});
 
 	const timestamp = event.blockTimestamp;
 
@@ -112,7 +112,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 
 		const currentBalance = fromAsset.balance ?? '0';
 		const newBalance = subBigInt(currentBalance, value);
-
+		console.debug('Erc20TokenInfoHandler: handleTransferEvent: fromAsset', {fromAsset, currentBalance, newBalance});
 		await fromAsset.update(
 			{
 				balance: newBalance,
@@ -157,7 +157,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 
 		const currentBalance = toAsset.balance ?? '0';
 		const newBalance = addBigInt(currentBalance, value);
-
+		console.debug('Erc20TokenInfoHandler: handleTransferEvent: toAsset', {toAsset, currentBalance, newBalance});
 		await toAsset.update(
 			{
 				balance: newBalance,
