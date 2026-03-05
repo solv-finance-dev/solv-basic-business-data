@@ -185,7 +185,7 @@ export async function getBalanceOf(
 	chainId: number,
 	contractAddress: string,
 	tokenId: string
-): Promise<string> {
+): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Abi = [
 		'function balanceOf(uint256 tokenId) view returns (uint256)',
@@ -195,13 +195,20 @@ export async function getBalanceOf(
 		const balance = await contract.balanceOf(tokenId);
 		return String(balance);
 	} catch (error) {
+		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常或返回 '0'
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
+			// 不记录错误，因为这是正常情况（token 可能已被 burn），调用方会从数据库查找
+			return null;
+		}
+		// 其他错误记录并返回 null
 		console.error('Rpc: Failed to get balanceOf', {
 			chainId,
 			contractAddress,
 			tokenId,
-			error: error instanceof Error ? error.message : String(error),
+			error: errorMessage,
 		});
-		return '0';
+		return null;
 	}
 }
 

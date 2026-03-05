@@ -719,13 +719,26 @@ export async function handleTransfer(
 	// 获取 balance（仅在 token 未被 burn 时调用）
 	let balance = '0';
 	try {
-		balance = await getBalanceOf(event.chainId, contractAddress, tokenId);
+		const balanceResult = await getBalanceOf(event.chainId, contractAddress, tokenId);
+		// getBalanceOf 现在可能返回 null（token 无效时），需要处理
+		if (balanceResult !== null) {
+			balance = balanceResult;
+		} else {
+			// 如果链上获取失败（token 可能已被 burn），尝试从数据库获取
+			if (tokenInfo?.balance) {
+				balance = tokenInfo.balance;
+			}
+		}
 	} catch (error) {
 		console.warn('ActivityHandler: Failed to get balanceOf', {
 			contractAddress,
 			tokenId,
 			error: error instanceof Error ? error.message : String(error),
 		});
+		// 如果链上调用失败，尝试从数据库获取
+		if (tokenInfo?.balance) {
+			balance = tokenInfo.balance;
+		}
 	}
 
 	// 根据合约类型处理
