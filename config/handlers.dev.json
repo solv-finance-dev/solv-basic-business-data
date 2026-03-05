@@ -407,8 +407,8 @@
         "contractAddresses": [],
         "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
-          "TransferValue(uint256,uint256,uint256)",
-          "Transfer(address,address,uint256)"
+          "Transfer(address,address,uint256)",
+          "TransferValue(uint256,uint256,uint256)"
         ]
       }
     ]
