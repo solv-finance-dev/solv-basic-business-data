@@ -17,6 +17,7 @@ import type {
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
 import {getOrCreateSequelize} from "../lib/dbClient";
+import {SqsParam} from "../types/sqsParam";
 
 type TemplateAddressMap = Record<string, string[]>;
 
@@ -42,7 +43,7 @@ export async function routerEvent(
     templateAddressesMap: TemplateAddressMap,
     transaction: Transaction,
     handlerEntries?: HandlerEntry[]
-): Promise<void> {
+): Promise<SqsParam[] | void> {
     if (!events.length) {
         console.warn('MonitorService: No events to route.');
         return;
@@ -59,6 +60,7 @@ export async function routerEvent(
         return;
     }
 
+    const sqsResults: SqsParam[] = [];
     for (const event of events) {
         const matchedHandlers = entries.filter((entry) => isEventMatch(event, entry, templateAddressesMap));
         if (!matchedHandlers.length) {
@@ -83,7 +85,16 @@ export async function routerEvent(
             const eventSignatureKey = event.eventSignature.toLowerCase();
             const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[eventSignatureKey] : '';
             try {
-                await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, transaction});
+                const result = await invokeHandler(entry, {
+                    event,
+                    args,
+                    eventFunc: eventSignature,
+                    config: entry,
+                    transaction
+                });
+                if (result) {
+                    sqsResults.push(result);
+                }
             } catch (error) {
                 console.error(`MonitorService: Handler failed: ${entry.name}`, error);
                 throw new Error('MonitorService: handler execution failed.');
@@ -91,6 +102,9 @@ export async function routerEvent(
         }
     }
 
+    if (sqsResults.length > 0) {
+        return sqsResults;
+    }
 }
 
 export async function routerEventByIds(
@@ -327,9 +341,9 @@ function isEventMatch(event: EventEvm, config: HandlerEntry, templateAddressesMa
     return true;
 }
 
-async function invokeHandler(entry: HandlerEntry, param: HandlerParam): Promise<void> {
+async function invokeHandler(entry: HandlerEntry, param: HandlerParam): Promise<SqsParam | void> {
     const handler = await getHandlerFunction(entry);
-    await handler(param);
+    return await handler(param);
 }
 
 async function getHandlerFunction(entry: HandlerEntry): Promise<HandlerFn> {

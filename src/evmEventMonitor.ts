@@ -5,6 +5,7 @@ import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
 import {getOrCreateSequelize} from "./lib/dbClient";
 import {getRedisClient} from "./lib/redis";
+import {sendQueueMessage} from "./lib/sqs";
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -86,15 +87,26 @@ async function processChain(chain: ChainConfig): Promise<void> {
         const sequelize = await getOrCreateSequelize();
         const transaction = await sequelize.transaction();
 
+        let sqsList;
         try {
-            await routerEvent(blockEvents, templateAddressesMap, transaction);
+            sqsList = await routerEvent(blockEvents, templateAddressesMap, transaction);
             await transaction.commit();
-            console.log('setLastSyncedBlock:', blockNumber);
-            await setLastSyncedBlock(chain.chainId, blockNumber);
         } catch (error) {
             await transaction.rollback();
             console.error('EVM Event Monitor: Error processing block', blockNumber, 'on chain', chain.chainId, error);
             throw error;
+        }
+        console.log('setLastSyncedBlock:', blockNumber);
+        await setLastSyncedBlock(chain.chainId, blockNumber);
+
+        if (sqsList && sqsList.length > 0) {
+            for (const sqs of sqsList) {
+                try {
+                    await sendQueueMessage(sqs.chainId, sqs.queueKey, sqs.message);
+                } catch (error) {
+                    console.error('EVM Event Monitor: Failed to send SQS message for block', blockNumber, 'chain', sqs, error);
+                }
+            }
         }
     }
 }
