@@ -73,6 +73,71 @@ export async function sendQueueMessage(
         console.error(`SQS: Failed to resolve queue info. chainId:${chainId},queueKey:${queueKey},error:${e}`);
         return;
     }
-    const payload = typeof message === 'string' ? message : JSON.stringify(message);
-    await sendSQSMessage(queueUrl, queueGroup, payload, region);
+
+    // 将消息转换为 JSON 字符串，并验证其有效性
+    let payload: string;
+    if (typeof message === 'string') {
+        // 如果已经是字符串，验证它是否是有效的 JSON
+        try {
+            const parsed = JSON.parse(message);
+            // 重新序列化以确保格式一致（移除可能的空格和格式问题）
+            payload = JSON.stringify(parsed);
+        } catch (parseError) {
+            // 如果不是有效的 JSON，将其作为普通字符串包装
+            console.warn('SQS: Message is string but not valid JSON, wrapping it', {
+                chainId,
+                queueKey,
+                messagePreview: message.substring(0, 100),
+            });
+            payload = JSON.stringify({ message });
+        }
+    } else {
+        // 将对象转换为 JSON 字符串（使用紧凑格式，无空格）
+        try {
+            payload = JSON.stringify(message);
+            // 验证生成的 JSON 是否有效
+            const parsed = JSON.parse(payload);
+            // 重新序列化以确保格式一致
+            payload = JSON.stringify(parsed);
+        } catch (stringifyError) {
+            console.error('SQS: Failed to stringify message', {
+                chainId,
+                queueKey,
+                error: stringifyError instanceof Error ? stringifyError.message : String(stringifyError),
+                messageType: typeof message,
+            });
+            throw new Error(`SQS: Invalid message format for chainId ${chainId}, queueKey ${queueKey}`);
+        }
+    }
+
+    // 记录发送的消息（仅记录前 200 个字符，避免日志过长）
+    console.log('SQS: Sending message', {
+        chainId,
+        queueKey,
+        queueUrl,
+        queueGroup,
+        payloadLength: payload.length,
+        payloadPreview: payload.substring(0, 200),
+    });
+
+    try {
+        await sendSQSMessage(queueUrl, queueGroup, payload, region);
+        console.log('SQS: Message sent successfully', {
+            chainId,
+            queueKey,
+            queueUrl,
+            queueGroup,
+        });
+    } catch (sendError) {
+        console.error('SQS: Failed to send message', {
+            chainId,
+            queueKey,
+            queueUrl,
+            queueGroup,
+            payloadLength: payload.length,
+            payloadPreview: payload.substring(0, 200),
+            error: sendError instanceof Error ? sendError.message : String(sendError),
+        });
+        throw sendError;
+    }
 }
