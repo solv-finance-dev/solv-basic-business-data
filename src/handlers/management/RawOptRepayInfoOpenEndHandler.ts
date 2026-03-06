@@ -112,7 +112,7 @@ async function upsertRepayInfo(param: HandlerParam, repayType: 'Normal' | 'Liqui
     );
 
     await sendQueueMessageDelay(event.chainId, 'assetQueue', {
-        source: 'V3_5_Raw_Wrapped_Asset_Info',
+        source: 'V3_5_Raw_Repay_Info_Open_End',
         data: {
             id: Number(created.id),
             chainId: String(event.chainId),

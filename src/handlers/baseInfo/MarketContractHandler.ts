@@ -51,7 +51,7 @@ async function getOrCreateMarketContract(
     if (created && created.id) {
         try {
             await sendQueueMessageDelay(chainId, 'configQueue', {
-                source: 'V3_5_Raw_Market_Contract',
+                source: 'V3_5_Raw_Market_Contract_Info',
                 data: {
                     id: Number(created.id),
                     chainId: String(chainId),
@@ -86,7 +86,7 @@ async function updateMarketContractAndSendSQS(
 
     try {
         await sendQueueMessageDelay(marketContract.chainId, 'configQueue', {
-            source: 'V3_5_Raw_Market_Contract',
+            source: 'V3_5_Raw_Market_Contract_Info',
             data: {
                 id: Number(marketContract.id),
                 chainId: String(marketContract.chainId),
