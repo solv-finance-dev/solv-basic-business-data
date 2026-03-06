@@ -1,5 +1,7 @@
 import {sendSQSMessage} from '@solvprotocol/service-utils';
 import {getSecretValue} from './secret';
+import {SqsParam} from "../types/sqsParam";
+import {int} from "aws-sdk/clients/datapipeline";
 
 interface QueueConfig {
     QUEUE_URL: string;
@@ -10,6 +12,8 @@ interface QueueConfig {
 type QueueConfigMap = Record<string, Record<string, QueueConfig>>;
 
 const queueConfigCache = new Map<string, QueueConfigMap>();
+const delayedQueueMap = new Map<number, SqsParam[]>();
+const flushingChains = new Set<number>();
 
 // Load and cache queue config from Secrets Manager.
 async function loadQueueConfig(secretName: string, region: string): Promise<QueueConfigMap> {
@@ -46,14 +50,61 @@ async function resolveQueueInfo(
     return {queueUrl, queueGroup};
 }
 
-// 将sqs消息存入全局变量
+// 延迟发送sqs，会将数据存入内存中。需要调用sendDelayQueueMessageNow()来真实推送（一般在事务提交之后，再调用更安全）
 export async function sendQueueMessageDelay(
     chainId: number,
     queueKey: string,
     message: unknown,
     secretName?: string
 ): Promise<void> {
-    //
+    const param: SqsParam = {
+        chainId,
+        queueKey,
+        secretName,
+        message
+    };
+
+    const list = delayedQueueMap.get(chainId) ?? [];
+    list.push(param);
+    delayedQueueMap.set(chainId, list);
+}
+
+// Flush delayed messages for a specific chain.
+export async function sendDelayQueueMessageNow(chainId: number): Promise<int> {
+    if (flushingChains.has(chainId)) {
+        return 0;
+    }
+
+    const list = delayedQueueMap.get(chainId);
+    if (!list || list.length === 0) {
+        return 0;
+    }
+
+    const count = list.length;
+
+    flushingChains.add(chainId);
+    const pending = list.splice(0, count);
+    delayedQueueMap.set(chainId, list);
+
+    try {
+        for (let i = 0; i < pending.length; i += 1) {
+            try {
+                const item = pending[i];
+                await sendQueueMessage(item.chainId, item.queueKey, item.message, item.secretName);
+            } catch (error) {
+                const rest = pending.slice(i);
+                if (rest.length) {
+                    const current = delayedQueueMap.get(chainId) ?? [];
+                    delayedQueueMap.set(chainId, rest.concat(current));
+                }
+                throw error;
+            }
+        }
+    } finally {
+        flushingChains.delete(chainId);
+    }
+
+    return count;
 }
 
 // Send message to SQS by chainId and queueKey.
