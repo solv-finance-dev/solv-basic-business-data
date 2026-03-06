@@ -88,16 +88,12 @@ export async function sendDelayQueueMessageNow(chainId: number): Promise<int> {
 
     try {
         for (let i = 0; i < pending.length; i += 1) {
+            const item = pending[i];
             try {
-                const item = pending[i];
                 await sendQueueMessage(item.chainId, item.queueKey, item.message, item.secretName);
             } catch (error) {
-                const rest = pending.slice(i);
-                if (rest.length) {
-                    const current = delayedQueueMap.get(chainId) ?? [];
-                    delayedQueueMap.set(chainId, rest.concat(current));
-                }
-                throw error;
+                console.error('SQS: Failed to send delayed message:', JSON.stringify(item));
+                // todo push sns
             }
         }
     } finally {
