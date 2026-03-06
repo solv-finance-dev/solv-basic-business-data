@@ -268,9 +268,22 @@ async function handleTransferValue(
     // 如果 toTokenId 不为 0，处理目标 token
     if (toTokenId !== ZERO_TOKEN_ID) {
         // 先查询目标 token 信息，以便检查 isBurned 状态
-        const toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+        let toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+        
+        // 如果 toTokenInfo 不存在且 fromTokenId 为 0（Mint 操作），先创建 tokenInfo
+        if (!toTokenInfo && fromTokenId === ZERO_TOKEN_ID) {
+            console.log(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId}, creating via Mint`);
+            // 从 Transfer 事件中获取 to 地址，这里需要从链上获取 owner
+            const owner = await getOwnerSafe(event.chainId, contractAddress, toTokenId, 'Erc3525TokenInfoHandler:TransferValue', null);
+            if (owner && owner !== NULL_ADDRESS) {
+                await handleMint(event.chainId, contractAddress, toTokenId, owner, timestamp, transaction);
+                // 重新查询创建后的 tokenInfo
+                toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+            }
+        }
+        
         if (!toTokenInfo) {
-            console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId}`);
+            console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId} and cannot create`);
             return;
         }
 

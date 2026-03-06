@@ -584,8 +584,26 @@ export async function handleTransferValue(
 		}
 	}
 
-	const toTokenInfo = await getTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+	let toTokenInfo = await getTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+	
+	// 如果 toTokenInfo 不存在且 fromTokenId 为 0（Mint 操作），记录警告但不直接返回
+	// 因为可能在同一个事务中，Transfer 事件还没处理完
+	if (!toTokenInfo && fromTokenId === ZERO_TOKEN_ID) {
+		console.warn('ActivityHandler: TokenInfo not found for toTokenId in TransferValue, may be created by Transfer event', {
+			toTokenId,
+			contractAddress,
+			eventId: event.eventId,
+		});
+		// 尝试再次查询，可能 Transfer 事件已经创建了 tokenInfo
+		toTokenInfo = await getTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+	}
+	
 	if (!toTokenInfo) {
+		console.warn('ActivityHandler: TokenInfo not found for toTokenId in TransferValue, skipping activity creation', {
+			toTokenId,
+			contractAddress,
+			eventId: event.eventId,
+		});
 		return;
 	}
 

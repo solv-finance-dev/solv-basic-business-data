@@ -21,7 +21,8 @@ async function getSftWrappedTokenInfo(
 ): Promise<SftWrappedTokenInfo | null> {
 	const lowerAddress = contractAddress.toLowerCase();
 
-	const existing = await SftWrappedTokenInfo.findOne({
+	// 先尝试查找 isDefaultSlot 为 true 的记录
+	let existing = await SftWrappedTokenInfo.findOne({
 		where: {
 			chainId,
 			tokenAddress: lowerAddress,
@@ -31,6 +32,24 @@ async function getSftWrappedTokenInfo(
 	});
 
 	if (existing) {
+		return existing;
+	}
+
+	// 如果找不到，尝试查找任意 isDefaultSlot 值的记录（可能是 false 或 null）
+	existing = await SftWrappedTokenInfo.findOne({
+		where: {
+			chainId,
+			tokenAddress: lowerAddress,
+		},
+		transaction,
+	});
+
+	if (existing) {
+		console.log('Erc20TokenInfoHandler: Found SftWrappedTokenInfo with isDefaultSlot != true', {
+			chainId,
+			contractAddress: lowerAddress,
+			isDefaultSlot: existing.isDefaultSlot,
+		});
 		return existing;
 	}
 
@@ -261,7 +280,11 @@ async function handleSetAliasEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc } = param;
-	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc);
+	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc, {
+		chainId: event.chainId,
+		contractAddress: event.contractAddress,
+		eventId: event.eventId,
+	});
 
 	// 统一查询一次，避免重复调用
 	const sftWrappedInfo = await getSftWrappedTokenInfo(event.chainId, event.contractAddress, event.blockTimestamp, transaction);
@@ -270,9 +293,17 @@ export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<vo
 			eventSignature: eventFunc,
 			chainId: event.chainId,
 			contractAddress: event.contractAddress,
+			eventId: event.eventId,
 		});
 		return;
 	}
+
+	console.log('Erc20TokenInfoHandler: SftWrappedTokenInfo found', {
+		chainId: event.chainId,
+		contractAddress: event.contractAddress,
+		sftWrappedTokenId: sftWrappedInfo.id,
+		symbol: sftWrappedInfo.symbol,
+	});
 
 	if (eventFunc === 'Transfer(address,address,uint256)') {
 		await handleTransferEvent(param, sftWrappedInfo);
