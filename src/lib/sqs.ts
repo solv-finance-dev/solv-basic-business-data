@@ -168,25 +168,18 @@ export async function sendQueueMessage(
     }
 
     // 记录发送的消息（仅记录前 200 个字符，避免日志过长）
-    console.log('SQS: Sending message', {
-        chainId,
-        queueKey,
-        queueUrl,
-        queueGroup,
-        payloadLength: payload.length,
-        payloadPreview: payload.substring(0, 200),
-    });
-
     try {
         await sendSQSMessage(queueUrl, queueGroup, payload, region);
-        console.log('SQS: Message sent successfully', {
+        console.log('SQS: Message sent successfully', JSON.stringify({
             chainId,
             queueKey,
             queueUrl,
             queueGroup,
-        });
+            payloadLength: payload.length,
+            payloadPreview: payload.substring(0, 200),
+        }));
     } catch (sendError) {
-        console.error('SQS: Failed to send message', {
+        console.error('SQS: Failed to send message', JSON.stringify({
             chainId,
             queueKey,
             queueUrl,
@@ -194,7 +187,7 @@ export async function sendQueueMessage(
             payloadLength: payload.length,
             payloadPreview: payload.substring(0, 200),
             error: sendError instanceof Error ? sendError.message : String(sendError),
-        });
+        }));
         throw sendError;
     }
 }

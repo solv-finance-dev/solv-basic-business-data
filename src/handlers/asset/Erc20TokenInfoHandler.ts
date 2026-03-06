@@ -113,7 +113,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	const to = String(args.to ?? '').toLowerCase();
 	const valueStr = String(args.value ?? '0');
 	const value = valueStr || '0';
-	console.debug('Erc20TokenInfoHandler: handleTransferEvent', {from, to, value: args.value, valueStr: valueStr});
+	console.debug('Erc20TokenInfoHandler: handleTransferEvent', JSON.stringify({from, to, value: args.value, valueStr: valueStr}));
 
 	const timestamp = event.blockTimestamp;
 
@@ -280,11 +280,11 @@ async function handleSetAliasEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc } = param;
-	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc, {
+	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc, JSON.stringify({
 		chainId: event.chainId,
 		contractAddress: event.contractAddress,
 		eventId: event.eventId,
-	});
+	}));
 
 	// 统一查询一次，避免重复调用
 	const sftWrappedInfo = await getSftWrappedTokenInfo(event.chainId, event.contractAddress, event.blockTimestamp, transaction);
