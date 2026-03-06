@@ -23,7 +23,7 @@ import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
 import {RawOptContractInfo} from "@solvprotocol/models";
 import { handleSolvBTCRouterV2Deposit, handleSolvBTCRouterV2WithdrawRequest, handleSolvBTCRouterV2CancelWithdrawRequest } from './subHandler/solvBTCRouterV2';
 import { handleXSolvBTCPoolDeposit, handleXSolvBTCPoolWithdraw } from './subHandler/xSolvBTCPool';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 // ==================== 事件签名常量 ====================
 
 const ERC3525_EVENT_SIGNATURES = {
@@ -144,7 +144,7 @@ export async function createActivity(params: ActivityCreationParams): Promise<vo
 				eventIndex: params.eventIndex,
 				transactionType: params.transactionType,
 			});
-            await sendQueueMessage(params.chainId, 'activityQueue', {
+            await sendQueueMessageDelay(params.chainId, 'activityQueue', {
                 source: 'V3_5_Raw_Activity',
                 data: {
                     id: Number(activity.id),

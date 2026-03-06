@@ -4,7 +4,7 @@ import {CurrencyInfo} from "@solvprotocol/models";
 import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
 import {RawOptRepayInfoOpenEnd} from "@solvprotocol/models";
 import {RawOptPoolSlotInfo} from "@solvprotocol/models";
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // Handle OpenFundRedemptionDelegate Repay event.
 export async function handleOpenFundRedemptionDelegateEvent(param: HandlerParam): Promise<void> {
@@ -111,7 +111,7 @@ async function upsertRepayInfo(param: HandlerParam, repayType: 'Normal' | 'Liqui
         { transaction },
     );
 
-    await sendQueueMessage(event.chainId, 'assetQueue', {
+    await sendQueueMessageDelay(event.chainId, 'assetQueue', {
         source: 'V3_5_Raw_Wrapped_Asset_Info',
         data: {
             id: Number(created.id),

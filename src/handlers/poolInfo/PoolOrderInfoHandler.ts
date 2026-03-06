@@ -5,7 +5,7 @@ import {CurrencyInfo} from "@solvprotocol/models";
 import {RawOptPoolSlotInfo} from "@solvprotocol/models";
 import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
 import { getTransactionInfo } from '../../lib/rpc';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // 常量定义
 const POOL_STATUS = {
@@ -144,7 +144,7 @@ async function createPoolOrderInfoAndSendSQS(
     // 创建成功后发送 SQS 消息
     if (poolOrderInfo && poolOrderInfo.id) {
         try {
-            await sendQueueMessage(chainId, 'assetQueue', {
+            await sendQueueMessageDelay(chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Order_Info',
                 data: {
                     id: Number(poolOrderInfo.id),
@@ -176,7 +176,7 @@ async function updatePoolOrderInfoAndSendSQS(
     // 确保 chainId 存在才发送 SQS
     if (poolOrderInfo.chainId !== undefined && poolOrderInfo.chainId !== null) {
         try {
-            await sendQueueMessage(poolOrderInfo.chainId, 'assetQueue', {
+            await sendQueueMessageDelay(poolOrderInfo.chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Order_Info',
                 data: {
                     id: Number(poolOrderInfo.id),

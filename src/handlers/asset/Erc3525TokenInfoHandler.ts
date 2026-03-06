@@ -2,7 +2,7 @@ import type { HandlerParam } from '../../types/handler';
 import {RawOptContractInfo} from "@solvprotocol/models";
 import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import { getSlotOf, getOwnerOf, getTokenURI } from '../../lib/rpc';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO_TOKEN_ID = '0';
@@ -140,7 +140,7 @@ async function updateContractInfoAndSendSQS(
     }
 
     try {
-        await sendQueueMessage(contractInfo.chainId, 'configQueue', {
+        await sendQueueMessageDelay(contractInfo.chainId, 'configQueue', {
             source: 'V3_5_Raw_Contract_Info',
             data: {
                 id: Number(contractInfo.id),
@@ -198,7 +198,7 @@ async function updateTokenInfoAndSendSQS(
     }
 
     try {
-        await sendQueueMessage(chainId, 'assetQueue', {
+        await sendQueueMessageDelay(chainId, 'assetQueue', {
             source: 'V3_5_Raw_Asset_Info',
             data: {
                 id: Number(erc3525tokenInfo.id),
@@ -408,7 +408,7 @@ async function handleMint(
     } else {
         // 如果是新创建的记录，也需要发送 SQS
         try {
-            await sendQueueMessage(chainId, 'assetQueue', {
+            await sendQueueMessageDelay(chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Asset_Info',
                 data: {
                     id: Number(tokenInfo.id),

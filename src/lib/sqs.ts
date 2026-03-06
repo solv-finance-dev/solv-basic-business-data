@@ -46,6 +46,16 @@ async function resolveQueueInfo(
     return {queueUrl, queueGroup};
 }
 
+// 将sqs消息存入全局变量
+export async function sendQueueMessageDelay(
+    chainId: number,
+    queueKey: string,
+    message: unknown,
+    secretName?: string
+): Promise<void> {
+    //
+}
+
 // Send message to SQS by chainId and queueKey.
 export async function sendQueueMessage(
     chainId: number,

@@ -1,7 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import {OptRawNavHistoryPool} from "@solvprotocol/models";
 import {NavRecords} from "@solvprotocol/models";
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 const NAV_TYPE = {
     INVESTMENT: 'Investment',
@@ -82,7 +82,7 @@ async function upsertNavHistoryPoolAndSendSQS(
     // 成功之后发送 SQS 消息
     if (navHistoryPool && navHistoryPool.id) {
         try {
-            await sendQueueMessage(chainId, 'assetQueue', {
+            await sendQueueMessageDelay(chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Nav_History_Pool',
                 data: {
                     id: Number(navHistoryPool.id),

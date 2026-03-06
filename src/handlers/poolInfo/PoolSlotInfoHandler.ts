@@ -7,7 +7,7 @@ import {RawOptPoolOrderInfo} from "@solvprotocol/models";
 import { getSlotURI, getSlotOf, getOwnerOf } from '../../lib/rpc';
 import {RawOptContractInfo} from "@solvprotocol/models";
 import { AbiCoder } from 'ethers';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // ==================== 类型定义 ====================
 
@@ -322,7 +322,7 @@ async function createPoolSlotInfoAndSendSQS(
     // 创建成功后发送 SQS 消息
     if (poolSlotInfo && poolSlotInfo.id) {
         try {
-            await sendQueueMessage(chainId, 'assetQueue', {
+            await sendQueueMessageDelay(chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Slot_Info',
                 data: {
                     id: Number(poolSlotInfo.id),
@@ -357,7 +357,7 @@ async function updatePoolSlotInfoAndSendSQS(
     // 确保 chainId 存在才发送 SQS
     if (poolSlotInfo.chainId !== undefined && poolSlotInfo.chainId !== null) {
         try {
-            await sendQueueMessage(poolSlotInfo.chainId, 'assetQueue', {
+            await sendQueueMessageDelay(poolSlotInfo.chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Slot_Info',
                 data: {
                     id: Number(poolSlotInfo.id),

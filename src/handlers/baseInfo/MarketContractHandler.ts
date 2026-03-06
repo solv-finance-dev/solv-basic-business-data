@@ -1,7 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import {RawOptMarketContract} from "@solvprotocol/models";
 import { getErc3525TokenMetadata } from '../../lib/rpc';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 async function getOrCreateMarketContract(
     chainId: number,
@@ -50,7 +50,7 @@ async function getOrCreateMarketContract(
     // 创建成功后发送 SQS 消息
     if (created && created.id) {
         try {
-            await sendQueueMessage(chainId, 'configQueue', {
+            await sendQueueMessageDelay(chainId, 'configQueue', {
                 source: 'V3_5_Raw_Market_Contract',
                 data: {
                     id: Number(created.id),
@@ -85,7 +85,7 @@ async function updateMarketContractAndSendSQS(
     await marketContract.update(updateData, { transaction });
 
     try {
-        await sendQueueMessage(marketContract.chainId, 'configQueue', {
+        await sendQueueMessageDelay(marketContract.chainId, 'configQueue', {
             source: 'V3_5_Raw_Market_Contract',
             data: {
                 id: Number(marketContract.id),

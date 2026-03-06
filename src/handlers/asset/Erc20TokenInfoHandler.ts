@@ -1,7 +1,7 @@
 import type { HandlerParam } from '../../types/handler';
 import {SftWrappedTokenInfo} from "@solvprotocol/models";
 import {RawOptErc20AssetInfo} from "@solvprotocol/models";
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -150,7 +150,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		// 修改成功后发送 SQS 消息
 		if (fromAsset && fromAsset.id) {
 			try {
-				await sendQueueMessage(chainId, 'assetQueue', {
+				await sendQueueMessageDelay(chainId, 'assetQueue', {
 					source: 'V3_5_Raw_Erc20_Asset',
 					data: {
 						id: Number(fromAsset.id),
@@ -224,7 +224,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		// 修改成功后发送 SQS 消息
 		if (toAsset && toAsset.id) {
 			try {
-				await sendQueueMessage(chainId, 'assetQueue', {
+				await sendQueueMessageDelay(chainId, 'assetQueue', {
 					source: 'V3_5_Raw_Erc20_Asset',
 					data: {
 						id: Number(toAsset.id),
