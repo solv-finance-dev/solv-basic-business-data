@@ -423,6 +423,16 @@
         "contractAddresses": [
           "0x9a29141215d15305665991630a37733c3bb23ef0"
         ],
+        "templateSignature": "NewBeaconProxy(indexed string,indexed string,indexed address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)",
+          "SetAlias(string,string)"
+        ]
+      },
+      {
+        "handler": "handleSftWrappedTokenEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [11155111],
         "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
         "eventSignatures": [
           "Transfer(address,address,uint256)",
@@ -553,6 +563,18 @@
         "chainIds": [11155111],
         "contractAddresses": [],
         "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)"
+        ]
+      },
+      {
+        "handler": "handleErc20TokenInfoEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x9a29141215d15305665991630a37733c3bb23ef0"
+        ],
+        "templateSignature": "NewBeaconProxy(indexed string,indexed string,indexed address)",
         "eventSignatures": [
           "Transfer(address,address,uint256)"
         ]

@@ -569,6 +569,18 @@
         ]
       },
       {
+        "handler": "handleErc20TokenInfoEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x0337CF080eD130f954d5d12cd3A8BdA10D2c14Af"
+        ],
+        "templateSignature": "NewBeaconProxy(indexed string,indexed string,indexed address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)"
+        ]
+      },
+      {
         "handler": "handleSolvBTCRouterV2Event",
         "abi": "SolvBTCRouterV2.json",
         "chainIds": [11155111],

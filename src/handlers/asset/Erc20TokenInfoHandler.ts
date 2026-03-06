@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
-import {SftWrappedTokenInfo} from "@solvprotocol/models";
-import {RawOptErc20AssetInfo} from "@solvprotocol/models";
+import { SftWrappedTokenInfo } from "@solvprotocol/models";
+import { RawOptErc20AssetInfo } from "@solvprotocol/models";
 import { sendQueueMessageDelay } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -265,7 +265,7 @@ async function handleSetAliasEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	);
 }
 
-export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
+async function Erc20TokenInfoEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc } = param;
 	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc, JSON.stringify({
 		chainId: event.chainId,
@@ -290,4 +290,12 @@ export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<vo
 	} else if (eventFunc === 'SetAlias(string,string)') {
 		await handleSetAliasEvent(param, sftWrappedInfo);
 	}
+}
+
+export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+	await Erc20TokenInfoEvent(param);
+}
+
+export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
+	await Erc20TokenInfoEvent(param);
 }

@@ -375,7 +375,7 @@ export async function handleRouterEvent(param: HandlerParam): Promise<void> {
 	}
 }
 
-export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+async function Erc20TokenInfoEvent(param: HandlerParam): Promise<void> {
     const {event, transaction, eventFunc, args} = param;
 
     try {
@@ -399,6 +399,14 @@ export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<v
         throw error;
     }
 }
+
+export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
+	await Erc20TokenInfoEvent(param);
+}
+
+export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+	await Erc20TokenInfoEvent(param);
+}	
 
 export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {
     const { event, transaction, eventFunc, args } = param;
