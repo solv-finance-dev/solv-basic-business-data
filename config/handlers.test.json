@@ -423,7 +423,7 @@
         "contractAddresses": [
           "0x9a29141215d15305665991630a37733c3bb23ef0"
         ],
-        "templateSignature": "NewBeaconProxy(indexed string,indexed string,indexed address)",
+        "templateSignature": "NewBeaconProxy(string,string,address)",
         "eventSignatures": [
           "Transfer(address,address,uint256)",
           "SetAlias(string,string)"
@@ -575,7 +575,7 @@
         "contractAddresses": [
           "0x9a29141215d15305665991630a37733c3bb23ef0"
         ],
-        "templateSignature": "NewBeaconProxy(indexed string,indexed string,indexed address)",
+        "templateSignature": "NewBeaconProxy(string,string,address)",
         "eventSignatures": [
           "Transfer(address,address,uint256)"
         ]
