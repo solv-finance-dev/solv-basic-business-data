@@ -110,7 +110,7 @@ async function getTokenURISafe(
 
     try {
         const tokenURI = await getTokenURI(chainId, contractAddress, tokenId);
-        if (tokenURI && tokenURI.trim() !== '') {
+        if (tokenURI && tokenURI == '') {
             throw new Error('TokenURI is empty.');
         }
         return tokenURI || '';
