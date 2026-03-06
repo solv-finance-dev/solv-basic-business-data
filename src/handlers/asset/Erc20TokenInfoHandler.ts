@@ -5,6 +5,19 @@ import { sendQueueMessageDelay } from '../../lib/sqs';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
+/**
+ * 安全地将值转换为字符串，处理 BigInt 类型
+ */
+function safeToString(value: unknown): string {
+	if (value === undefined || value === null) {
+		return '0';
+	}
+	if (typeof value === 'bigint') {
+		return value.toString();
+	}
+	return String(value);
+}
+
 function addBigInt(a: string, b: string): string {
 	return (BigInt(a || '0') + BigInt(b || '0')).toString();
 }
@@ -111,10 +124,9 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 
 	const from = String(args.from ?? '').toLowerCase();
 	const to = String(args.to ?? '').toLowerCase();
-	const valueStr = String(args.value ?? '0');
+	// 确保 value 转换为字符串（处理 BigInt 类型）
+	const valueStr = safeToString(args.value);
 	const value = valueStr || '0';
-	console.debug('Erc20TokenInfoHandler: handleTransferEvent', JSON.stringify({from, to, value: args.value, valueStr: valueStr}));
-
 	const timestamp = event.blockTimestamp;
 
 	console.log('Erc20TokenInfoHandler: handleTransferEvent', JSON.stringify({
@@ -122,7 +134,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		contractAddress,
 		from,
 		to,
-		value: args.value,
+		value: valueStr,
 		valueStr,
 		eventId: event.eventId,
 	}));

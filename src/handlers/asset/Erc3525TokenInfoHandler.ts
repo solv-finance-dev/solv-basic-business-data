@@ -7,6 +7,19 @@ import { sendQueueMessageDelay } from '../../lib/sqs';
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO_TOKEN_ID = '0';
 
+/**
+ * 安全地将值转换为字符串，处理 BigInt 类型
+ */
+function safeToString(value: unknown): string {
+	if (value === undefined || value === null) {
+		return '';
+	}
+	if (typeof value === 'bigint') {
+		return value.toString();
+	}
+	return String(value);
+}
+
 // 大数运算辅助函数
 function addBigInt(a: string, b: string): string {
     return (BigInt(a) + BigInt(b)).toString();
@@ -197,9 +210,10 @@ async function handleTransferValue(
     transaction: any
 ): Promise<void> {
     const contractAddress = event.contractAddress.toLowerCase();
-    const fromTokenId = String(args._fromTokenId ?? '');
-    const toTokenId = String(args._toTokenId ?? '');
-    const value = String(args._value ?? '');
+    // 使用 safeToString 确保 BigInt 类型也能正确转换
+    const fromTokenId = safeToString(args._fromTokenId) || '';
+    const toTokenId = safeToString(args._toTokenId) || '';
+    const value = safeToString(args._value) || '0';
     const timestamp = event.blockTimestamp;
 
     // 如果 fromTokenId 不为 0，处理源 token
@@ -475,9 +489,10 @@ async function handleTransfer(
     transaction: any
 ): Promise<void> {
     const contractAddress = event.contractAddress.toLowerCase();
-    const tokenId = String(args._tokenId ?? '');
-    const from = String(args._from ?? '').toLowerCase();
-    const to = String(args._to ?? '').toLowerCase();
+    // 使用 safeToString 确保 BigInt 类型也能正确转换
+    const tokenId = safeToString(args._tokenId) || '';
+    const from = safeToString(args._from).toLowerCase();
+    const to = safeToString(args._to).toLowerCase();
     const timestamp = event.blockTimestamp;
 
     let totalSupply = contractInfo.totalSupply || '0';
