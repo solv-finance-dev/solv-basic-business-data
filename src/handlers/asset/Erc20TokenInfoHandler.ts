@@ -45,11 +45,11 @@ async function getSftWrappedTokenInfo(
 	});
 
 	if (existing) {
-		console.log('Erc20TokenInfoHandler: Found SftWrappedTokenInfo with isDefaultSlot != true', {
+		console.log('Erc20TokenInfoHandler: Found SftWrappedTokenInfo with isDefaultSlot != true', JSON.stringify({
 			chainId,
 			contractAddress: lowerAddress,
 			isDefaultSlot: existing.isDefaultSlot,
-		});
+		}));
 		return existing;
 	}
 
@@ -113,9 +113,17 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	const to = String(args.to ?? '').toLowerCase();
 	const valueStr = String(args.value ?? '0');
 	const value = valueStr || '0';
-	console.debug('Erc20TokenInfoHandler: handleTransferEvent', {from, to, value: args.value, valueStr: valueStr});
-
 	const timestamp = event.blockTimestamp;
+
+	console.log('Erc20TokenInfoHandler: handleTransferEvent', JSON.stringify({
+		chainId,
+		contractAddress,
+		from,
+		to,
+		value: args.value,
+		valueStr,
+		eventId: event.eventId,
+	}));
 
 	if (from !== NULL_ADDRESS) {
 		const fromAsset = await getOrCreateWrappedAssetInfo(
@@ -130,14 +138,13 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		);
 
 		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
-		await fromAsset.reload({ transaction });
 		const currentBalance = fromAsset.balance ?? '0';
 		const newBalance = subBigInt(currentBalance, value);
 		
 		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
 		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
 		
-		console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset update', {
+		console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset update', JSON.stringify({
 			assetId: fromAsset.id,
 			chainId,
 			contractAddress,
@@ -146,7 +153,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			value,
 			newBalance,
 			balanceValue,
-		});
+		}));
 
 		// 更新 balance，确保使用字符串格式
 		await fromAsset.update(
@@ -157,20 +164,11 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			{ transaction }
 		);
 
-		// 重新加载以验证更新是否成功
-		await fromAsset.reload({ transaction });
-		console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset after update', {
-			assetId: fromAsset.id,
-			balance: fromAsset.balance,
-			expectedBalance: balanceValue,
-			balanceMatch: fromAsset.balance === balanceValue || (fromAsset.balance && String(fromAsset.balance) === balanceValue),
-		});
-
 		// 修改成功后发送 SQS 消息
 		if (fromAsset && fromAsset.id) {
 			try {
 				await sendQueueMessageDelay(chainId, 'assetQueue', {
-					source: 'V3_5_Raw_Erc20_Asset',
+					source: 'V3_5_Raw_Wrapped_Asset_Info',
 					data: {
 						id: Number(fromAsset.id),
 						chainId: String(chainId),
@@ -178,12 +176,12 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 					},
 				});
 			} catch (error) {
-				console.error('Erc20TokenInfoHandler: Failed to send SQS message for updated asset (from)', {
+				console.error('Erc20TokenInfoHandler: Failed to send SQS message for updated asset (from)', JSON.stringify({
 					id: fromAsset.id,
 					chainId,
 					contractAddress,
 					error: error instanceof Error ? error.message : String(error),
-				});
+				}));
 			}
 		}
 	}
@@ -201,26 +199,11 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		);
 
 		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
-		await toAsset.reload({ transaction });
 		const currentBalance = toAsset.balance ?? '0';
 		const newBalance = addBigInt(currentBalance, value);
 		
 		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
 		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
-		
-		console.log('Erc20TokenInfoHandler: handleTransferEvent: toAsset update', {
-			assetId: toAsset.id,
-			chainId,
-			contractAddress,
-			holder: to,
-			currentBalance,
-			value,
-			newBalance,
-			balanceValue,
-			valueType: typeof value,
-			currentBalanceType: typeof currentBalance,
-			newBalanceType: typeof newBalance,
-		});
 
 		// 更新 balance，确保使用字符串格式
 		await toAsset.update(
@@ -230,21 +213,11 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			},
 			{ transaction }
 		);
-
-		// 重新加载以验证更新是否成功
-		await toAsset.reload({ transaction });
-		console.log('Erc20TokenInfoHandler: handleTransferEvent: toAsset after update', {
-			assetId: toAsset.id,
-			balance: toAsset.balance,
-			expectedBalance: balanceValue,
-			balanceMatch: toAsset.balance === balanceValue || (toAsset.balance && String(toAsset.balance) === balanceValue),
-		});
-
 		// 修改成功后发送 SQS 消息
 		if (toAsset && toAsset.id) {
 			try {
 				await sendQueueMessageDelay(chainId, 'assetQueue', {
-					source: 'V3_5_Raw_Erc20_Asset',
+					source: 'V3_5_Raw_Wrapped_Asset_Info',
 					data: {
 						id: Number(toAsset.id),
 						chainId: String(chainId),
@@ -252,12 +225,12 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 					},
 				});
 			} catch (error) {
-				console.error('Erc20TokenInfoHandler: Failed to send SQS message for updated asset (to)', {
+				console.error('Erc20TokenInfoHandler: Failed to send SQS message for updated asset (to)', JSON.stringify({
 					id: toAsset.id,
 					chainId,
 					contractAddress,
 					error: error instanceof Error ? error.message : String(error),
-				});
+				}));
 			}
 		}
 	}
@@ -280,30 +253,17 @@ async function handleSetAliasEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
 	const { event, transaction, eventFunc } = param;
-	console.log('Erc20TokenInfoHandler: eventSignature', eventFunc, {
-		chainId: event.chainId,
-		contractAddress: event.contractAddress,
-		eventId: event.eventId,
-	});
-
 	// 统一查询一次，避免重复调用
 	const sftWrappedInfo = await getSftWrappedTokenInfo(event.chainId, event.contractAddress, event.blockTimestamp, transaction);
 	if (!sftWrappedInfo) {
-		console.warn('Erc20TokenInfoHandler: SftWrappedTokenInfo not found', {
+		console.warn('Erc20TokenInfoHandler: SftWrappedTokenInfo not found', JSON.stringify({
 			eventSignature: eventFunc,
 			chainId: event.chainId,
 			contractAddress: event.contractAddress,
 			eventId: event.eventId,
-		});
+		}));
 		return;
 	}
-
-	console.log('Erc20TokenInfoHandler: SftWrappedTokenInfo found', {
-		chainId: event.chainId,
-		contractAddress: event.contractAddress,
-		sftWrappedTokenId: sftWrappedInfo.id,
-		symbol: sftWrappedInfo.symbol,
-	});
 
 	if (eventFunc === 'Transfer(address,address,uint256)') {
 		await handleTransferEvent(param, sftWrappedInfo);
@@ -311,4 +271,3 @@ export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<vo
 		await handleSetAliasEvent(param, sftWrappedInfo);
 	}
 }
-
