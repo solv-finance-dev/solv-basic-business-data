@@ -84,7 +84,7 @@ export async function routerEvent(
             const eventSignatureKey = event.eventSignature.toLowerCase();
             const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[eventSignatureKey] : '';
             try {
-                await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, transaction});
+                await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, events: events, transaction});
             } catch (error) {
                 console.error(`MonitorService: Handler failed: ${entry.name}`, error);
                 throw new Error('MonitorService: handler execution failed.');

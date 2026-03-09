@@ -37,6 +37,7 @@ export interface HandlerEntry {
 // Handler 参数：包含事件与同一事务上下文。
 export interface HandlerParam {
     event: EventEvm;
+    events: EventEvm[];
     args: Record<string, unknown>;
     eventFunc: string;
     config: HandlerEntry;
