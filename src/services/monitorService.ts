@@ -17,6 +17,7 @@ import type {
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
 import {getOrCreateSequelize} from "../lib/dbClient";
+import {sendDelayQueueMessageNow} from "../lib/sqs";
 
 type TemplateAddressMap = Record<string, string[]>;
 
@@ -136,6 +137,8 @@ export async function routerEventByIds(
         await newTransaction.rollback();
         throw error;
     }
+    const sqsCount = await sendDelayQueueMessageNow(chainIds[0]);
+    console.log(`fix flush delay sqs done on chain ${chainIds[0]}, messages sent: ${sqsCount}`);
 }
 
 function getHandlerEntries(): HandlerEntry[] {
