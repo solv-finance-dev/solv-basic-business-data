@@ -228,9 +228,12 @@ export async function getTokenURI(
 		console.debug('Rpc: getTokenURI: tokenURI', { chainId, contractAddress, tokenId, tokenURI });
 		return String(tokenURI);
 	} catch (error) {
-		// 如果调用失败，返回空字符串
-		console.error('Rpc: Failed to get tokenURI', { chainId, contractAddress, tokenId, error: error instanceof Error ? error.message : String(error) });
-		return '';
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
+			return '';
+		}
+		console.error('Rpc: Failed to get tokenURI', { chainId, contractAddress, tokenId, error: errorMessage });
+		throw error;
 	}
 }
 
