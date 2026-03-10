@@ -1,4 +1,4 @@
-import { JsonRpcProvider, Contract } from 'ethers';
+import { JsonRpcProvider, Contract, Interface } from 'ethers';
 import { loadJsonConfig } from './config';
 
 interface RpcConfig {
@@ -104,25 +104,37 @@ export async function getContractTypeByAddress(
 }
 
 // 获取 ERC3525 token 的 slot
+// 可选传入 blockNumber，用于在指定区块高度查询历史数据
 export async function getSlotOf(
 	chainId: number,
 	contractAddress: string,
-	tokenId: string
+	tokenId: string,
+	blockNumber?: number
 ): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
-	const erc3525Abi = [
+	const erc3525Interface = new Interface([
 		'function slotOf(uint256 tokenId) view returns (uint256)',
-	];
-	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	]);
+
 	try {
-		const slot = await contract.slotOf(tokenId);
-		return String(slot);
+		const data = erc3525Interface.encodeFunctionData('slotOf', [tokenId]);
+		const blockTag = blockNumber ? blockNumber : 'latest';
+
+		const result = await provider.call({
+			to: contractAddress,
+			data,
+			blockTag,
+		});
+
+		const decoded = erc3525Interface.decodeFunctionResult('slotOf', result);
+		const slot = String(decoded[0]);
+
+		return slot;
 	} catch (error) {
-		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
 		const errorMessage = error instanceof Error ? error.message : String(error);
+		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
 		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
-			// 不记录警告，因为这是正常情况（token 可能已被 burn），调用方会从数据库查找
-			return null;
+			return '';
 		}
 		// 其他错误继续抛出
 		throw error;
@@ -155,24 +167,36 @@ export async function getSlotByIndex(
 }
 
 // 获取 ERC3525 token 的 owner
+// 可选传入 blockNumber，用于在指定区块高度查询历史数据
 export async function getOwnerOf(
 	chainId: number,
 	contractAddress: string,
-	tokenId: string
+	tokenId: string,
+	blockNumber?: number
 ): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
-	const erc3525Abi = [
+	const erc3525Interface = new Interface([
 		'function ownerOf(uint256 tokenId) view returns (address)',
-	];
-	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	]);
+
 	try {
-		const owner = await contract.ownerOf(tokenId);
-		return String(owner);
+		const data = erc3525Interface.encodeFunctionData('ownerOf', [tokenId]);
+		const blockTag = blockNumber ? blockNumber : 'latest';
+
+		const result = await provider.call({
+			to: contractAddress,
+			data,
+			blockTag,
+		});
+
+		const decoded = erc3525Interface.decodeFunctionResult('ownerOf', result);
+		const owner = String(decoded[0]);
+
+		return owner;
 	} catch (error) {
-		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
 		const errorMessage = error instanceof Error ? error.message : String(error);
+		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
 		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
-			// 不记录警告，因为这是正常情况（token 可能已被 burn），调用方会从数据库查找
 			return null;
 		}
 		// 其他错误继续抛出
@@ -181,24 +205,36 @@ export async function getOwnerOf(
 }
 
 // 获取 ERC3525 token 的 balance
+// 可选传入 blockNumber，用于在指定区块高度查询历史数据
 export async function getBalanceOf(
 	chainId: number,
 	contractAddress: string,
-	tokenId: string
+	tokenId: string,
+	blockNumber?: number
 ): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
-	const erc3525Abi = [
+	const erc3525Interface = new Interface([
 		'function balanceOf(uint256 tokenId) view returns (uint256)',
-	];
-	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	]);
+
 	try {
-		const balance = await contract.balanceOf(tokenId);
-		return String(balance);
+		const data = erc3525Interface.encodeFunctionData('balanceOf', [tokenId]);
+		const blockTag = blockNumber ? blockNumber : 'latest';
+
+		const result = await provider.call({
+			to: contractAddress,
+			data,
+			blockTag,
+		});
+
+		const decoded = erc3525Interface.decodeFunctionResult('balanceOf', result);
+		const balance = String(decoded[0]);
+
+		return balance;
 	} catch (error) {
-		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常或返回 '0'
 		const errorMessage = error instanceof Error ? error.message : String(error);
+		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常或返回 '0'
 		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
-			// 不记录错误，因为这是正常情况（token 可能已被 burn），调用方会从数据库查找
 			return null;
 		}
 		// 其他错误记录并返回 null
@@ -206,6 +242,7 @@ export async function getBalanceOf(
 			chainId,
 			contractAddress,
 			tokenId,
+			blockNumber,
 			error: errorMessage,
 		});
 		return null;
@@ -216,41 +253,72 @@ export async function getBalanceOf(
 export async function getTokenURI(
 	chainId: number,
 	contractAddress: string,
-	tokenId: string
-): Promise<string> {
+	tokenId: string,
+	blockNumber?: number
+): Promise<string | null> {
 	const provider = getRpcProvider(chainId);
-	const erc3525Abi = [
+	const erc3525Interface = new Interface([
 		'function tokenURI(uint256 tokenId_) view returns (string)',
-	];
-	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	]);
+
 	try {
-		const tokenURI = await contract.tokenURI(tokenId);
-		console.debug('Rpc: getTokenURI: tokenURI', { chainId, contractAddress, tokenId, tokenURI });
-		return String(tokenURI);
+		// 编码函数调用数据
+		const data = erc3525Interface.encodeFunctionData('tokenURI', [tokenId]);
+
+		const blockTag = blockNumber ? blockNumber : 'latest';
+		// 使用 provider.call 执行调用
+		const result = await provider.call({
+			to: contractAddress,
+			data: data,
+			blockTag
+		});
+
+		// 解码返回结果
+		const decoded = erc3525Interface.decodeFunctionResult('tokenURI', result);
+		const tokenURI = String(decoded[0]);
+
+		console.debug('Rpc Call: getTokenURI: tokenURI', JSON.stringify({ chainId, contractAddress, tokenId, tokenURI }));
+		return tokenURI;
 	} catch (error) {
+		// 如果 token 不存在或无效（可能已被 burn），返回空字符串
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		// if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
-		// 	return '';
-		// }
-		console.error('Rpc: Failed to get tokenURI', { chainId, contractAddress, tokenId, error: errorMessage });
+		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
+			// 不记录错误，因为这是正常情况（token 可能已被 burn）
+			return '';
+		}
+		// 其他错误抛出
+		console.error('Rpc Call: Failed to get tokenURI', JSON.stringify({ chainId, contractAddress, tokenId, error: errorMessage }));
 		throw error;
 	}
 }
 
 // 获取 ERC3525 slot 的 slotURI
+// 可选传入 blockNumber，用于在指定区块高度查询历史数据
 export async function getSlotURI(
 	chainId: number,
 	contractAddress: string,
-	slot: string
+	slot: string,
+	blockNumber?: number
 ): Promise<string> {
 	const provider = getRpcProvider(chainId);
-	const erc3525Abi = [
+	const erc3525Interface = new Interface([
 		'function slotURI(uint256 slot) view returns (string)',
-	];
-	const contract = new Contract(contractAddress, erc3525Abi, provider);
+	]);
+
 	try {
-		const slotURI = await contract.slotURI(slot);
-		return String(slotURI);
+		const data = erc3525Interface.encodeFunctionData('slotURI', [slot]);
+		const blockTag = blockNumber ? blockNumber : 'latest';
+
+		const result = await provider.call({
+			to: contractAddress,
+			data,
+			blockTag,
+		});
+
+		const decoded = erc3525Interface.decodeFunctionResult('slotURI', result);
+		const slotURI = String(decoded[0]);
+
+		return slotURI;
 	} catch (error) {
 		// 如果调用失败，返回空字符串
 		return '';
