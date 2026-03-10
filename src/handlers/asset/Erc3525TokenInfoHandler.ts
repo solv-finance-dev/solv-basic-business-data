@@ -318,7 +318,7 @@ async function handleTransferValue(
             // 从 Transfer 事件中获取 to 地址，这里需要从链上获取 owner
             const owner = await getOwnerSafe(event.chainId, contractAddress, toTokenId, 'Erc3525TokenInfoHandler:TransferValue', null);
             if (owner && owner !== NULL_ADDRESS) {
-                toTokenInfo = await handleMint(event.chainId, contractInfo, toTokenId, owner, timestamp, isBurned, transaction);
+                toTokenInfo = await handleMint(event.chainId, contractInfo, toTokenId, owner, timestamp, isBurned, slot, transaction);
                 slot = toTokenInfo ? toTokenInfo.slot || '0' : '0';
                 isMint = true;
             }
@@ -403,6 +403,7 @@ async function handleMint(
     to: string,
     timestamp: number,
     isBurned: boolean,
+    slot: string,
     transaction: any
 ): Promise<RawOptErc3525TokenInfo | null> {
     // 先查询 token 信息，检查是否已被 burn
@@ -412,7 +413,9 @@ async function handleMint(
         return null;
     }
 
-    const slot = await getSlotSafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
+    if (!slot) {
+        slot = await getSlotSafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
+    }
     let tokenURI = '';
     if (!isBurned) {
         tokenURI = await getTokenURISafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
@@ -572,7 +575,7 @@ async function handleTransfer(
     if (from === NULL_ADDRESS) {
         // Mint 操作：增加 totalSupply
         totalSupply = addBigInt(totalSupply, '1');
-        await handleMint(event.chainId, contractInfo, tokenId, to, timestamp, isBurned, transaction);
+        await handleMint(event.chainId, contractInfo, tokenId, to, timestamp, isBurned, '', transaction);
     } else {
         // 普通转账或 Burn 操作
         try {
