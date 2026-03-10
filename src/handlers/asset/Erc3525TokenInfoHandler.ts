@@ -517,6 +517,9 @@ async function handleTransfer(
             isBurned = true;
         }
     });
+    if (to === NULL_ADDRESS) {
+        isBurned = true;
+    }
 
     // 根据 from 地址判断操作类型
     if (from === NULL_ADDRESS) {
