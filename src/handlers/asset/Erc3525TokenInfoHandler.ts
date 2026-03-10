@@ -513,6 +513,7 @@ async function handleTransfer(
     let totalSupply = contractInfo.totalSupply || '0';
     let isBurned = false;
     events.forEach(otherEvent => {
+        console.debug('Erc3525TokenInfoHandler: handleTransfer otherEvent', JSON.stringify(otherEvent));
         if (otherEvent.logIndex > event.logIndex && otherEvent.contractAddress.toLowerCase() === contractAddress && otherEvent.eventSignature === "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" && otherEvent._tokenId === tokenId && otherEvent._to === NULL_ADDRESS) {
             isBurned = true;
         }
