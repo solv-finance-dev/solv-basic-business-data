@@ -229,9 +229,9 @@ export async function getTokenURI(
 		return String(tokenURI);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
-			return '';
-		}
+		// if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
+		// 	return '';
+		// }
 		console.error('Rpc: Failed to get tokenURI', { chainId, contractAddress, tokenId, error: errorMessage });
 		throw error;
 	}
