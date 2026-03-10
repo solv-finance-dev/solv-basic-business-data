@@ -360,7 +360,8 @@ async function getTokenOwner(
 	chainId: number,
 	contractAddress: string,
 	tokenId: string,
-	transaction: Transaction
+	transaction: Transaction,
+	blockNumber?: number
 ): Promise<string> {
 	// 先从数据库获取 token 信息，检查 isBurned 状态
 	const tokenInfo = await getTokenInfo(chainId, contractAddress, tokenId, transaction);
@@ -372,7 +373,7 @@ async function getTokenOwner(
 
 	// 优先从链上获取
 	try {
-		const owner = await getOwnerOf(chainId, contractAddress, tokenId);
+		const owner = await getOwnerOf(chainId, contractAddress, tokenId, blockNumber);
 		if (owner && owner !== NULL_ADDRESS) {
 			return owner;
 		}
@@ -610,9 +611,9 @@ export async function handleTransferValue(
 	// 获取 owner 地址
 	const fromAddress =
 		fromTokenId !== ZERO_TOKEN_ID
-			? await getTokenOwner(event.chainId, contractAddress, fromTokenId, transaction)
+			? await getTokenOwner(event.chainId, contractAddress, fromTokenId, transaction, event.blockNumber)
 			: NULL_ADDRESS;
-	const toAddress = await getTokenOwner(event.chainId, contractAddress, toTokenId, transaction);
+	const toAddress = await getTokenOwner(event.chainId, contractAddress, toTokenId, transaction, event.blockNumber);
 
 	// 检查是否需要过滤
 	const shouldFilterFrom = await shouldFilterAddress(
@@ -737,7 +738,7 @@ export async function handleTransfer(
 	// 获取 balance（仅在 token 未被 burn 时调用）
 	let balance = '0';
 	try {
-		const balanceResult = await getBalanceOf(event.chainId, contractAddress, tokenId);
+		const balanceResult = await getBalanceOf(event.chainId, contractAddress, tokenId, event.blockNumber);
 		// getBalanceOf 现在可能返回 null（token 无效时），需要处理
 		if (balanceResult !== null) {
 			balance = balanceResult;

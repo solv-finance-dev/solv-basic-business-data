@@ -110,7 +110,7 @@ export async function getSlotOf(
 	contractAddress: string,
 	tokenId: string,
 	blockNumber?: number
-): Promise<string | null> {
+): Promise<string> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Interface = new Interface([
 		'function slotOf(uint256 tokenId) view returns (uint256)',
@@ -132,7 +132,7 @@ export async function getSlotOf(
 		return slot;
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
+		// 如果 token 不存在或无效（可能已被 burn），返回 空字符串 而不是抛出异常
 		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
 			return '';
 		}
@@ -173,7 +173,7 @@ export async function getOwnerOf(
 	contractAddress: string,
 	tokenId: string,
 	blockNumber?: number
-): Promise<string | null> {
+): Promise<string> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Interface = new Interface([
 		'function ownerOf(uint256 tokenId) view returns (address)',
@@ -195,9 +195,9 @@ export async function getOwnerOf(
 		return owner;
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		// 如果 token 不存在或无效（可能已被 burn），返回 null 而不是抛出异常
+		// 如果 token 不存在或无效（可能已被 burn），返回 空字符串 而不是抛出异常
 		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
-			return null;
+			return '';
 		}
 		// 其他错误继续抛出
 		throw error;
@@ -237,7 +237,7 @@ export async function getBalanceOf(
 		if (errorMessage.includes('invalid token ID') || errorMessage.includes('token ID')) {
 			return null;
 		}
-		// 其他错误记录并返回 null
+		// 其他错误抛出
 		console.error('Rpc: Failed to get balanceOf', {
 			chainId,
 			contractAddress,
@@ -245,7 +245,7 @@ export async function getBalanceOf(
 			blockNumber,
 			error: errorMessage,
 		});
-		return null;
+		throw error;
 	}
 }
 
@@ -255,7 +255,7 @@ export async function getTokenURI(
 	contractAddress: string,
 	tokenId: string,
 	blockNumber?: number
-): Promise<string | null> {
+): Promise<string> {
 	const provider = getRpcProvider(chainId);
 	const erc3525Interface = new Interface([
 		'function tokenURI(uint256 tokenId_) view returns (string)',

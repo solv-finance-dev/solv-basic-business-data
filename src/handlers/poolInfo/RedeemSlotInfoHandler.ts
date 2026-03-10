@@ -353,10 +353,11 @@ function extractFieldsFromSlotURI(slotURI: string): {
 async function getSlotURISafe(
 	chainId: number,
 	contractAddress: string,
-	slot: string
+	slot: string,
+    blockNumber?: number
 ): Promise<string> {
 	try {
-		return await getSlotURI(chainId, contractAddress, slot);
+		return await getSlotURI(chainId, contractAddress, slot, blockNumber);
 	} catch (error) {
 		console.warn('RedeemSlotInfoHandler: Failed to get slotURI', {
 			chainId,
@@ -502,7 +503,8 @@ async function getSlotFromTokenId(
     chainId: number,
     contractAddress: string,
     tokenId: string,
-    transaction: Transaction
+    transaction: Transaction,
+    blockNumber?: number
 ): Promise<string | null> {
     console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
     // 首先尝试从数据库查找
@@ -529,7 +531,7 @@ async function getSlotFromTokenId(
     }
 
     // 如果数据库中没有找到，尝试从链上获取
-    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
     if (slotFromChain) {
         return slotFromChain;
     }

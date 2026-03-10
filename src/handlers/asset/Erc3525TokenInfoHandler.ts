@@ -54,7 +54,8 @@ async function getSlotSafe(
     contractAddress: string,
     tokenId: string,
     logPrefix: string,
-    tokenInfo?: RawOptErc3525TokenInfo | null
+    tokenInfo?: RawOptErc3525TokenInfo | null,
+    blockNumber?: number
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回 '0'，避免无效的链上调用
     if (tokenInfo && tokenInfo.isBurned === 1) {
@@ -62,8 +63,8 @@ async function getSlotSafe(
     }
 
     try {
-        const slot = await getSlotOf(chainId, contractAddress, tokenId);
-        // getSlotOf 在 token 无效时会返回 null
+        const slot = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
+        // getSlotOf 在 token 无效时会返回 ''
         return slot || '0';
     } catch (error) {
         console.error(`${logPrefix}: Failed to get slotOf`, JSON.stringify({ contractAddress, tokenId, error }));
@@ -78,7 +79,8 @@ async function getOwnerSafe(
     contractAddress: string,
     tokenId: string,
     logPrefix: string,
-    tokenInfo?: RawOptErc3525TokenInfo | null
+    tokenInfo?: RawOptErc3525TokenInfo | null,
+    blockNumber?: number
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回 NULL_ADDRESS，避免无效的链上调用
     if (tokenInfo && tokenInfo.isBurned === 1) {
@@ -86,8 +88,8 @@ async function getOwnerSafe(
     }
 
     try {
-        const owner = await getOwnerOf(chainId, contractAddress, tokenId);
-        // getOwnerOf 现在可能返回 null（token 无效时），需要处理
+        const owner = await getOwnerOf(chainId, contractAddress, tokenId, blockNumber);
+        // getOwnerOf 现在可能返回 ''（token 无效时），需要处理
         return owner || NULL_ADDRESS;
     } catch (error) {
         console.error(`${logPrefix}: Failed to get ownerOf`, JSON.stringify({ contractAddress, tokenId, error }));
@@ -102,7 +104,8 @@ async function getTokenURISafe(
     contractAddress: string,
     tokenId: string,
     logPrefix: string,
-    tokenInfo?: RawOptErc3525TokenInfo | null
+    tokenInfo?: RawOptErc3525TokenInfo | null,
+    blockNumber?: number
 ): Promise<string> {
     // 如果 token 已被标记为 burned，直接返回空字符串，避免无效的链上调用
     if (tokenInfo && (tokenInfo.isBurned === 1 || tokenInfo.holder == NULL_ADDRESS)) {
@@ -110,7 +113,7 @@ async function getTokenURISafe(
     }
 
     try {
-        const tokenURI = await getTokenURI(chainId, contractAddress, tokenId);
+        const tokenURI = await getTokenURI(chainId, contractAddress, tokenId, blockNumber);
         return tokenURI || '';
     } catch (error) {
         console.error(`${logPrefix}: Failed to get tokenURI`, JSON.stringify({ contractAddress, tokenId, error }));
@@ -316,9 +319,9 @@ async function handleTransferValue(
         if (!toTokenInfo && fromTokenId === ZERO_TOKEN_ID) {
             console.log(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId}, creating via Mint`);
             // 从 Transfer 事件中获取 to 地址，这里需要从链上获取 owner
-            const owner = await getOwnerSafe(event.chainId, contractAddress, toTokenId, 'Erc3525TokenInfoHandler:TransferValue', null);
+            const owner = await getOwnerSafe(event.chainId, contractAddress, toTokenId, 'Erc3525TokenInfoHandler:TransferValue', null, event.blockNumber);
             if (owner && owner !== NULL_ADDRESS) {
-                toTokenInfo = await handleMint(event.chainId, contractInfo, toTokenId, owner, timestamp, isBurned, slot, transaction);
+                toTokenInfo = await handleMint(event.chainId, contractInfo, toTokenId, owner, timestamp, isBurned, slot, transaction, event.blockNumber);
                 if (toTokenInfo) {
                     slot = toTokenInfo.slot || '0';
                     isMint = true;
@@ -333,13 +336,13 @@ async function handleTransferValue(
 
         // 如果 slot 为空，从链上获取（传入 tokenInfo 以检查 isBurned）
         if (!slot || slot === '0') {
-            slot = await getSlotSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
+            slot = await getSlotSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo, event.blockNumber);
         }
 
         // 获取 owner（传入 tokenInfo 以检查 isBurned）
         if (!isMint && !isBurned) {
-            toTokenInfo.holder = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
-            toTokenInfo.tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
+            toTokenInfo.holder = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo, event.blockNumber);
+            toTokenInfo.tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo, event.blockNumber);
         }
 
         // 增加余额
@@ -398,7 +401,8 @@ async function handleMint(
     timestamp: number,
     isBurned: boolean,
     slot: string,
-    transaction: any
+    transaction: any,
+    blockNumber?: number
 ): Promise<RawOptErc3525TokenInfo | null> {
     // 先查询 token 信息，检查是否已被 burn
     const existingTokenInfo = await findTokenInfo(chainId, contractInfo.contractAddress, tokenId, transaction);
@@ -412,7 +416,7 @@ async function handleMint(
     }
     let tokenURI = '';
     if (!isBurned) {
-        tokenURI = await getTokenURISafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
+        tokenURI = await getTokenURISafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo, blockNumber);
     }
 
     // 从 RawOptContractInfo 中获取 productType（即合约的 contractType）
@@ -484,7 +488,8 @@ async function handleTransferOrBurn(
     to: string,
     timestamp: number,
     isAlreadyBurned: boolean,
-    transaction: any
+    transaction: any,
+    blockNumber?: number
 ): Promise<{ supplyDelta: string; isBurned: boolean }> {
     const tokenInfo = await findTokenInfo(chainId, contractAddress, tokenId, transaction);
     if (!tokenInfo) {
@@ -504,7 +509,7 @@ async function handleTransferOrBurn(
     // 获取 tokenURI（如果需要更新，传入 tokenInfo 以检查 isBurned）
     let tokenURI = '';
     if (!isAlreadyBurned && to !== NULL_ADDRESS) {
-        tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Transfer', tokenInfo);
+        tokenURI = await getTokenURISafe(chainId, contractAddress, tokenId, 'Erc3525TokenInfoHandler:Transfer', tokenInfo, blockNumber);
     }
 
     // 更新 holder 和 lastUpdated
@@ -569,11 +574,11 @@ async function handleTransfer(
     if (from === NULL_ADDRESS) {
         // Mint 操作：增加 totalSupply
         totalSupply = addBigInt(totalSupply, '1');
-        await handleMint(event.chainId, contractInfo, tokenId, to, timestamp, isBurned, '', transaction);
+        await handleMint(event.chainId, contractInfo, tokenId, to, timestamp, isBurned, '', transaction, event.blockNumber);
     } else {
         // 普通转账或 Burn 操作
         try {
-            const result = await handleTransferOrBurn(event.chainId, contractAddress, tokenId, to, timestamp, isBurned, transaction);
+            const result = await handleTransferOrBurn(event.chainId, contractAddress, tokenId, to, timestamp, isBurned, transaction, event.blockNumber);
             // 如果是 burn 操作，减少 totalSupply
             if (result.isBurned) {
                 totalSupply = subBigInt(totalSupply, '1');

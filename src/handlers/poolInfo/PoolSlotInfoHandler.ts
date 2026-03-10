@@ -4,7 +4,7 @@ import {RawOptPoolSlotInfo} from "@solvprotocol/models";
 import {CurrencyInfo} from "@solvprotocol/models";
 import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import {RawOptPoolOrderInfo} from "@solvprotocol/models";
-import { getSlotURI, getSlotOf, getOwnerOf } from '../../lib/rpc';
+import { getSlotURI, getSlotOf } from '../../lib/rpc';
 import {RawOptContractInfo} from "@solvprotocol/models";
 import { AbiCoder } from 'ethers';
 import { sendQueueMessageDelay } from '../../lib/sqs';
@@ -216,7 +216,8 @@ async function getSlotFromTokenId(
     chainId: number,
     contractAddress: string,
     tokenId: string,
-    transaction: Transaction
+    transaction: Transaction,
+    blockNumber?: number
 ): Promise<string | null> {
     // 首先从数据库查找 token 信息，检查 isBurned 状态
     try {
@@ -246,7 +247,7 @@ async function getSlotFromTokenId(
 
         // 如果数据库中有记录且未被 burn，但 slot 为空，尝试从链上获取
         if (tokenInfo && !tokenInfo.slot) {
-            const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+            const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
             if (slotFromChain) {
                 return slotFromChain;
             }
@@ -267,7 +268,7 @@ async function getSlotFromTokenId(
 
     // 如果数据库中没有记录或记录中没有 slot，尝试从链上获取
     try {
-        const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+        const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
         if (slotFromChain) {
             return slotFromChain;
         }
@@ -294,10 +295,11 @@ async function getSlotFromTokenId(
 async function getSlotURISafe(
     chainId: number,
     contractAddress: string,
-    slot: string
+    slot: string,
+    blockNumber?: number
 ): Promise<string> {
     try {
-        return await getSlotURI(chainId, contractAddress, slot);
+        return await getSlotURI(chainId, contractAddress, slot, blockNumber);
     } catch (error) {
         console.debug('PoolSlotInfoHandler: Failed to get slotURI', {
             chainId,
@@ -387,10 +389,11 @@ async function updatePoolSlotInfoWithURI(
     slot: string,
     updateData: Partial<RawOptPoolSlotInfo>,
     timestamp: number,
-    transaction: Transaction
+    transaction: Transaction,
+    blockNumber?: number
 ): Promise<void> {
     // 获取最新的 slotURI
-    const slotURI = await getSlotURISafe(chainId, contractAddress, slot);
+    const slotURI = await getSlotURISafe(chainId, contractAddress, slot, blockNumber);
 
     // 使用统一方法更新并发送 SQS
     await updatePoolSlotInfoAndSendSQS(
@@ -710,7 +713,7 @@ async function handleCreateSlot(
 	}
 
 	// 获取 slotURI
-	const slotURI = await getSlotURISafe(event.chainId, contractAddress, slot);
+	const slotURI = await getSlotURISafe(event.chainId, contractAddress, slot, event.blockNumber);
 
 	// 如果从 slotInfo 中提取失败或字段不完整，尝试从 slotURI 中解析
 	let supervisor: string | undefined;
@@ -821,7 +824,8 @@ async function handleMintValue(
                 totalAmount: addBigInt(currentTotalValue, value),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: MintValue success', {
@@ -864,7 +868,7 @@ async function handleClaim(
     const contractAddress = event.contractAddress.toLowerCase();
 
     // 从 tokenId 获取 slot
-    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
+    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction, event.blockNumber);
     if (!slot) {
         console.warn('PoolSlotInfoHandler: Claim tokenInfo not found or missing slot', {
             contractAddress,
@@ -896,7 +900,8 @@ async function handleClaim(
                 totalClaimedValue: addBigInt(currentClaimedValue, claimValue),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: Claim success', {
@@ -959,7 +964,8 @@ async function handleRepay(
                 totalRepaidValue: addBigInt(currentRepaidValue, repayCurrencyAmount),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: Repay success', {
@@ -1020,7 +1026,8 @@ async function handleSetInterestRate(
                 interestRate,
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: SetInterestRate success', {
@@ -1063,7 +1070,7 @@ async function handleBurnValue(
     const contractAddress = event.contractAddress.toLowerCase();
 
     // 从 tokenId 获取 slot
-    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
+    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction, event.blockNumber);
     if (!slot) {
         console.warn('PoolSlotInfoHandler: BurnValue tokenInfo not found or missing slot', {
             contractAddress,
@@ -1095,7 +1102,8 @@ async function handleBurnValue(
                 totalAmount: subBigInt(currentTotalValue, burnValue),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: BurnValue success', {
