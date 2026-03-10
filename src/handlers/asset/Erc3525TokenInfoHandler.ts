@@ -365,10 +365,9 @@ async function handleMint(
         return null;
     }
 
-    let slot = '';
+    const slot = await getSlotSafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
     let tokenURI = '';
     if (!isBurned) {
-        slot = await getSlotSafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
         tokenURI = await getTokenURISafe(chainId, contractInfo.contractAddress, tokenId, 'Erc3525TokenInfoHandler:Mint', existingTokenInfo);
     }
 
