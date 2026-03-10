@@ -386,7 +386,7 @@ async function handleMint(
             balance: '0',
             holder: to.toLowerCase(),
             mintTime: timestamp,
-            isBurned: 0,
+            isBurned: isBurned ? 1 : 0,
             lastUpdated: timestamp,
             tokenURI: tokenURI || '',
             productType,
@@ -403,7 +403,7 @@ async function handleMint(
                 holder: to.toLowerCase(),
                 lastUpdated: timestamp,
                 tokenURI: tokenURI || tokenInfo.tokenURI || '',
-                isBurned: 0, // 如果是 mint 操作，确保 isBurned 为 0
+                isBurned: isBurned ? 1 : 0,
             },
             chainId,
             contractInfo.contractAddress.toLowerCase(),
