@@ -254,11 +254,12 @@ async function handleTransferValue(
 
     // 如果 toTokenId 不为 0，处理目标 token
     let isMint = false;
+    let isBurned = false;
     if (toTokenId !== ZERO_TOKEN_ID) {
         // 先查询目标 token 信息，以便检查 isBurned 状态
         let toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
-        let isBurned = false;
         events.forEach(otherEvent => {
+            console.debug('Erc3525TokenInfoHandler: handleTransferValue otherEvent', JSON.stringify(otherEvent));
             if (otherEvent.logIndex > event.logIndex && otherEvent.contractAddress.toLowerCase() === contractAddress && otherEvent.eventSignature === "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" && otherEvent._tokenId === toTokenId && otherEvent._to === NULL_ADDRESS) {
                 isBurned = true;
             }
@@ -271,6 +272,7 @@ async function handleTransferValue(
             const owner = await getOwnerSafe(event.chainId, contractAddress, toTokenId, 'Erc3525TokenInfoHandler:TransferValue', null);
             if (owner && owner !== NULL_ADDRESS) {
                 toTokenInfo = await handleMint(event.chainId, contractInfo, toTokenId, owner, timestamp, isBurned, transaction);
+                slot = toTokenInfo ? toTokenInfo.slot || '0' : '0';
                 isMint = true;
             }
         }
@@ -287,10 +289,8 @@ async function handleTransferValue(
         }
 
         // 如果 slot 为空，从链上获取（传入 tokenInfo 以检查 isBurned）
-        let isGetSlot = false;
         if (!slot || slot === '0') {
             slot = await getSlotSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
-            isGetSlot = true;
         }
 
         // 获取 owner（传入 tokenInfo 以检查 isBurned）
@@ -328,7 +328,7 @@ async function handleTransferValue(
         );
 
         // 如果 fromTokenId 不为 0，也需要更新其 slot 并发送 SQS
-        if (fromTokenId !== ZERO_TOKEN_ID && fromTokenInfo && !isGetSlot) {
+        if (fromTokenId !== ZERO_TOKEN_ID && fromTokenInfo) {
             await updateTokenInfoAndSendSQS(
                 fromTokenInfo,
                 { slot: fromTokenInfo.slot || '0', lastUpdated: timestamp },
