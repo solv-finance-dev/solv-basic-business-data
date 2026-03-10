@@ -11,6 +11,7 @@ export interface ChainConfig {
     chainId: number;
     startBlockNumber: number;
     blockLimit?: number;
+    delayBlock?: number;
     config?: ChainRuntimeConfig;
 }
 

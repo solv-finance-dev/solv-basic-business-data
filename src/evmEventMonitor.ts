@@ -6,6 +6,7 @@ import type {ChainConfig} from './types/config';
 import {getOrCreateSequelize} from "./lib/dbClient";
 import {getRedisClient} from "./lib/redis";
 import {sendDelayQueueMessageNow, sendQueueMessageDelay} from "./lib/sqs";
+import {getLatestBlockNumber} from './lib/rpc';
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -63,8 +64,23 @@ async function processChain(chain: ChainConfig): Promise<void> {
     console.log('getLastSyncedBlock:', lastSyncedBlock, 'chainId:', chain.chainId);
     const beginBlockNumber = lastSyncedBlock === null ? chain.startBlockNumber : lastSyncedBlock + 1;
 
-    const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit);
-    console.log(`fetchChainEvents: Fetched ${events.length} events for chain ${chain.chainId} from block ${beginBlockNumber}`);
+    let maxBlockNumber: number | undefined;
+    if (chain.delayBlock !== undefined && chain.delayBlock !== null) {
+        const delayBlock = Number(chain.delayBlock);
+        if (Number.isFinite(delayBlock) && delayBlock >= 0) {
+            const latestBlockNumber = await getLatestBlockNumber(chain.chainId);
+            maxBlockNumber = latestBlockNumber - delayBlock;
+            if (maxBlockNumber < beginBlockNumber) {
+                console.log(`EVM Event Monitor: maxBlockNumber is behind beginBlockNumber. chainId: ${chain.chainId}, beginBlockNumber: ${beginBlockNumber}, latestBlockNumber: ${latestBlockNumber}, delayBlock: ${delayBlock}, maxBlockNumber: ${maxBlockNumber}`);
+                return;
+            }
+        } else {
+            console.warn(`EVM Event Monitor: invalid delayBlock config, ignored. chainId: ${chain.chainId}, delayBlock: ${chain.delayBlock}`);
+        }
+    }
+
+    const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit, maxBlockNumber);
+    console.log(`fetchChainEvents: Fetched ${events.length} events for chain ${chain.chainId} from block ${beginBlockNumber} to ${maxBlockNumber ?? 'latest'}`);
 
     const templateAddressesMap = await getTemplateAddressesMap(chain.chainId);
 

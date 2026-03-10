@@ -38,6 +38,32 @@ export function getRpcProvider(chainId: number): JsonRpcProvider {
 	return provider;
 }
 
+// Get latest block number by chainId.
+export async function getLatestBlockNumber(chainId: number): Promise<number> {
+	const provider = getRpcProvider(chainId);
+	const blockNumber = await provider.getBlockNumber();
+	return Number(blockNumber);
+}
+
+// Get latest safe block number by chainId.
+// 失败自动获取最新区块高度
+export async function getLatestSafeBlockNumber(chainId: number): Promise<number> {
+	const provider = getRpcProvider(chainId);
+	try {
+		const safeBlock = await provider.getBlock('safe');
+		if (safeBlock && safeBlock.number !== null && safeBlock.number !== undefined) {
+			return Number(safeBlock.number);
+		}
+	} catch (error) {
+		console.warn('Rpc: Failed to get safe block, fallback to latest.', {
+			chainId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	return await getLatestBlockNumber(chainId);
+}
+
 // 获取 ERC20 基础元数据（decimals/symbol）。
 export async function getErc20Metadata(
 	chainId: number,
