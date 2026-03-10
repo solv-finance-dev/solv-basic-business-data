@@ -3,6 +3,7 @@ import {RawOptContractInfo} from "@solvprotocol/models";
 import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import { getSlotOf, getOwnerOf, getTokenURI } from '../../lib/rpc';
 import { sendQueueMessageDelay } from '../../lib/sqs';
+import { decodeEventFromAbi } from '../../lib/abi';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO_TOKEN_ID = '0';
@@ -157,6 +158,55 @@ async function updateContractInfoAndSendSQS(
     }
 }
 
+/**
+ * 检查后续的 Transfer 事件是否会 burn 指定的 tokenId
+ * @param event 当前事件
+ * @param events 同一交易中的所有事件
+ * @param contractAddress 合约地址
+ * @param tokenId 要检查的 tokenId
+ * @returns 如果后续有 Transfer 事件会将 token burn，返回 true
+ */
+function checkIfTokenWillBeBurned(
+	event: any,
+	events: any[],
+	contractAddress: string,
+	tokenId: string
+): boolean {
+	if (!events || !Array.isArray(events)) {
+		return false;
+	}
+
+	for (const otherEvent of events) {
+		// 检查是否是同一个交易中的后续事件
+		if (
+			otherEvent.transactionHash === event.transactionHash &&
+			otherEvent.logIndex > event.logIndex &&
+			otherEvent.contractAddress.toLowerCase() === contractAddress &&
+			otherEvent.eventSignature === "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+		) {
+			try {
+				// 解码 Transfer 事件获取参数
+				const transferArgs = decodeEventFromAbi('OpenFundShareDelegate.json', otherEvent);
+				const otherTokenId = safeToString(transferArgs._tokenId) || safeToString(transferArgs.tokenId) || '';
+				const otherTo = safeToString(transferArgs._to) || safeToString(transferArgs.to) || '';
+				
+				// 如果 tokenId 匹配且 to 地址是 NULL_ADDRESS（表示 burn），返回 true
+				if (otherTokenId === tokenId && otherTo.toLowerCase() === NULL_ADDRESS) {
+					return true;
+				}
+			} catch (error) {
+				// 解码失败，继续检查下一个事件
+				console.debug('Erc3525TokenInfoHandler: Failed to decode Transfer event', JSON.stringify({
+					eventId: otherEvent.eventId,
+					error: error instanceof Error ? error.message : String(error),
+				}));
+			}
+		}
+	}
+
+	return false;
+}
+
 // 统一更新 RawOptErc3525TokenInfo 并发送 SQS
 async function updateTokenInfoAndSendSQS(
     erc3525tokenInfo: RawOptErc3525TokenInfo,
@@ -258,12 +308,9 @@ async function handleTransferValue(
     if (toTokenId !== ZERO_TOKEN_ID) {
         // 先查询目标 token 信息，以便检查 isBurned 状态
         let toTokenInfo = await findTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
-        events.forEach(otherEvent => {
-            console.debug('Erc3525TokenInfoHandler: handleTransferValue otherEvent', JSON.stringify(otherEvent));
-            if (otherEvent.logIndex > event.logIndex && otherEvent.contractAddress.toLowerCase() === contractAddress && otherEvent.eventSignature === "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" && otherEvent._tokenId === toTokenId && otherEvent._to === NULL_ADDRESS) {
-                isBurned = true;
-            }
-        });
+        
+        // 检查是否有后续的 Transfer 事件会 burn 这个 token
+        isBurned = checkIfTokenWillBeBurned(event, events, contractAddress, toTokenId);
 
         // 如果 toTokenInfo 不存在且 fromTokenId 为 0（Mint 操作），先创建 tokenInfo
         if (!toTokenInfo && fromTokenId === ZERO_TOKEN_ID) {
@@ -512,14 +559,13 @@ async function handleTransfer(
 
     let totalSupply = contractInfo.totalSupply || '0';
     let isBurned = false;
-    events.forEach(otherEvent => {
-        console.debug('Erc3525TokenInfoHandler: handleTransfer otherEvent', JSON.stringify(otherEvent));
-        if (otherEvent.logIndex > event.logIndex && otherEvent.contractAddress.toLowerCase() === contractAddress && otherEvent.eventSignature === "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" && otherEvent._tokenId === tokenId && otherEvent._to === NULL_ADDRESS) {
-            isBurned = true;
-        }
-    });
+    
+    // 如果当前事件的 to 地址是 NULL_ADDRESS，直接标记为 burned
+    // 否则检查是否有后续的 Transfer 事件会 burn 这个 token
     if (to === NULL_ADDRESS) {
         isBurned = true;
+    } else {
+        isBurned = checkIfTokenWillBeBurned(event, events, contractAddress, tokenId);
     }
 
     // 根据 from 地址判断操作类型
