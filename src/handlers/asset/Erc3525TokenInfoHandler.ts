@@ -319,19 +319,15 @@ async function handleTransferValue(
             const owner = await getOwnerSafe(event.chainId, contractAddress, toTokenId, 'Erc3525TokenInfoHandler:TransferValue', null);
             if (owner && owner !== NULL_ADDRESS) {
                 toTokenInfo = await handleMint(event.chainId, contractInfo, toTokenId, owner, timestamp, isBurned, slot, transaction);
-                slot = toTokenInfo ? toTokenInfo.slot || '0' : '0';
-                isMint = true;
+                if (toTokenInfo) {
+                    slot = toTokenInfo.slot || '0';
+                    isMint = true;
+                }
             }
         }
 
         if (!toTokenInfo) {
             console.warn(`Erc3525TokenInfoHandler: TokenInfo not found for toTokenId ${toTokenId} and cannot create`);
-            return;
-        }
-
-        // 如果 token 已被 burn，跳过处理
-        if (toTokenInfo.isBurned === 1) {
-            console.warn(`Erc3525TokenInfoHandler: Token ${toTokenId} is already burned, skipping TransferValue`);
             return;
         }
 
@@ -341,16 +337,14 @@ async function handleTransferValue(
         }
 
         // 获取 owner（传入 tokenInfo 以检查 isBurned）
-        const owner = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
+        if (!isMint && !isBurned) {
+            toTokenInfo.holder = await getOwnerSafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
+            toTokenInfo.tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
+        }
 
         // 增加余额
         const balance = toTokenInfo.balance || '0';
         const newBalance = addBigInt(balance, value);
-
-        // 获取 tokenURI（传入 tokenInfo 以检查 isBurned）
-        if (!isMint && !isBurned) {
-            toTokenInfo.tokenURI = await getTokenURISafe(event.chainId, event.contractAddress, toTokenId, 'Erc3525TokenInfoHandler', toTokenInfo);
-        }
 
         console.log('Erc3525TokenInfoHandler: handleTransferValue toTokenInfo update', JSON.stringify({
             tokenId: toTokenId,
@@ -366,7 +360,7 @@ async function handleTransferValue(
                 balance: newBalance,
                 lastUpdated: timestamp,
                 slot,
-                holder: owner.toLowerCase(),
+                holder: toTokenInfo.holder || '',
                 tokenURI: toTokenInfo.tokenURI || '',
             },
             event.chainId,
@@ -378,7 +372,7 @@ async function handleTransferValue(
         if (fromTokenId !== ZERO_TOKEN_ID && fromTokenInfo) {
             await updateTokenInfoAndSendSQS(
                 fromTokenInfo,
-                { slot: fromTokenInfo.slot || '0', lastUpdated: timestamp },
+                { slot, lastUpdated: timestamp },
                 event.chainId,
                 contractAddress,
                 transaction
