@@ -59,6 +59,7 @@ async function upsertNavHistoryPoolAndSendSQS(
             time,
         },
         defaults: {
+            chainId,
             poolId,
             navType,
             time,
