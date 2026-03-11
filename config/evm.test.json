@@ -4,6 +4,7 @@
       "chainId": 11155111,
       "startBlockNumber": 5469100,
       "blockLimit": 5,
+      "delayBlock": 5,
       "config": {
         "openFundMarketAddress": "0x91967806f47e2c6603c9617efd5cc91bc2a7473e",
         "navOracleAddress": "0x2271d9fb0a45b63c781d038d0f44596e865dbc2b",
