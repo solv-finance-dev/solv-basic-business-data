@@ -144,7 +144,7 @@ export async function getSlotOf(
 
 	try {
 		const data = erc3525Interface.encodeFunctionData('slotOf', [tokenId]);
-		const blockTag = blockNumber ? blockNumber : 'latest';
+		const blockTag = blockNumber ? String(blockNumber) : 'latest';
 
 		const result = await provider.call({
 			to: contractAddress,
@@ -207,7 +207,7 @@ export async function getOwnerOf(
 
 	try {
 		const data = erc3525Interface.encodeFunctionData('ownerOf', [tokenId]);
-		const blockTag = blockNumber ? blockNumber : 'latest';
+		const blockTag = blockNumber ? String(blockNumber) : 'latest';
 
 		const result = await provider.call({
 			to: contractAddress,
@@ -245,7 +245,7 @@ export async function getBalanceOf(
 
 	try {
 		const data = erc3525Interface.encodeFunctionData('balanceOf', [tokenId]);
-		const blockTag = blockNumber ? blockNumber : 'latest';
+		const blockTag = blockNumber ? String(blockNumber) : 'latest';
 
 		const result = await provider.call({
 			to: contractAddress,
@@ -291,7 +291,7 @@ export async function getTokenURI(
 		// 编码函数调用数据
 		const data = erc3525Interface.encodeFunctionData('tokenURI', [tokenId]);
 
-		const blockTag = blockNumber ? blockNumber : 'latest';
+		const blockTag = blockNumber ? String(blockNumber) : 'latest';
 		// 使用 provider.call 执行调用
 		const result = await provider.call({
 			to: contractAddress,
@@ -333,7 +333,7 @@ export async function getSlotURI(
 
 	try {
 		const data = erc3525Interface.encodeFunctionData('slotURI', [slot]);
-		const blockTag = blockNumber ? blockNumber : 'latest';
+		const blockTag = blockNumber ? String(blockNumber) : 'latest';
 
 		const result = await provider.call({
 			to: contractAddress,
