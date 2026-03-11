@@ -69,7 +69,8 @@ async function processChain(chain: ChainConfig): Promise<void> {
         const delayBlock = Number(chain.delayBlock);
         if (Number.isFinite(delayBlock) && delayBlock >= 0) {
             const latestBlockNumber = await getLatestBlockNumber(chain.chainId);
-            maxBlockNumber = latestBlockNumber - delayBlock;
+            // 这里要额外+1，是因为maxBlockNumber是后续查询的开区间
+            maxBlockNumber = latestBlockNumber - delayBlock + 1;
             if (maxBlockNumber < beginBlockNumber) {
                 console.log(`EVM Event Monitor: maxBlockNumber is behind beginBlockNumber. chainId: ${chain.chainId}, beginBlockNumber: ${beginBlockNumber}, latestBlockNumber: ${latestBlockNumber}, delayBlock: ${delayBlock}, maxBlockNumber: ${maxBlockNumber}`);
                 return;
