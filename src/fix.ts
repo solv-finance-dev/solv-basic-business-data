@@ -1,6 +1,9 @@
 import {routerEventByIds} from "./services/monitorService";
 import {getRedisClient} from "./lib/redis";
 import {setLastSyncedBlock} from "./data/evmSyncState";
+import {getChainConfigs} from "./services/evmService";
+import {getOrCreateSequelize} from "./lib/dbClient";
+import {CurrencyInfo} from "@solvprotocol/models";
 
 const task = process.argv[2]
 
@@ -80,6 +83,17 @@ export async function main(task: string) {
         }
         await setLastSyncedBlock(setChainId, height);
         console.log('Chain height set for chainId', setChainId, 'height:', height)
+    } else if (task === 'checkHealth') {
+        const chains = getChainConfigs();
+        for (const chain of chains) {
+            const key = `StopMonitorChainId_${chain.chainId}`;
+            const value = await redisClient.get(key);
+            console.log(`Monitor switch status: chainId=${chain.chainId} key=${key} value=${value}`);
+        }
+
+        await getOrCreateSequelize();
+        const currencyInfo = await CurrencyInfo.findOne();
+        console.log(`DB health check: CurrencyInfo first record id=${currencyInfo?.id ?? 'null'}`);
     } else {
         console.error("Unknown task:", task)
     }
