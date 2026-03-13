@@ -106,9 +106,7 @@
       {
         "handler": "handlePayableDelegateFactoryEvent",
         "abi": "PayableDelegateFactory.json",
-        "chainIds": [
-          56
-        ],
+        "chainIds": [1, 56, 42161],
         "contractAddresses": [
           "0x5531f96bb9e9559ae9880cc0109e06ef477aef8e"
         ],
@@ -438,7 +436,7 @@
       {
         "handler": "handleErc3525TokenInfoEvent",
         "abi": "OpenFundShareDelegate.json",
-        "chainIds": [56],
+        "chainIds": [1, 56, 42161],
         "contractAddresses": [],
         "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
         "eventSignatures": [
