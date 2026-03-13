@@ -22,7 +22,7 @@ const TRANSACTION_TYPE_SETTLE_CARRY = 'SettleCarry';
 const TRANSACTION_TYPE_SETTLE_PROTOCOL_FEE = 'SettleProtocolFee';
 const CONTRACT_TYPE_OPEN_FUND_SHARES = 'Open Fund Shares';
 const CONTRACT_TYPE_OPEN_FUND_REDEMPTIONS = 'Open Fund Redemptions';
-const NAV_TYPE_SUBSCRIBE = '申购';
+const NAV_TYPE_SUBSCRIBE = 'Investment';
 
 // router 合约地址列表（需要根据实际情况配置）
 const ROUTER_CONTRACT_ADDRESSES: string[] = [];
