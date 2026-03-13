@@ -1,5 +1,5 @@
 import type { HandlerParam } from '../../types/handler';
-import CurrencyInfo from '../../models/CurrencyInfo';
+import {CurrencyInfo} from "@solvprotocol/models";
 import {getErc20Metadata} from "../../services/evmService";
 import {isStablecoin} from "../../lib/utils";
 

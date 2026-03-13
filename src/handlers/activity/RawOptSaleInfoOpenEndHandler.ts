@@ -1,6 +1,6 @@
-import CurrencyInfo from '../../models/CurrencyInfo';
-import RawOptSaleInfoOpenEnd from '../../models/RawOptSaleInfoOpenEnd';
-import {sendQueueMessage} from '../../lib/sqs';
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptSaleInfoOpenEnd} from "@solvprotocol/models";
+import {sendQueueMessageDelay} from '../../lib/sqs';
 import {HandlerParam} from "../../types/handler";
 import {RouterContractInfo, OptRawNavHistoryPool} from "@solvprotocol/models";
 import {Op} from "sequelize";
@@ -135,7 +135,7 @@ async function handleSaleEvent(
         {transaction},
     );
 
-    await sendQueueMessage(event.chainId, 'activityQueue', {
+    await sendQueueMessageDelay(event.chainId, 'activityQueue', {
         source: 'V3_5_Raw_Sale_Info_Open_End',
         data: {
             id: Number(created.id),

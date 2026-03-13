@@ -1,5 +1,4 @@
-// import {RawOptNavHistoryPool} from "@solvprotocol/models";
-import RawOptNavHistoryPool from '../models/RawOptNavHistoryPool';
+import {OptRawNavHistoryPool as RawOptNavHistoryPool} from "@solvprotocol/models";
 import {Op} from "sequelize";
 
 export async function getSubscribeNav(poolId: string | undefined, timestamp: number, decimals?: number): Promise<string | undefined> {

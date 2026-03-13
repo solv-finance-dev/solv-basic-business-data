@@ -1,9 +1,9 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
 import { getTransactionInfo } from '../../../lib/rpc';
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 
@@ -139,9 +139,9 @@ async function getTokenInfo(
 	contractAddress: string,
 	tokenId: string,
 	transaction: Transaction
-): Promise<OptRawErc3525TokenInfo | null> {
+): Promise<RawOptErc3525TokenInfo | null> {
 	try {
-		return await OptRawErc3525TokenInfo.findOne({
+		return await RawOptErc3525TokenInfo.findOne({
 			where: {
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),

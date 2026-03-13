@@ -1,13 +1,13 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
-import { getSlotURI, getSlotOf, getOwnerOf } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import { getSlotURI, getSlotOf } from '../../lib/rpc';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { AbiCoder } from 'ethers';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // ==================== 类型定义 ====================
 
@@ -61,7 +61,7 @@ function addBigInt(a: string | undefined | null, b: string | undefined | null): 
 	try {
 		return (BigInt(aValue) + BigInt(bValue)).toString();
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: BigInt addition failed', {
+		console.error('PoolSlotInfoHandler: BigInt addition failed', {
 			a: aValue,
 			b: bValue,
 			error: error instanceof Error ? error.message : String(error),
@@ -81,7 +81,7 @@ function subBigInt(a: string | undefined | null, b: string | undefined | null): 
 		// 确保结果不为负数
 		return result < 0 ? '0' : result.toString();
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: BigInt subtraction failed', {
+		console.error('PoolSlotInfoHandler: BigInt subtraction failed', {
 			a: aValue,
 			b: bValue,
 			error: error instanceof Error ? error.message : String(error),
@@ -153,7 +153,7 @@ async function findPoolIdBySlot(
 		});
 		return poolOrder?.poolId;
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: Failed to find PoolOrderInfo', {
+		console.error('PoolSlotInfoHandler: Failed to find PoolOrderInfo', {
 			chainId,
 			contractAddress,
 			slot,
@@ -209,23 +209,19 @@ async function getOrCreatePoolSlotInfo(
 
 /**
  * 从 tokenId 获取 slot
- * 优先从链上调用 slotOf，如果失败（token 已被 burn 等），则从数据库查找历史记录
+ * 优先从数据库检查 isBurned 状态，如果已被 burn，直接返回数据库中的 slot
+ * 如果未被 burn 或数据库中不存在，再从链上调用 slotOf
  */
 async function getSlotFromTokenId(
     chainId: number,
     contractAddress: string,
     tokenId: string,
-    transaction: Transaction
+    transaction: Transaction,
+    blockNumber?: number
 ): Promise<string | null> {
-    // 首先尝试从链上获取
-    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
-    if (slotFromChain) {
-        return slotFromChain;
-    }
-
-    // 如果链上获取失败（token 可能已被 burn），尝试从数据库查找历史记录
+    // 首先从数据库查找 token 信息，检查 isBurned 状态
     try {
-        const tokenInfo = await OptRawErc3525TokenInfo.findOne({
+        const tokenInfo = await RawOptErc3525TokenInfo.findOne({
             where: {
                 chainId,
                 contractAddress: contractAddress.toLowerCase(),
@@ -234,22 +230,59 @@ async function getSlotFromTokenId(
             transaction,
         });
 
+        // 如果 token 已被标记为 burned，直接返回数据库中的 slot，避免无效的链上调用
+        if (tokenInfo && tokenInfo.isBurned === 1) {
+            if (tokenInfo.slot) {
+                console.log('PoolSlotInfoHandler: Got slot from database for burned token', {
+                    chainId,
+                    contractAddress,
+                    tokenId,
+                    slot: tokenInfo.slot,
+                });
+                return tokenInfo.slot;
+            }
+            // 如果已被 burn 但没有 slot 信息，返回 null
+            return null;
+        }
+
+        // 如果数据库中有记录且未被 burn，但 slot 为空，尝试从链上获取
+        if (tokenInfo && !tokenInfo.slot) {
+            const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
+            if (slotFromChain) {
+                return slotFromChain;
+            }
+        }
+
+        // 如果数据库中有记录且有 slot，直接返回
         if (tokenInfo?.slot) {
-            console.log('PoolSlotInfoHandler: Got slot from database for burned token', {
-                chainId,
-                contractAddress,
-                tokenId,
-                slot: tokenInfo.slot,
-            });
             return tokenInfo.slot;
         }
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to get slot from database', {
+        console.debug('PoolSlotInfoHandler: Failed to get token info from database', {
             chainId,
             contractAddress,
             tokenId,
             error: error instanceof Error ? error.message : String(error),
         });
+    }
+
+    // 如果数据库中没有记录或记录中没有 slot，尝试从链上获取
+    try {
+        const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
+        if (slotFromChain) {
+            return slotFromChain;
+        }
+    } catch (error) {
+        // getSlotOf 已经处理了 invalid token ID 错误，这里只记录其他错误
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (!errorMessage.includes('invalid token ID') && !errorMessage.includes('token ID')) {
+            console.debug('PoolSlotInfoHandler: Failed to get slot from chain', {
+                chainId,
+                contractAddress,
+                tokenId,
+                error: errorMessage,
+            });
+        }
     }
 
     // 如果都失败了，返回 null（不记录警告，由调用方决定如何处理）
@@ -262,12 +295,13 @@ async function getSlotFromTokenId(
 async function getSlotURISafe(
     chainId: number,
     contractAddress: string,
-    slot: string
+    slot: string,
+    blockNumber?: number
 ): Promise<string> {
     try {
-        return await getSlotURI(chainId, contractAddress, slot);
+        return await getSlotURI(chainId, contractAddress, slot, blockNumber);
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to get slotURI', {
+        console.debug('PoolSlotInfoHandler: Failed to get slotURI', {
             chainId,
             contractAddress,
             slot,
@@ -290,7 +324,7 @@ async function createPoolSlotInfoAndSendSQS(
     // 创建成功后发送 SQS 消息
     if (poolSlotInfo && poolSlotInfo.id) {
         try {
-            await sendQueueMessage(chainId, 'assetQueue', {
+            await sendQueueMessageDelay(chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Slot_Info',
                 data: {
                     id: Number(poolSlotInfo.id),
@@ -325,7 +359,7 @@ async function updatePoolSlotInfoAndSendSQS(
     // 确保 chainId 存在才发送 SQS
     if (poolSlotInfo.chainId !== undefined && poolSlotInfo.chainId !== null) {
         try {
-            await sendQueueMessage(poolSlotInfo.chainId, 'assetQueue', {
+            await sendQueueMessageDelay(poolSlotInfo.chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Slot_Info',
                 data: {
                     id: Number(poolSlotInfo.id),
@@ -355,10 +389,11 @@ async function updatePoolSlotInfoWithURI(
     slot: string,
     updateData: Partial<RawOptPoolSlotInfo>,
     timestamp: number,
-    transaction: Transaction
+    transaction: Transaction,
+    blockNumber?: number
 ): Promise<void> {
     // 获取最新的 slotURI
-    const slotURI = await getSlotURISafe(chainId, contractAddress, slot);
+    const slotURI = await getSlotURISafe(chainId, contractAddress, slot, blockNumber);
 
     // 使用统一方法更新并发送 SQS
     await updatePoolSlotInfoAndSendSQS(
@@ -390,7 +425,7 @@ async function getContractType(
 		});
 		return contractInfo?.contractType || null;
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: Failed to get ContractInfo', {
+		console.error('PoolSlotInfoHandler: Failed to get ContractInfo', {
 			chainId,
 			contractAddress,
 			error: error instanceof Error ? error.message : String(error),
@@ -402,6 +437,8 @@ async function getContractType(
 /**
  * 从 ABI 编码的 bytes 中解码 slotInfo
  * 根据合约类型使用不同的 ABI 结构
+ * 
+ * 注意：如果 slotInfoBytes 包含 ABI 编码的长度前缀（前 32 字节），需要先移除
  */
 function decodeSlotInfoFromBytes(
 	slotInfoBytes: string,
@@ -414,6 +451,44 @@ function decodeSlotInfoFromBytes(
 	supervisor?: string;
 } {
 	try {
+		// 检查并移除 ABI 编码的长度前缀（如果存在）
+		// Solidity bytes 类型的 ABI 编码格式：前 32 字节是长度（uint256），后续是实际数据
+		let actualBytes = slotInfoBytes;
+		
+		// 如果 bytes 长度足够，检查前 32 字节是否是长度前缀
+		// 需要至少 66 个字符（0x + 64 hex chars = 32 bytes）才能有前缀
+		if (actualBytes.length > 66 && actualBytes.startsWith('0x')) {
+			const lengthPrefix = actualBytes.substring(0, 66); // 前 32 字节（64 hex chars + 0x）
+			
+			try {
+				const lengthValue = BigInt(lengthPrefix);
+				
+				// 计算总数据长度（字节数）
+				const totalBytes = (actualBytes.length - 2) / 2; // 减去 0x
+				// 计算剩余数据长度（字节数），减去 32 字节前缀
+				const remainingBytes = totalBytes - 32;
+				
+				// 如果长度前缀的值合理（大于 0 且小于等于剩余数据长度），则移除前缀
+				// 同时检查长度前缀的值不能太大（比如超过 100KB），避免误判
+				if (lengthValue > 0n && lengthValue <= BigInt(remainingBytes) && lengthValue <= 100000n) {
+					// 移除长度前缀，只保留实际数据
+					actualBytes = '0x' + actualBytes.substring(66);
+					console.log('PoolSlotInfoHandler: Removed ABI length prefix from slotInfo bytes', {
+						originalLength: slotInfoBytes.length,
+						lengthPrefix: lengthPrefix,
+						lengthValue: lengthValue.toString(),
+						remainingBytes,
+						actualBytesLength: actualBytes.length,
+					});
+				}
+			} catch (prefixError) {
+				// 如果无法解析长度前缀，说明可能不是长度前缀，直接使用原始数据
+				console.debug('PoolSlotInfoHandler: Could not parse length prefix, using original bytes', {
+					prefixError: prefixError instanceof Error ? prefixError.message : String(prefixError),
+				});
+			}
+		}
+
 		const abiCoder = AbiCoder.defaultAbiCoder();
 		let decoded: unknown[];
 
@@ -422,7 +497,7 @@ function decodeSlotInfoFromBytes(
 			// bytes: (address,address,uint256,uint8,int32,uint64,uint64,uint64,bool,string)
 			// struct: currency,supervisor,issueQuota,interestType,interestRate,valueDate,maturity,createTime,transferable,externalURI
 			const types = ['address', 'address', 'uint256', 'uint8', 'int32', 'uint64', 'uint64', 'uint64', 'bool', 'string'];
-			decoded = abiCoder.decode(types, slotInfoBytes);
+			decoded = abiCoder.decode(types, actualBytes);
 			const [currency, supervisor, , , interestRateInt32, valueDateUint64, maturityUint64] = decoded;
 
 			return {
@@ -437,9 +512,10 @@ function decodeSlotInfoFromBytes(
 			return {};
 		}
 	} catch (error) {
-		console.warn('PoolSlotInfoHandler: Failed to decode slotInfo bytes', {
+		console.error('PoolSlotInfoHandler: Failed to decode slotInfo bytes', {
 			contractType,
 			slotInfoBytesPrefix: slotInfoBytes?.substring(0, 50),
+			slotInfoBytesLength: slotInfoBytes?.length,
 			error: error instanceof Error ? error.message : String(error),
 		});
 		return {};
@@ -537,7 +613,7 @@ function extractFieldsFromSlotURI(slotURI: string): {
 
         return result;
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to parse slotURI', {
+        console.error('PoolSlotInfoHandler: Failed to parse slotURI', {
             error: error instanceof Error ? error.message : String(error),
         });
         return {};
@@ -562,7 +638,7 @@ async function getCurrencySymbol(
         });
         return currencyInfo?.symbol;
     } catch (error) {
-        console.warn('PoolSlotInfoHandler: Failed to get CurrencyInfo', {
+        console.error('PoolSlotInfoHandler: Failed to get CurrencyInfo', {
             chainId,
             currencyAddress,
             error: error instanceof Error ? error.message : String(error),
@@ -637,7 +713,7 @@ async function handleCreateSlot(
 	}
 
 	// 获取 slotURI
-	const slotURI = await getSlotURISafe(event.chainId, contractAddress, slot);
+	const slotURI = await getSlotURISafe(event.chainId, contractAddress, slot, event.blockNumber);
 
 	// 如果从 slotInfo 中提取失败或字段不完整，尝试从 slotURI 中解析
 	let supervisor: string | undefined;
@@ -748,7 +824,8 @@ async function handleMintValue(
                 totalAmount: addBigInt(currentTotalValue, value),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: MintValue success', {
@@ -791,7 +868,7 @@ async function handleClaim(
     const contractAddress = event.contractAddress.toLowerCase();
 
     // 从 tokenId 获取 slot
-    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
+    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction, event.blockNumber);
     if (!slot) {
         console.warn('PoolSlotInfoHandler: Claim tokenInfo not found or missing slot', {
             contractAddress,
@@ -823,7 +900,8 @@ async function handleClaim(
                 totalClaimedValue: addBigInt(currentClaimedValue, claimValue),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: Claim success', {
@@ -886,7 +964,8 @@ async function handleRepay(
                 totalRepaidValue: addBigInt(currentRepaidValue, repayCurrencyAmount),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: Repay success', {
@@ -947,7 +1026,8 @@ async function handleSetInterestRate(
                 interestRate,
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: SetInterestRate success', {
@@ -990,7 +1070,7 @@ async function handleBurnValue(
     const contractAddress = event.contractAddress.toLowerCase();
 
     // 从 tokenId 获取 slot
-    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
+    const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction, event.blockNumber);
     if (!slot) {
         console.warn('PoolSlotInfoHandler: BurnValue tokenInfo not found or missing slot', {
             contractAddress,
@@ -1022,7 +1102,8 @@ async function handleBurnValue(
                 totalAmount: subBigInt(currentTotalValue, burnValue),
             },
             event.blockTimestamp,
-            transaction
+            transaction,
+            event.blockNumber
         );
 
         console.log('PoolSlotInfoHandler: BurnValue success', {

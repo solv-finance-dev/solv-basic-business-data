@@ -1,5 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import MarketInfo from '../../models/MarketInfo';
+import {MarketInfo} from "@solvprotocol/models";
 
 // 处理 OpenFundMarket 的 SetProtocolFeeCollector/SetProtocolFeeRate 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {

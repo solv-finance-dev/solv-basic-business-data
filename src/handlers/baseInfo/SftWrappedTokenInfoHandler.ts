@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
 import { getErc20Metadata } from '../../services/evmService';
-import SftWrappedTokenInfo from '../../models/SftWrappedTokenInfo';
+import {SftWrappedTokenInfo} from "@solvprotocol/models";
 
 // Handle SftWrappedTokenFactory events.
 export async function handleSftWrappedTokenFactoryEvent(param: HandlerParam): Promise<void> {

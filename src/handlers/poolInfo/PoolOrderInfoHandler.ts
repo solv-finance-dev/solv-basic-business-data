@@ -1,11 +1,11 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
 import { getTransactionInfo } from '../../lib/rpc';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // 常量定义
 const POOL_STATUS = {
@@ -58,7 +58,7 @@ function addBigInt(a: string | undefined | null, b: string | undefined | null): 
     try {
         return (BigInt(aValue) + BigInt(bValue)).toString();
     } catch (error) {
-        console.warn('PoolOrderInfoHandler: BigInt addition failed', { a: aValue, b: bValue, error });
+        console.error('PoolOrderInfoHandler: BigInt addition failed', { a: aValue, b: bValue, error });
         return '0';
     }
 }
@@ -107,7 +107,7 @@ async function getCurrencyDecimals(
             return currencyInfo.decimals;
         }
     } catch (error) {
-        console.warn('PoolOrderInfoHandler: Failed to get CurrencyInfo', {
+        console.error('PoolOrderInfoHandler: Failed to get CurrencyInfo', {
             chainId,
             currencyAddress,
             error: error instanceof Error ? error.message : String(error),
@@ -144,7 +144,7 @@ async function createPoolOrderInfoAndSendSQS(
     // 创建成功后发送 SQS 消息
     if (poolOrderInfo && poolOrderInfo.id) {
         try {
-            await sendQueueMessage(chainId, 'assetQueue', {
+            await sendQueueMessageDelay(chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Order_Info',
                 data: {
                     id: Number(poolOrderInfo.id),
@@ -176,7 +176,7 @@ async function updatePoolOrderInfoAndSendSQS(
     // 确保 chainId 存在才发送 SQS
     if (poolOrderInfo.chainId !== undefined && poolOrderInfo.chainId !== null) {
         try {
-            await sendQueueMessage(poolOrderInfo.chainId, 'assetQueue', {
+            await sendQueueMessageDelay(poolOrderInfo.chainId, 'assetQueue', {
                 source: 'V3_5_Raw_Pool_Order_Info',
                 data: {
                     id: Number(poolOrderInfo.id),

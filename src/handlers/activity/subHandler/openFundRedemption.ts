@@ -1,10 +1,10 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import RawOptRedeemSlotInfo from '../../../models/RawOptRedeemSlotInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
-import NavRecords from '../../../models/NavRecords';
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {NavRecords} from "@solvprotocol/models";
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 
 // ==================== 常量定义 ====================
@@ -72,9 +72,9 @@ async function getTokenInfo(
 	contractAddress: string,
 	tokenId: string,
 	transaction: Transaction
-): Promise<OptRawErc3525TokenInfo | null> {
+): Promise<RawOptErc3525TokenInfo | null> {
 	try {
-		return await OptRawErc3525TokenInfo.findOne({
+		return await RawOptErc3525TokenInfo.findOne({
 			where: {
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),

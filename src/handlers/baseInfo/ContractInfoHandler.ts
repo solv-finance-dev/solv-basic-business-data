@@ -1,9 +1,8 @@
 import type { HandlerParam } from '../../types/handler';
 import { getErc3525TokenMetadata } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import {getContractType} from "../../services/evmService";
-// import {RawOptContractInfo} from "@solvprotocol/models"; 
-
+import { sendQueueMessageDelay } from '../../lib/sqs';
 export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Promise<void> {
     const { event, args, transaction } = param;
     const beaconProxy = String(args.beaconProxy ?? '');
@@ -68,4 +67,12 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
     } else {
         console.log('ContractInfoHandler: created record for beaconProxy ', beaconProxy, ' eventId ', event.eventId);
     }
+    await sendQueueMessageDelay(contractInfo.chainId, 'configQueue', {
+        source: 'V3_5_Raw_Contract_Info',
+        data: {
+            id: Number(contractInfo.id),
+            chainId: String(contractInfo.chainId),
+            contractAddress: contractInfo.contractAddress,
+        },
+    });
 }

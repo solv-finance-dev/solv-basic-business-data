@@ -45,6 +45,7 @@ function normalizeChainConfig(chain: ChainConfig): ChainConfig {
         chainId: chain.chainId,
         startBlockNumber: chain.startBlockNumber,
         blockLimit: chain.blockLimit ?? DEFAULT_BLOCK_LIMIT,
+        delayBlock: chain.delayBlock,
         config: chain.config,
     };
 }
@@ -52,7 +53,8 @@ function normalizeChainConfig(chain: ChainConfig): ChainConfig {
 export async function fetchChainEvents(
     chainId: number,
     beginBlockNumber: number,
-    blockLimit?: number
+    blockLimit?: number,
+    maxBlockNumber?: number
 ): Promise<EventEvm[]> {
     if (!Number.isFinite(chainId) || !Number.isFinite(beginBlockNumber)) {
         console.error('EvmService: Invalid chain inputs.', {chainId, beginBlockNumber});
@@ -65,11 +67,20 @@ export async function fetchChainEvents(
         return [];
     }
 
-    const payload = {
+    const payload: {
+        chainId: number;
+        beginBlockNumber: number;
+        blockLimit: number;
+        maxBlockNumber?: number;
+    } = {
         chainId,
         beginBlockNumber,
         blockLimit: effectiveBlockLimit,
     };
+
+    if (Number.isFinite(maxBlockNumber)) {
+        payload.maxBlockNumber = Number(maxBlockNumber);
+    }
 
     try {
         const response = await getLambdaClient()

@@ -1,10 +1,10 @@
 import type {HandlerParam} from '../../types/handler';
 import {getContractType, getErc20Metadata} from '../../services/evmService';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
-import RawOptRepayInfoOpenEnd from '../../models/RawOptRepayInfoOpenEnd';
-import RawOptPoolSlotInfo from '../../models/RawOptPoolSlotInfo';
-import { sendQueueMessage } from '../../lib/sqs';
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {RawOptRepayInfoOpenEnd} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // Handle OpenFundRedemptionDelegate Repay event.
 export async function handleOpenFundRedemptionDelegateEvent(param: HandlerParam): Promise<void> {
@@ -111,8 +111,8 @@ async function upsertRepayInfo(param: HandlerParam, repayType: 'Normal' | 'Liqui
         { transaction },
     );
 
-    await sendQueueMessage(event.chainId, 'assetQueue', {
-        source: 'V3_5_Raw_Wrapped_Asset_Info',
+    await sendQueueMessageDelay(event.chainId, 'assetQueue', {
+        source: 'V3_5_Raw_Repay_Info_Open_End',
         data: {
             id: Number(created.id),
             chainId: String(event.chainId),

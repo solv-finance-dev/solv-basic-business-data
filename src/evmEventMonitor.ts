@@ -4,6 +4,9 @@ import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
 import {getOrCreateSequelize} from "./lib/dbClient";
+import {getRedisClient} from "./lib/redis";
+import {sendDelayQueueMessageNow, sendQueueMessageDelay} from "./lib/sqs";
+import {getLatestBlockNumber} from './lib/rpc';
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -49,12 +52,36 @@ async function runCycle(): Promise<void> {
 }
 
 async function processChain(chain: ChainConfig): Promise<void> {
+    const redisClient = await getRedisClient();
+    const isStop = await redisClient.get('StopMonitorChainId_' + chain.chainId);
+    // console.log("StopMonitorChainId_" + chain.chainId + ":", isStop)
+    if (isStop == null || isStop === '1') {
+        console.log('EVM Event Monitor: Monitor is stopped for chainId', chain.chainId, ', skipping this cycle.');
+        return;
+    }
+
     const lastSyncedBlock = await getLastSyncedBlock(chain.chainId);
     console.log('getLastSyncedBlock:', lastSyncedBlock, 'chainId:', chain.chainId);
     const beginBlockNumber = lastSyncedBlock === null ? chain.startBlockNumber : lastSyncedBlock + 1;
 
-    const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit);
-    console.log(`fetchChainEvents: Fetched ${events.length} events for chain ${chain.chainId} from block ${beginBlockNumber}`);
+    let maxBlockNumber: number | undefined;
+    if (chain.delayBlock !== undefined && chain.delayBlock !== null) {
+        const delayBlock = Number(chain.delayBlock);
+        if (Number.isFinite(delayBlock) && delayBlock >= 0) {
+            const latestBlockNumber = await getLatestBlockNumber(chain.chainId);
+            // 这里要额外+1，是因为maxBlockNumber是后续查询的开区间
+            maxBlockNumber = latestBlockNumber - delayBlock + 1;
+            if (maxBlockNumber < beginBlockNumber) {
+                console.log(`EVM Event Monitor: maxBlockNumber is behind beginBlockNumber. chainId: ${chain.chainId}, beginBlockNumber: ${beginBlockNumber}, latestBlockNumber: ${latestBlockNumber}, delayBlock: ${delayBlock}, maxBlockNumber: ${maxBlockNumber}`);
+                return;
+            }
+        } else {
+            console.warn(`EVM Event Monitor: invalid delayBlock config, ignored. chainId: ${chain.chainId}, delayBlock: ${chain.delayBlock}`);
+        }
+    }
+
+    const events = await fetchChainEvents(chain.chainId, beginBlockNumber, chain.blockLimit, maxBlockNumber);
+    console.log(`fetchChainEvents: Fetched ${events.length} events for chain ${chain.chainId} from block ${beginBlockNumber} to ${maxBlockNumber ?? 'latest'}`);
 
     const templateAddressesMap = await getTemplateAddressesMap(chain.chainId);
 
@@ -71,19 +98,24 @@ async function processChain(chain: ChainConfig): Promise<void> {
             continue;
         }
 
+        // 按 logIndex 升序排序
+        blockEvents.sort((a, b) => a.logIndex - b.logIndex);
+
         const sequelize = await getOrCreateSequelize();
         const transaction = await sequelize.transaction();
 
         try {
             await routerEvent(blockEvents, templateAddressesMap, transaction);
             await transaction.commit();
-            console.log('setLastSyncedBlock:', blockNumber);
-            await setLastSyncedBlock(chain.chainId, blockNumber);
         } catch (error) {
             await transaction.rollback();
             console.error('EVM Event Monitor: Error processing block', blockNumber, 'on chain', chain.chainId, error);
             throw error;
         }
+        const sqsCount = await sendDelayQueueMessageNow(chain.chainId);
+        console.log(`flush delay sqs done for block ${blockNumber} on chain ${chain.chainId}, messages sent: ${sqsCount}`);
+        await setLastSyncedBlock(chain.chainId, blockNumber);
+        console.log('setLastSyncedBlock:', blockNumber);
     }
 }
 

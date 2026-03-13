@@ -1,5 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import NavRecords from '../../models/NavRecords';
+import {NavRecords} from "@solvprotocol/models";
 
 // 处理 OpenFundMarket 的 SetRedeemNav/SetSubscribeNav 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {

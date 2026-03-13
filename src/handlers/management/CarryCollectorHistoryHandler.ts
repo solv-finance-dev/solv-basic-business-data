@@ -1,5 +1,5 @@
 import type {HandlerParam} from '../../types/handler';
-import CarryCollectorHistory from '../../models/CarryCollectoHistory';
+import {CarryCollectorHistory} from "@solvprotocol/models";
 
 // 处理 OpenFundMarket 的 CreatePool/UpdatePoolInfo 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {

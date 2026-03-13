@@ -4,10 +4,11 @@
       "chainId": 11155111,
       "startBlockNumber": 5469100,
       "blockLimit": 5,
+      "delayBlock": 1,
       "config": {
-        "openFundMarketAddress": "0x109198eb8bd3064efa5d0711b505f59cfd77de18",
-        "navOracleAddress": "0x6255a8d0485659e7f45d97c3d61e532b3fb01877",
-        "whitelistAddress": "0x17b92a03ea16667f3deaefff8279d59361f004dd",
+        "openFundMarketAddress": "0x91967806f47e2c6603c9617efd5cc91bc2a7473e",
+        "navOracleAddress": "0x2271d9fb0a45b63c781d038d0f44596e865dbc2b",
+        "whitelistAddress": "0x140a5c070497a64f7c27ea631e821552401ae223",
         "isCrossChain": false,
         "saveSftWrappedTokenTimestamp": {}
       }

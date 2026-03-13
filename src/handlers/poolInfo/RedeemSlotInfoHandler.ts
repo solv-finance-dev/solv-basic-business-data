@@ -1,13 +1,13 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptRedeemSlotInfo from '../../models/RawOptRedeemSlotInfo';
-import CurrencyInfo from '../../models/CurrencyInfo';
-import OptRawErc3525TokenInfo from '../../models/RawOptErc3525TokenInfo';
-import RawOptPoolOrderInfo from '../../models/RawOptPoolOrderInfo';
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { getSlotOf, getSlotURI } from '../../lib/rpc';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
 import { AbiCoder } from 'ethers';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // ==================== 类型定义 ====================
 
@@ -353,10 +353,11 @@ function extractFieldsFromSlotURI(slotURI: string): {
 async function getSlotURISafe(
 	chainId: number,
 	contractAddress: string,
-	slot: string
+	slot: string,
+    blockNumber?: number
 ): Promise<string> {
 	try {
-		return await getSlotURI(chainId, contractAddress, slot);
+		return await getSlotURI(chainId, contractAddress, slot, blockNumber);
 	} catch (error) {
 		console.warn('RedeemSlotInfoHandler: Failed to get slotURI', {
 			chainId,
@@ -381,7 +382,7 @@ async function createRedeemSlotInfoAndSendSQS(
 	// 创建成功后发送 SQS 消息
 	if (redeemSlotInfo && redeemSlotInfo.id) {
 		try {
-			await sendQueueMessage(chainId, 'assetQueue', {
+			await sendQueueMessageDelay(chainId, 'assetQueue', {
 				source: 'V3_5_Raw_Redeem_Slot_Info',
 				data: {
 					id: Number(redeemSlotInfo.id),
@@ -416,7 +417,7 @@ async function updateRedeemSlotInfoAndSendSQS(
 	// 确保 chainId 存在才发送 SQS
 	if (redeemSlotInfo.chainId !== undefined && redeemSlotInfo.chainId !== null) {
 		try {
-			await sendQueueMessage(redeemSlotInfo.chainId, 'assetQueue', {
+			await sendQueueMessageDelay(redeemSlotInfo.chainId, 'assetQueue', {
 				source: 'V3_5_Raw_Redeem_Slot_Info',
 				data: {
 					id: Number(redeemSlotInfo.id),
@@ -502,12 +503,13 @@ async function getSlotFromTokenId(
     chainId: number,
     contractAddress: string,
     tokenId: string,
-    transaction: Transaction
+    transaction: Transaction,
+    blockNumber?: number
 ): Promise<string | null> {
     console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
     // 首先尝试从数据库查找
     try {
-        const tokenInfo = await OptRawErc3525TokenInfo.findOne({
+        const tokenInfo = await RawOptErc3525TokenInfo.findOne({
             where: {
                 chainId,
                 contractAddress: contractAddress.toLowerCase(),
@@ -529,7 +531,7 @@ async function getSlotFromTokenId(
     }
 
     // 如果数据库中没有找到，尝试从链上获取
-    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId);
+    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
     if (slotFromChain) {
         return slotFromChain;
     }

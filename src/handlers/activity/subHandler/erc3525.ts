@@ -1,14 +1,14 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
-import OptRawErc3525TokenInfo from '../../../models/RawOptErc3525TokenInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
-import RawOptRedeemSlotInfo from '../../../models/RawOptRedeemSlotInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
-import NavRecords from '../../../models/NavRecords';
-import CarryInfo from '../../../models/CarryInfo';
-import ProtocolFeeInfo from '../../../models/ProtocolFeeInfo';
-import SftWrappedTokenInfo from '../../../models/SftWrappedTokenInfo';
+import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
+import {RawOptRedeemSlotInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
+import {NavRecords} from "@solvprotocol/models";
+import {CarryInfo} from "@solvprotocol/models";
+import {ProtocolFeeInfo} from "@solvprotocol/models";
+import {SftWrappedTokenInfo} from "@solvprotocol/models";
 import { getOwnerOf, getBalanceOf } from '../../../lib/rpc';
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 
@@ -94,9 +94,9 @@ async function getTokenInfo(
 	contractAddress: string,
 	tokenId: string,
 	transaction: Transaction
-): Promise<OptRawErc3525TokenInfo | null> {
+): Promise<RawOptErc3525TokenInfo | null> {
 	try {
-		return await OptRawErc3525TokenInfo.findOne({
+		return await RawOptErc3525TokenInfo.findOne({
 			where: {
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),
@@ -354,16 +354,26 @@ async function calculateNav(
 
 /**
  * 获取 token 的 owner 地址（优先从链上获取，失败则从数据库获取）
+ * 如果 token 已被 burn，直接返回 NULL_ADDRESS，不进行链上调用
  */
 async function getTokenOwner(
 	chainId: number,
 	contractAddress: string,
 	tokenId: string,
-	transaction: Transaction
+	transaction: Transaction,
+	blockNumber?: number
 ): Promise<string> {
+	// 先从数据库获取 token 信息，检查 isBurned 状态
+	const tokenInfo = await getTokenInfo(chainId, contractAddress, tokenId, transaction);
+	
+	// 如果 token 已被标记为 burned，直接返回 NULL_ADDRESS，避免无效的链上调用
+	if (tokenInfo && tokenInfo.isBurned === 1) {
+		return tokenInfo.holder || NULL_ADDRESS;
+	}
+
 	// 优先从链上获取
 	try {
-		const owner = await getOwnerOf(chainId, contractAddress, tokenId);
+		const owner = await getOwnerOf(chainId, contractAddress, tokenId, blockNumber);
 		if (owner && owner !== NULL_ADDRESS) {
 			return owner;
 		}
@@ -376,7 +386,6 @@ async function getTokenOwner(
 	}
 
 	// 从数据库获取
-	const tokenInfo = await getTokenInfo(chainId, contractAddress, tokenId, transaction);
 	if (tokenInfo?.holder) {
 		return tokenInfo.holder;
 	}
@@ -434,7 +443,7 @@ async function determineTransactionType(
 async function handleOpenFundSharesActivity(
 	event: HandlerParam['event'],
 	contractInfo: RawOptContractInfo,
-	tokenInfo: OptRawErc3525TokenInfo,
+	tokenInfo: RawOptErc3525TokenInfo,
 	fromAddress: string,
 	toAddress: string,
 	amount: string,
@@ -498,7 +507,7 @@ async function handleOpenFundSharesActivity(
 async function handleOpenFundRedemptionsActivity(
 	event: HandlerParam['event'],
 	contractInfo: RawOptContractInfo,
-	tokenInfo: OptRawErc3525TokenInfo,
+	tokenInfo: RawOptErc3525TokenInfo,
 	fromAddress: string,
 	toAddress: string,
 	amount: string,
@@ -576,17 +585,35 @@ export async function handleTransferValue(
 		}
 	}
 
-	const toTokenInfo = await getTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+	let toTokenInfo = await getTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+	
+	// 如果 toTokenInfo 不存在且 fromTokenId 为 0（Mint 操作），记录警告但不直接返回
+	// 因为可能在同一个事务中，Transfer 事件还没处理完
+	if (!toTokenInfo && fromTokenId === ZERO_TOKEN_ID) {
+		console.warn('ActivityHandler: TokenInfo not found for toTokenId in TransferValue, may be created by Transfer event', {
+			toTokenId,
+			contractAddress,
+			eventId: event.eventId,
+		});
+		// 尝试再次查询，可能 Transfer 事件已经创建了 tokenInfo
+		toTokenInfo = await getTokenInfo(event.chainId, contractAddress, toTokenId, transaction);
+	}
+	
 	if (!toTokenInfo) {
+		console.warn('ActivityHandler: TokenInfo not found for toTokenId in TransferValue, skipping activity creation', {
+			toTokenId,
+			contractAddress,
+			eventId: event.eventId,
+		});
 		return;
 	}
 
 	// 获取 owner 地址
 	const fromAddress =
 		fromTokenId !== ZERO_TOKEN_ID
-			? await getTokenOwner(event.chainId, contractAddress, fromTokenId, transaction)
+			? await getTokenOwner(event.chainId, contractAddress, fromTokenId, transaction, event.blockNumber)
 			: NULL_ADDRESS;
-	const toAddress = await getTokenOwner(event.chainId, contractAddress, toTokenId, transaction);
+	const toAddress = await getTokenOwner(event.chainId, contractAddress, toTokenId, transaction, event.blockNumber);
 
 	// 检查是否需要过滤
 	const shouldFilterFrom = await shouldFilterAddress(
@@ -693,22 +720,44 @@ export async function handleTransfer(
 		return;
 	}
 
+	// 如果 token 已被标记为 burned，跳过处理，避免无效的链上调用
+	if (tokenInfo.isBurned === 1) {
+		console.warn('ActivityHandler: Token is already burned, skipping Transfer activity', {
+			contractAddress,
+			tokenId,
+		});
+		return;
+	}
+
 	// 获取合约信息
 	const contractInfo = await getContractInfo(event.chainId, contractAddress, transaction);
 	if (!contractInfo) {
 		return;
 	}
 
-	// 获取 balance
+	// 获取 balance（仅在 token 未被 burn 时调用）
 	let balance = '0';
 	try {
-		balance = await getBalanceOf(event.chainId, contractAddress, tokenId);
+		const balanceResult = await getBalanceOf(event.chainId, contractAddress, tokenId, event.blockNumber);
+		// getBalanceOf 现在可能返回 null（token 无效时），需要处理
+		if (balanceResult !== null) {
+			balance = balanceResult;
+		} else {
+			// 如果链上获取失败（token 可能已被 burn），尝试从数据库获取
+			if (tokenInfo?.balance) {
+				balance = tokenInfo.balance;
+			}
+		}
 	} catch (error) {
 		console.warn('ActivityHandler: Failed to get balanceOf', {
 			contractAddress,
 			tokenId,
 			error: error instanceof Error ? error.message : String(error),
 		});
+		// 如果链上调用失败，尝试从数据库获取
+		if (tokenInfo?.balance) {
+			balance = tokenInfo.balance;
+		}
 	}
 
 	// 根据合约类型处理

@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
-import RawOptActivity from '../../models/RawOptActivity';
+import {RawOptActivity} from "@solvprotocol/models";
 import { handleTransferValue, handleTransfer } from './subHandler/erc3525';
 import {
 	handleCreatePool,
@@ -20,10 +20,10 @@ import {
 	handleUnstake,
 } from './subHandler/router';
 import { handleSftWrappedTokenTransfer } from './subHandler/sftWrappedToken';
-import RawOptContractInfo from '../../models/RawOptContractInfo';
+import {RawOptContractInfo} from "@solvprotocol/models";
 import { handleSolvBTCRouterV2Deposit, handleSolvBTCRouterV2WithdrawRequest, handleSolvBTCRouterV2CancelWithdrawRequest } from './subHandler/solvBTCRouterV2';
 import { handleXSolvBTCPoolDeposit, handleXSolvBTCPoolWithdraw } from './subHandler/xSolvBTCPool';
-import { sendQueueMessage } from '../../lib/sqs';
+import { sendQueueMessageDelay } from '../../lib/sqs';
 // ==================== 事件签名常量 ====================
 
 const ERC3525_EVENT_SIGNATURES = {
@@ -144,7 +144,7 @@ export async function createActivity(params: ActivityCreationParams): Promise<vo
 				eventIndex: params.eventIndex,
 				transactionType: params.transactionType,
 			});
-            await sendQueueMessage(params.chainId, 'activityQueue', {
+            await sendQueueMessageDelay(params.chainId, 'activityQueue', {
                 source: 'V3_5_Raw_Activity',
                 data: {
                     id: Number(activity.id),
@@ -375,7 +375,7 @@ export async function handleRouterEvent(param: HandlerParam): Promise<void> {
 	}
 }
 
-export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+async function Erc20TokenInfoEvent(param: HandlerParam): Promise<void> {
     const {event, transaction, eventFunc, args} = param;
 
     try {
@@ -399,6 +399,14 @@ export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<v
         throw error;
     }
 }
+
+export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
+	await Erc20TokenInfoEvent(param);
+}
+
+export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<void> {
+	await Erc20TokenInfoEvent(param);
+}	
 
 export async function handleSolvBTCRouterV2Event(param: HandlerParam): Promise<void> {
     const { event, transaction, eventFunc, args } = param;

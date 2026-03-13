@@ -1,11 +1,11 @@
 import type { HandlerParam } from '../../../types/handler';
 import type { Transaction } from 'sequelize';
 import { Op } from 'sequelize';
-import RawOptPoolOrderInfo from '../../../models/RawOptPoolOrderInfo';
-import RawOptContractInfo from '../../../models/RawOptContractInfo';
-import CurrencyInfo from '../../../models/CurrencyInfo';
+import {RawOptPoolOrderInfo} from "@solvprotocol/models";
+import {RawOptContractInfo} from "@solvprotocol/models";
+import {CurrencyInfo} from "@solvprotocol/models";
 import { OptRawNavHistoryPool } from '@solvprotocol/models';
-import RawOptPoolSlotInfo from '../../../models/RawOptPoolSlotInfo';
+import {RawOptPoolSlotInfo} from "@solvprotocol/models";
 import { createActivity } from '../ActivityHandler';
 
 // ==================== 常量定义 ====================
