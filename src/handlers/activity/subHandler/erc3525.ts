@@ -711,21 +711,20 @@ export async function handleTransfer(
 		isRouterAddress(from) ||
 		isRouterAddress(to)
 	) {
+		console.warn(`ActivityHandler: Invalid Transfer event: ${JSON.stringify({ contractAddress, tokenId, from, to })}`);
 		return;
 	}
 
 	// 验证 token 信息是否存在
 	const tokenInfo = await getTokenInfo(event.chainId, contractAddress, tokenId, transaction);
 	if (!tokenInfo || !tokenInfo.slot) {
+		console.warn(`ActivityHandler: TokenInfo not found for tokenId: ${tokenId} in Transfer event: ${JSON.stringify({ contractAddress, tokenId })}`);
 		return;
 	}
 
 	// 如果 token 已被标记为 burned，跳过处理，避免无效的链上调用
 	if (tokenInfo.isBurned === 1) {
-		console.warn('ActivityHandler: Token is already burned, skipping Transfer activity', {
-			contractAddress,
-			tokenId,
-		});
+		console.warn(`ActivityHandler: Token is already burned, skipping Transfer activity: ${JSON.stringify({ contractAddress, tokenId })}`);
 		return;
 	}
 
