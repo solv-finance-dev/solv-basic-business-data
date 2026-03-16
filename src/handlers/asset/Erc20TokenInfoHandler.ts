@@ -1,5 +1,5 @@
 import type { HandlerParam } from '../../types/handler';
-import { SftWrappedTokenInfo } from "@solvprotocol/models";
+import { SftWrappedTokenInfo, WrappedAssetInfo } from "@solvprotocol/models";
 import { RawOptErc20AssetInfo } from "@solvprotocol/models";
 import { sendQueueMessageDelay } from '../../lib/sqs';
 
@@ -95,6 +95,24 @@ async function getOrCreateWrappedAssetInfo(
 	if (existing) {
 		return existing;
 	}
+	let balance = '0';
+	const wrappedAssetInfo = await WrappedAssetInfo.findOne({
+		where: {
+			chainId,
+			tokenAddress: lowerContractAddress,
+			holder: lowerHolder,
+		},
+		transaction,
+	});
+	if (wrappedAssetInfo) {
+		balance = wrappedAssetInfo.balance ?? '0';
+	} else {
+		console.error('Erc20TokenInfoHandler: WrappedAssetInfo not found', JSON.stringify({
+			chainId,
+			tokenAddress: lowerContractAddress,
+			holder: lowerHolder,
+		}));
+	}
 
 	const created = await RawOptErc20AssetInfo.create(
 		{
@@ -106,7 +124,7 @@ async function getOrCreateWrappedAssetInfo(
 			decimals: wrappedInfo.decimals ?? 0,
 			sftAddress: wrappedInfo.sftAddress ?? '',
 			slot: wrappedInfo.slot ?? '',
-			balance: '0',
+			balance,
 			mintTime: timestamp,
 			lastUpdated: timestamp,
 		},
@@ -154,7 +172,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
 		const currentBalance = fromAsset.balance ?? '0';
 		const newBalance = subBigInt(currentBalance, value);
-		
+
 		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
 		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
 		
@@ -215,7 +233,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
 		const currentBalance = toAsset.balance ?? '0';
 		const newBalance = addBigInt(currentBalance, value);
-		
+
 		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
 		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
 
