@@ -275,6 +275,46 @@ export async function getBalanceOf(
 	}
 }
 
+
+export async function getErc20BalanceOf(
+	chainId: number,
+	contractAddress: string,
+	account: string,
+	blockNumber?: number
+): Promise<string | null> {
+	const provider = getRpcProvider(chainId);
+	const erc20Interface = new Interface([
+		'function balanceOf(address account) view returns (uint256)',
+	]);
+
+	try {
+		const data = erc20Interface.encodeFunctionData('balanceOf', [account]);
+		const blockTag = getBlockTag(blockNumber);
+
+		const result = await provider.call({
+			to: contractAddress,
+			data,
+			blockTag,
+		});
+
+		const decoded = erc20Interface.decodeFunctionResult('balanceOf', result);
+		const balance = String(decoded[0]);
+
+		return balance;
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		// 对于 ERC20，没有 invalid token ID 这种语义，出错一律记日志并抛出
+		console.error('Rpc: Failed to get erc20 balanceOf', {
+			chainId,
+			contractAddress,
+			account,
+			blockNumber,
+			error: errorMessage,
+		});
+		throw error;
+	}
+}
+
 function getBlockTag(blockNumber?: number): string {
 	return blockNumber ? '0x' + BigInt(blockNumber).toString(16) : 'latest';
 }

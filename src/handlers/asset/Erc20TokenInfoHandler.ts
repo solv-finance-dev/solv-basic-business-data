@@ -2,6 +2,7 @@ import type { HandlerParam } from '../../types/handler';
 import { SftWrappedTokenInfo, WrappedAssetInfo } from "@solvprotocol/models";
 import { RawOptErc20AssetInfo } from "@solvprotocol/models";
 import { sendQueueMessageDelay } from '../../lib/sqs';
+import { getErc20BalanceOf } from 'src/lib/rpc';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -78,7 +79,7 @@ async function getOrCreateWrappedAssetInfo(
 	},
 	wrappedInfo: SftWrappedTokenInfo,
 	transaction: any
-): Promise<RawOptErc20AssetInfo> {
+): Promise<{ asset: RawOptErc20AssetInfo; isBalanceFromRpc: boolean }> {
 	const { chainId, contractAddress, holder, timestamp } = params;
 	const lowerContractAddress = contractAddress.toLowerCase();
 	const lowerHolder = holder.toLowerCase();
@@ -93,26 +94,13 @@ async function getOrCreateWrappedAssetInfo(
 	});
 
 	if (existing) {
-		return existing;
+		return {
+			asset: existing,
+			isBalanceFromRpc: false,
+		};
 	}
-	let balance = '0';
-	const wrappedAssetInfo = await WrappedAssetInfo.findOne({
-		where: {
-			chainId,
-			tokenAddress: lowerContractAddress,
-			holder: lowerHolder,
-		},
-		transaction,
-	});
-	if (wrappedAssetInfo) {
-		balance = wrappedAssetInfo.balance ?? '0';
-	} else {
-		console.error('Erc20TokenInfoHandler: WrappedAssetInfo not found', JSON.stringify({
-			chainId,
-			tokenAddress: lowerContractAddress,
-			holder: lowerHolder,
-		}));
-	}
+
+	const balanceFromRpc = await getErc20BalanceOf(chainId, lowerContractAddress, lowerHolder);
 
 	const created = await RawOptErc20AssetInfo.create(
 		{
@@ -124,14 +112,26 @@ async function getOrCreateWrappedAssetInfo(
 			decimals: wrappedInfo.decimals ?? 0,
 			sftAddress: wrappedInfo.sftAddress ?? '',
 			slot: wrappedInfo.slot ?? '',
-			balance,
+			balance: balanceFromRpc ?? '0',
 			mintTime: timestamp,
 			lastUpdated: timestamp,
 		},
 		{ transaction }
 	);
 
-	return created;
+	if (balanceFromRpc !== null) {
+		console.log('Erc20TokenInfoHandler: created RawOptErc20AssetInfo with balance from getErc20BalanceOf', JSON.stringify({
+			chainId,
+			contractAddress: lowerContractAddress,
+			holder: lowerHolder,
+			balance: balanceFromRpc,
+		}));
+	}
+
+	return {
+		asset: created,
+		isBalanceFromRpc: true,
+	};
 }
 
 async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrappedTokenInfo): Promise<void> {
@@ -158,7 +158,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	}));
 
 	if (from !== NULL_ADDRESS) {
-		const fromAsset = await getOrCreateWrappedAssetInfo(
+		const { asset: fromAsset, isBalanceFromRpc: fromBalanceFromRpc } = await getOrCreateWrappedAssetInfo(
 			{
 				chainId,
 				contractAddress,
@@ -169,32 +169,35 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			transaction
 		);
 
-		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
-		const currentBalance = fromAsset.balance ?? '0';
-		const newBalance = subBigInt(currentBalance, value);
+		if (!fromBalanceFromRpc) {
+			// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
+			const currentBalance = fromAsset.balance ?? '0';
+			const newBalance = subBigInt(currentBalance, value);
 
-		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
-		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
-		
-		console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset update', JSON.stringify({
-			assetId: fromAsset.id,
-			chainId,
-			contractAddress,
-			holder: from,
-			currentBalance,
-			value,
-			newBalance,
-			balanceValue,
-		}));
+			// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
+			const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
 
-		// 更新 balance，确保使用字符串格式
-		await fromAsset.update(
-			{
-				balance: balanceValue,
-				lastUpdated: timestamp,
-			},
-			{ transaction }
-		);
+			console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset update', JSON.stringify({
+				assetId: fromAsset.id,
+				chainId,
+				contractAddress,
+				holder: from,
+				currentBalance,
+				value,
+				newBalance,
+				balanceValue,
+				isBalanceFromRpc: fromBalanceFromRpc,
+			}));
+
+			// 更新 balance，确保使用字符串格式
+			await fromAsset.update(
+				{
+					balance: balanceValue,
+					lastUpdated: timestamp,
+				},
+				{ transaction }
+			);
+		}
 
 		// 修改成功后发送 SQS 消息
 		if (fromAsset && fromAsset.id) {
@@ -219,7 +222,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 	}
 
 	if (to !== NULL_ADDRESS) {
-		const toAsset = await getOrCreateWrappedAssetInfo(
+		const { asset: toAsset, isBalanceFromRpc: toBalanceFromRpc } = await getOrCreateWrappedAssetInfo(
 			{
 				chainId,
 				contractAddress,
@@ -230,21 +233,23 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			transaction
 		);
 
-		// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
-		const currentBalance = toAsset.balance ?? '0';
-		const newBalance = addBigInt(currentBalance, value);
+		if (!toBalanceFromRpc) {
+			// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
+			const currentBalance = toAsset.balance ?? '0';
+			const newBalance = addBigInt(currentBalance, value);
 
-		// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
-		const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
+			// 确保 newBalance 是有效的数字字符串（不能为空或包含非数字字符）
+			const balanceValue = newBalance && newBalance.trim() !== '' ? String(newBalance) : '0';
 
-		// 更新 balance，确保使用字符串格式
-		await toAsset.update(
-			{
-				balance: balanceValue,
-				lastUpdated: timestamp,
-			},
-			{ transaction }
-		);
+			// 更新 balance，确保使用字符串格式
+			await toAsset.update(
+				{
+					balance: balanceValue,
+					lastUpdated: timestamp,
+				},
+				{ transaction }
+			);
+		}
 		// 修改成功后发送 SQS 消息
 		if (toAsset && toAsset.id) {
 			try {
