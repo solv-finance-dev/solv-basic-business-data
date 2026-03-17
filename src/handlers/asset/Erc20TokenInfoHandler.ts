@@ -2,7 +2,7 @@ import type { HandlerParam } from '../../types/handler';
 import { SftWrappedTokenInfo, WrappedAssetInfo } from "@solvprotocol/models";
 import { RawOptErc20AssetInfo } from "@solvprotocol/models";
 import { sendQueueMessageDelay } from '../../lib/sqs';
-import { getErc20BalanceOf } from 'src/lib/rpc';
+import { getErc20BalanceOf } from '../../lib/rpc';
 
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
