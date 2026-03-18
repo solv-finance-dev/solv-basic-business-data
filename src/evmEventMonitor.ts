@@ -5,8 +5,9 @@ import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
 import {getOrCreateSequelize} from "./lib/dbClient";
 import {getRedisClient} from "./lib/redis";
-import {sendDelayQueueMessageNow, sendQueueMessageDelay} from "./lib/sqs";
+import {sendDelayQueueMessageNow} from "./lib/sqs";
 import {getLatestBlockNumber} from './lib/rpc';
+import {sendSNS} from "./lib/sns";
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -45,6 +46,7 @@ async function runCycle(): Promise<void> {
     results.forEach((result: PromiseSettledResult<void>, index: number) => {
         if (result.status === 'rejected') {
             console.error('EVM Event Monitor: Chain task failed.', chains[index].chainId, result.reason);
+            sendSNS(`chainId:${chains[index].chainId},reason:${result.reason.toString()}`, "basic-business-data 处理发现异常 ");
         }
     });
 
@@ -109,7 +111,12 @@ async function processChain(chain: ChainConfig): Promise<void> {
             await transaction.commit();
         } catch (error) {
             await transaction.rollback();
-            console.error('EVM Event Monitor: Error processing block', blockNumber, 'on chain', chain.chainId, error);
+            // 生成uuid
+            const uuid = crypto.randomUUID();
+            // 从blockEvents里获取id作为id的数组合集
+            const eventIds = blockEvents.map(e => e.eventId).join(',');
+            console.error(`EVM Event Monitor: Error processing block,uuid:${uuid},blockNumber: ${blockNumber},chainId: ${chain.chainId},eventIds: ${eventIds}`, error);
+            await sendSNS(`uuid:${uuid},chainId:${chain.chainId},blockNumber:${blockNumber},reason:${error ? error.toString() : 'unknown'}`, "basic-business-data 处理routerEvent异常 ");
             throw error;
         }
         const sqsCount = await sendDelayQueueMessageNow(chain.chainId);

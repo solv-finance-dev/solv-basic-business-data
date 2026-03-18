@@ -4,6 +4,7 @@ import {setLastSyncedBlock} from "./data/evmSyncState";
 import {getChainConfigs} from "./services/evmService";
 import {getOrCreateSequelize} from "./lib/dbClient";
 import {CurrencyInfo} from "@solvprotocol/models";
+import {sendSNS} from "./lib/sns";
 
 const task = process.argv[2]
 
@@ -94,6 +95,10 @@ export async function main(task: string) {
         await getOrCreateSequelize();
         const currencyInfo = await CurrencyInfo.findOne();
         console.log(`DB health check: CurrencyInfo first record id=${currencyInfo?.id ?? 'null'}`);
+    } else if (task === 'testSNS') {
+        // 发送测试SNS通知
+        await sendSNS("This is a test SNS message from fix task", "Test SNS Notification");
+        console.log("Test SNS message sent");
     } else {
         console.error("Unknown task:", task)
     }
