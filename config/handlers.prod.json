@@ -88,8 +88,8 @@
         "abi": "OpenFundMarket.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [
-          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
           "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
           "0xaE050694c137aD777611286C316E5FDda58242F3"
         ],
         "eventSignatures": [
@@ -124,7 +124,11 @@
         "handler": "handleMarketContractEvent",
         "abi": "OpenFundMarket.json",
         "chainIds": [1, 56, 42161],
-        "contractAddresses": ["0xaE050694c137aD777611286C316E5FDda58242F3"],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8"
+        ],
         "eventSignatures": [
           "AddSFT(address,address)",
           "RemoveSFT(address)"
@@ -160,9 +164,9 @@
         "abi": "NavOracle.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [
-          "0x6ec1fec6c6af53624733f671b490b8250ff251ed",
+          "0x8c29858319614380024093dbee553f9337665756",
           "0x9c491539aec346aafeb0bee9a1e9d9c02ab50889",
-          "0x8c29858319614380024093dbee553f9337665756"
+          "0x6ec1fec6c6af53624733f671b490b8250ff251ed"
         ],
         "eventSignatures": [
           "UpdateAllTimeHighRedeemNav(bytes32,uint256,uint256)"
@@ -173,9 +177,9 @@
         "abi": "Whitelist.json",
         "chainIds": [1, 56, 42161],
         "contractAddresses": [
-          "0x8f694b722b32ab9fe7959d8398cd61b70cde58db",
+          "0x2f5ce1a4ab04de1ce667e5ed2ec1a11ac20da732",
           "0x069c3bdf1b0083bb78652b6e1e1a68c481ae2ff5",
-          "0x2f5ce1a4ab04de1ce667e5ed2ec1a11ac20da732"
+          "0x8f694b722b32ab9fe7959d8398cd61b70cde58db"
         ],
         "eventSignatures": [
           "SetWhitelist(bytes32,bytes32,bool)"
@@ -419,8 +423,8 @@
         "abi": "XSolvBTCPool.json",
         "chainIds": [1, 56],
         "contractAddresses": [
-          "0xF50860533D209E44dbe02F58B77EA85a8bfC28a3",
-          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86"
+          "0xf394Aa7CFB25644e2A713EbbBE259B81F7c67c86",
+          "0xF50860533D209E44dbe02F58B77EA85a8bfC28a3"
         ],
         "eventSignatures": [
           "Deposit(address,address,address,uint256,uint256)",
@@ -548,7 +552,6 @@
           "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
           "CloseRedeemSlot(bytes32,uint256,uint256)",
           "RequestRedeem(bytes32,address,uint256,uint256,uint256)",
-          "RevokeRedeem(bytes32,address,uint256,uint256)",
           "RevokeRedeem(bytes32,address,uint256,uint256)"
         ]
       },

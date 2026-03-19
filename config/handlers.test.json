@@ -513,7 +513,6 @@
           "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
           "CloseRedeemSlot(bytes32,uint256,uint256)",
           "RequestRedeem(bytes32,address,uint256,uint256,uint256)",
-          "RevokeRedeem(bytes32,address,uint256,uint256)",
           "RevokeRedeem(bytes32,address,uint256,uint256)"
         ]
       },
