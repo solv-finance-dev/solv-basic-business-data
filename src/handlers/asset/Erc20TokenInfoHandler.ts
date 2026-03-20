@@ -101,10 +101,12 @@ async function getOrCreateWrappedAssetInfo(
 		};
 	}
 
-	let balanceFromRpc: string | null = "0";
+	// 仅当 isGetBalance 为 true 时才走链上查询；未查询或查询失败(null) 时应用事件加减修正
+	let balanceFromRpc: string | null = null;
 	if (isGetBalance) {
 		balanceFromRpc = await getErc20BalanceOf(chainId, lowerContractAddress, lowerHolder);
 	}
+	const initialBalance = balanceFromRpc ?? '0';
 
 	const created = await RawOptErc20AssetInfo.create(
 		{
@@ -116,14 +118,15 @@ async function getOrCreateWrappedAssetInfo(
 			decimals: wrappedInfo.decimals ?? 0,
 			sftAddress: wrappedInfo.sftAddress ?? '',
 			slot: wrappedInfo.slot ?? '',
-			balance: balanceFromRpc ?? '0',
+			balance: initialBalance,
 			mintTime: timestamp,
 			lastUpdated: timestamp,
 		},
 		{ transaction }
 	);
 
-	if (balanceFromRpc !== null) {
+	const isBalanceFromRpc = Boolean(isGetBalance && balanceFromRpc !== null);
+	if (isBalanceFromRpc) {
 		console.log('Erc20TokenInfoHandler: created RawOptErc20AssetInfo with balance from getErc20BalanceOf', JSON.stringify({
 			chainId,
 			contractAddress: lowerContractAddress,
@@ -134,7 +137,7 @@ async function getOrCreateWrappedAssetInfo(
 
 	return {
 		asset: created,
-		isBalanceFromRpc: isGetBalance ? true : false,
+		isBalanceFromRpc,
 	};
 }
 
