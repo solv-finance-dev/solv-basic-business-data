@@ -78,6 +78,7 @@ async function getOrCreateWrappedAssetInfo(
 		timestamp: number;
 	},
 	wrappedInfo: SftWrappedTokenInfo,
+	isGetBalance: boolean,
 	transaction: any
 ): Promise<{ asset: RawOptErc20AssetInfo; isBalanceFromRpc: boolean }> {
 	const { chainId, contractAddress, holder, timestamp } = params;
@@ -100,7 +101,10 @@ async function getOrCreateWrappedAssetInfo(
 		};
 	}
 
-	const balanceFromRpc = await getErc20BalanceOf(chainId, lowerContractAddress, lowerHolder);
+	let balanceFromRpc: string | null = "0";
+	if (isGetBalance) {
+		balanceFromRpc = await getErc20BalanceOf(chainId, lowerContractAddress, lowerHolder);
+	}
 
 	const created = await RawOptErc20AssetInfo.create(
 		{
@@ -130,7 +134,7 @@ async function getOrCreateWrappedAssetInfo(
 
 	return {
 		asset: created,
-		isBalanceFromRpc: true,
+		isBalanceFromRpc: isGetBalance ? true : false,
 	};
 }
 
@@ -166,6 +170,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 				timestamp,
 			},
 			sftWrappedInfo,
+			true,
 			transaction
 		);
 
@@ -230,6 +235,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 				timestamp,
 			},
 			sftWrappedInfo,
+			from == NULL_ADDRESS ? false : true, 
 			transaction
 		);
 
