@@ -79,7 +79,8 @@ async function getOrCreateWrappedAssetInfo(
 	},
 	wrappedInfo: SftWrappedTokenInfo,
 	isGetBalance: boolean,
-	transaction: any
+	transaction: any,
+	blockNumber?: number
 ): Promise<{ asset: RawOptErc20AssetInfo; isBalanceFromRpc: boolean }> {
 	const { chainId, contractAddress, holder, timestamp } = params;
 	const lowerContractAddress = contractAddress.toLowerCase();
@@ -104,7 +105,7 @@ async function getOrCreateWrappedAssetInfo(
 	// 仅当 isGetBalance 为 true 时才走链上查询；未查询或查询失败(null) 时应用事件加减修正
 	let balanceFromRpc: string | null = null;
 	if (isGetBalance) {
-		balanceFromRpc = await getErc20BalanceOf(chainId, lowerContractAddress, lowerHolder);
+		balanceFromRpc = await getErc20BalanceOf(chainId, lowerContractAddress, lowerHolder, blockNumber);
 	}
 	const initialBalance = balanceFromRpc ?? '0';
 
@@ -174,10 +175,20 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			},
 			sftWrappedInfo,
 			true,
-			transaction
+			transaction,
+			event.blockNumber
 		);
 
 		if (!fromBalanceFromRpc) {
+			console.log('Erc20TokenInfoHandler: handleTransferEvent: fromAsset update', JSON.stringify({
+				assetId: fromAsset.id,
+				chainId,
+				contractAddress,
+				holder: from,
+				currentBalance: fromAsset.balance,
+				value,
+				newBalance: fromAsset.balance,
+			}));
 			// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
 			const currentBalance = fromAsset.balance ?? '0';
 			const newBalance = subBigInt(currentBalance, value);
@@ -239,10 +250,20 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			},
 			sftWrappedInfo,
 			from == NULL_ADDRESS ? false : true, 
-			transaction
+			transaction,
+			event.blockNumber
 		);
 
 		if (!toBalanceFromRpc || toAsset.balance == '0') {
+			console.log('Erc20TokenInfoHandler: handleTransferEvent: toAsset update', JSON.stringify({
+				assetId: toAsset.id,
+				chainId,
+				contractAddress,
+				holder: to,
+				currentBalance: toAsset.balance,
+				value,
+				newBalance: toAsset.balance,
+			}));
 			// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
 			const currentBalance = toAsset.balance ?? '0';
 			const newBalance = addBigInt(currentBalance, value);
