@@ -242,7 +242,7 @@ async function handleTransferEvent(param: HandlerParam, sftWrappedInfo: SftWrapp
 			transaction
 		);
 
-		if (!toBalanceFromRpc) {
+		if (!toBalanceFromRpc || toAsset.balance == '0') {
 			// 确保获取到最新的 balance 值（如果是已存在的记录，需要重新加载以确保获取最新值）
 			const currentBalance = toAsset.balance ?? '0';
 			const newBalance = addBigInt(currentBalance, value);
