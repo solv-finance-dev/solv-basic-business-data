@@ -648,6 +648,7 @@ async function handleCreateSlot(
                 redeemAmount: '0',
                 repaidValue: '0',
                 claimedAmount: '0',
+				navSetTime: 0,
                 lastUpdated: event.blockTimestamp,
                 blockTimestamp: event.blockTimestamp,
             },
