@@ -29,6 +29,19 @@
       }
     },
     {
+      "chainId": 196,
+      "startBlockNumber": 50825206,
+      "blockLimit": 5,
+      "delayBlock": 1,
+      "config": {
+        "openFundMarketAddress": "0xb37889068f9ecaa64bd011c8de66ae677368c118",
+        "navOracleAddress": "0x45fb21ac62503c0bb6fff3513a3d0ffaaa11acdb",
+        "whitelistAddress": "0x7112df9c31c246d83ff9c7337759aa672dc34d79",
+        "isCrossChain": false,
+        "saveSftWrappedTokenTimestamp": {}
+      }
+    },
+    {
       "chainId": 42161,
       "startBlockNumber": 84104000,
       "blockLimit": 5,
