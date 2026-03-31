@@ -100,6 +100,14 @@
     "rpc_node": "https://rpc.sft-api.com/merlin"
   },
   {
+    "chain_id": 5000,
+    "rpc_node": "https://rpc.mantle.xyz"
+  },
+  {
+    "chain_id": 57073,
+    "rpc_node": "https://rpc-gel.inkonchain.com"
+  },
+  {
     "chain_id": 1,
     "rpc_node": "https://rpc.sft-api.com/eth"
   },
