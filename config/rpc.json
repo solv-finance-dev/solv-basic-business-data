@@ -36,6 +36,10 @@
     "rpc_node": "https://rpc.ankr.com/avalanche_fuji"
   },
   {
+    "chain_id": 196,
+    "rpc_node": "https://rpc-proxy.sft-api.com/196"
+  },
+  {
     "chain_id": 111,
     "rpc_node": "https://testnet.rpc.gobob.xyz/"
   },
