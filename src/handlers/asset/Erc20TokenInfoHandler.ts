@@ -311,5 +311,6 @@ export async function handleSftWrappedTokenEvent(param: HandlerParam): Promise<v
 }
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
+	console.log('handleErc20TokenInfoEvent erc20 doing');
 	await Erc20TokenInfoEvent(param);
 }

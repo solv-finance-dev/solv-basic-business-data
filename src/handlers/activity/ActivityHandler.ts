@@ -401,6 +401,7 @@ async function Erc20TokenInfoEvent(param: HandlerParam): Promise<void> {
 }
 
 export async function handleErc20TokenInfoEvent(param: HandlerParam): Promise<void> {
+	console.log('handleErc20TokenInfoEvent activity doing');
 	await Erc20TokenInfoEvent(param);
 }
 
