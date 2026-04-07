@@ -27,7 +27,7 @@ export async function main(task: string) {
         // node build/fix.js routerEventByIds 1,2,3 [name] [handlerName]
         // node build/fix.js routerEventByIds 1,2,3 MarketInfo
         // node build/fix.js routerEventByIds 12204949 Activity handleErc20TokenInfoEvent
-        // node build/fix.js routerEventByIds 12204949 Erc20TokenInfo handleErc20TokenInfoEvent
+        // node build/fix.js routerEventByIds 12204949,12204949 Erc20TokenInfo handleErc20TokenInfoEvent
         let params: number[] = []
         try {
             params = process.argv[3].split(',').map((id: string) => Number(id))

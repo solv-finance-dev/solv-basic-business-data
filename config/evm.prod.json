@@ -42,6 +42,19 @@
       }
     },
     {
+      "chainId": 8453,
+      "startBlockNumber": 19056800,
+      "blockLimit": 5,
+      "delayBlock": 2,
+      "config": {
+        "openFundMarketAddress": "0xf5a247157656678398b08d3efa1673358c611a3f",
+        "navOracleAddress": "0x1210371f2e26a74827f250afdfdbe3091304a3b7",
+        "whitelistAddress": "0xf1da757f1344dd69c25faa14fd3921b863c33c31",
+        "isCrossChain": false,
+        "saveSftWrappedTokenTimestamp": {}
+      }
+    },
+    {
       "chainId": 42161,
       "startBlockNumber": 84104000,
       "blockLimit": 5,
@@ -50,6 +63,32 @@
         "openFundMarketAddress": "0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8",
         "navOracleAddress": "0x6ec1fec6c6af53624733f671b490b8250ff251ed",
         "whitelistAddress": "0x8f694b722b32ab9fe7959d8398cd61b70cde58db",
+        "isCrossChain": false,
+        "saveSftWrappedTokenTimestamp": {}
+      }
+    },
+    {
+      "chainId": 5000,
+      "startBlockNumber": 27310600,
+      "blockLimit": 5,
+      "delayBlock": 2,
+      "config": {
+        "openFundMarketAddress": "0x1210371f2e26a74827f250afdfdbe3091304a3b7",
+        "navOracleAddress": "0x540a9dbba1ae6250253ba8793714492ee357ac1d",
+        "whitelistAddress": "0xae050694c137ad777611286c316e5fdda58242f3",
+        "isCrossChain": false,
+        "saveSftWrappedTokenTimestamp": {}
+      }
+    },
+    {
+      "chainId": 57073,
+      "startBlockNumber": 11535600,
+      "blockLimit": 5,
+      "delayBlock": 2,
+      "config": {
+        "openFundMarketAddress": "0xba891ce042bdb092c450d242c05db44d7e5bb728",
+        "navOracleAddress": "0x600fb9600444fb8373bf9a112ae0977f6676c564",
+        "whitelistAddress": "0x311c46c2ceeead93877a03449bebf887ac303272",
         "isCrossChain": false,
         "saveSftWrappedTokenTimestamp": {}
       }
