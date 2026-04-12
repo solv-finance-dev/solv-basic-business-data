@@ -8,6 +8,9 @@ import {getRedisClient} from "./lib/redis";
 import {sendDelayQueueMessageNow} from "./lib/sqs";
 import {getLatestBlockNumber} from './lib/rpc';
 import {sendSNS} from "./lib/sns";
+// ─── BEGIN: market scheduler integration (10-endpoint migration) ───
+import {main as marketSchedulerMain} from './marketScheduler';
+// ─── END: market scheduler integration ───
 
 // 轮询上游服务的默认间隔。 默认10秒
 const DEFAULT_INTERVAL_MS = 10000;
@@ -32,6 +35,15 @@ export async function main() {
             running = false;
         });
     }, intervalMs);
+
+    // ─── BEGIN: market scheduler integration (10-endpoint migration) ───
+    // marketScheduler shares the same Node process with evmEventMonitor.
+    // Production Dockerfile CMD unchanged (still node build/evmEventMonitor.js).
+    // marketScheduler.main() uses setInterval internally, returns immediately, non-blocking.
+    marketSchedulerMain().catch((err) => {
+        console.error('[main] marketScheduler failed to start:', err);
+    });
+    // ─── END: market scheduler integration ───
 }
 
 async function runCycle(): Promise<void> {
