@@ -10,11 +10,11 @@ export async function getBasicSequelize(): Promise<Sequelize> {
 
     // 检查是否需要重新初始化：缓存为空 或 缓存已过期
     if (!cachedBasicSequelize || (lastBasicInitTime && now - lastBasicInitTime > CACHE_BASIC_EXPIRY_TIME)) {
-        console.log('[DB] Creating new Sequelize instance (cold start or cache expired)');
+        console.log('[DB] Creating new Basic Sequelize instance (cold start or cache expired)');
         cachedBasicSequelize = await initBasicSequelize();
         lastBasicInitTime = now; // 更新最后初始化时间
     } else {
-        console.log('[DB] Reusing existing Sequelize instance (warm start)');
+        console.log('[DB] Reusing existing Basic Sequelize instance (warm start)');
     }
 
     return cachedBasicSequelize;
@@ -29,11 +29,11 @@ export async function getBusinessSequelize(): Promise<Sequelize> {
 
     // 检查是否需要重新初始化：缓存为空 或 缓存已过期
     if (!cachedBusinessSequelize || (lastBusinessInitTime && now - lastBusinessInitTime > CACHE_BUSINESS_EXPIRY_TIME)) {
-        console.log('[DB] Creating new Sequelize instance (cold start or cache expired)');
+        console.log('[DB] Creating new Business Sequelize instance (cold start or cache expired)');
         cachedBusinessSequelize = await initBusinessSequelize();
         lastBusinessInitTime = now; // 更新最后初始化时间
     } else {
-        console.log('[DB] Reusing existing Sequelize instance (warm start)');
+        console.log('[DB] Reusing existing Business Sequelize instance (warm start)');
     }
 
     return cachedBusinessSequelize;
