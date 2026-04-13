@@ -354,7 +354,7 @@ export async function initBusinessSequelize() {
             host: localFlag ? host : process.env.BUSINESS_DB_PROXY_HOSTNAME,
             dialectModule: pg,
             dialect: engine,
-            database: process.env.DATABASE_NAME,
+            database: process.env.BUSINESS_DATABASE_NAME,
             username,
             password: localFlag ? password : token,
             dialectOptions: {
