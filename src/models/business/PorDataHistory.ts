@@ -1,6 +1,6 @@
 import {AutoIncrement, Column, DataType, Model, PrimaryKey, Sequelize, Table} from 'sequelize-typescript';
 
-@Table({tableName: 'por_data_history', timestamps: true})
+@Table({tableName: 'basic_por_data_history', timestamps: true})
 export default class PorDataHistory extends Model {
     @PrimaryKey
     @AutoIncrement
