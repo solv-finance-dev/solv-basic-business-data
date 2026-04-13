@@ -454,3 +454,93 @@ export async function getTransactionInfo(
 		return null;
 	}
 }
+
+// ─── BEGIN: ERC20 totalSupply helper (10-endpoint migration §2.1.4.1) ───
+
+const ERC20_TOTAL_SUPPLY_INTERFACE = new Interface([
+	'function totalSupply() view returns (uint256)',
+]);
+
+/**
+ * Read ERC20 totalSupply with retry. Used by YieldPoolSnapshotWriter for cross-chain supply aggregation.
+ * Ethers v6 rewrite of legacy solv-external-api/src/lambda/resolvers/utils.ts::getTotalSupplyWithRetry.
+ * Returns null on failure (caller uses BigNumber(result ?? 0) as fallback).
+ */
+export async function getErc20TotalSupplyWithRetry(
+	chainId: number,
+	contractAddress: string,
+	maxRetries: number = 3
+): Promise<string | null> {
+	const provider = getRpcProvider(chainId);
+	let lastErr: unknown;
+	for (let i = 0; i < maxRetries; i++) {
+		try {
+			const data = ERC20_TOTAL_SUPPLY_INTERFACE.encodeFunctionData('totalSupply', []);
+			const result = await provider.call({to: contractAddress, data});
+			const decoded = ERC20_TOTAL_SUPPLY_INTERFACE.decodeFunctionResult('totalSupply', result);
+			return String(decoded[0]);
+		} catch (err) {
+			lastErr = err;
+			console.warn(
+				`[getErc20TotalSupplyWithRetry] attempt ${i + 1}/${maxRetries} failed for ${chainId}:${contractAddress}`,
+				err instanceof Error ? err.message : String(err)
+			);
+			if (i < maxRetries - 1) {
+				await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+			}
+		}
+	}
+	console.error(
+		`[getErc20TotalSupplyWithRetry] all ${maxRetries} attempts failed for ${chainId}:${contractAddress}`,
+		lastErr
+	);
+	return null;
+}
+
+// ─── END: ERC20 totalSupply helper ───
+
+// ─── BEGIN: Redeem amount helper (AumCalculation migration) ───
+
+/**
+ * Read unclaimed redeem amount via concrete() -> slotTotalValue().
+ * Ethers v6 rewrite of legacy solv-schedule-task/src/lambda/resolvers/utils.ts::getRedeemAmountWithRetry.
+ * Returns null on failure.
+ */
+export async function getRedeemAmountWithRetry(
+	chainId: number,
+	contractAddress: string,
+	redeemSlot: string,
+	maxRetries: number = 3
+): Promise<string | null> {
+	const provider = getRpcProvider(chainId);
+	const concreteABI = ['function concrete() external view returns (address)'];
+	const slotTotalValueABI = ['function slotTotalValue(uint256 slot_) external view returns (uint256)'];
+
+	let lastErr: unknown;
+	for (let i = 0; i < maxRetries; i++) {
+		try {
+			const contract = new Contract(contractAddress, concreteABI, provider);
+			const concreteAddress = await contract.concrete();
+
+			const concreteContract = new Contract(concreteAddress, slotTotalValueABI, provider);
+			const slotTotalValue = await concreteContract.slotTotalValue(redeemSlot);
+			return slotTotalValue.toString();
+		} catch (err) {
+			lastErr = err;
+			console.warn(
+				`[getRedeemAmountWithRetry] attempt ${i + 1}/${maxRetries} failed for ${chainId}:${contractAddress}`,
+				err instanceof Error ? err.message : String(err)
+			);
+			if (i < maxRetries - 1) {
+				await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+			}
+		}
+	}
+	console.error(
+		`[getRedeemAmountWithRetry] all ${maxRetries} attempts failed for ${chainId}:${contractAddress}`,
+		lastErr
+	);
+	return null;
+}
+
+// ─── END: Redeem amount helper ───

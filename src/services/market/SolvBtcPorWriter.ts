@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import {getOrCreateBusinessSequelize} from '../../lib/businessDbClient';
+import {getBusinessSequelize} from '../../lib/dbClient';
 import {getBtcTvlFromChainlink} from '../../lib/chainlink';
 import PorDataHistory from '../../models/business/PorDataHistory';
 
@@ -11,7 +11,7 @@ const POR_CONTRACT = '0xda9258AFc797Cd64d1b6FC651051224cdAB1B25E';
  * Ported from solv-schedule-task/src/lambda/resolvers/solvbtcTransparency.ts
  */
 export async function runSolvBtcPorWriter(): Promise<void> {
-    await getOrCreateBusinessSequelize(); // ensure DB connection is ready
+    await getBusinessSequelize(); // ensure DB connection is ready
 
     const rawAmount = await getBtcTvlFromChainlink(POR_CHAIN_ID, POR_CONTRACT);
     const amountDecimal = new BigNumber(rawAmount).dividedBy(new BigNumber(10).pow(18));

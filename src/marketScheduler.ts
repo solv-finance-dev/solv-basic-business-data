@@ -1,5 +1,5 @@
 import {runSolvBtcPorWriter} from './services/market/SolvBtcPorWriter';
-// Interface #2: import { runXSolvBtcPorWriter } from './services/market/XSolvBtcPorWriter';
+import {runXSolvBtcPorWriter} from './services/market/XSolvBtcPorWriter';
 // Interface #3: import { runYieldPoolSnapshotWriter } from './services/market/YieldPoolSnapshotWriter';
 // Interface #9: import { runBtcPlusApyHistoryWriter } from './services/market/BtcPlusApyHistoryWriter';
 
@@ -29,11 +29,11 @@ export async function main() {
     console.log('[MarketScheduler] starting');
 
     periodicTask('SolvBtcPorWriter', runSolvBtcPorWriter, HOUR_MS);
-    // Interface #2: periodicTask('XSolvBtcPorWriter', runXSolvBtcPorWriter, HOUR_MS);
+    periodicTask('XSolvBtcPorWriter', runXSolvBtcPorWriter, HOUR_MS);
     // Interface #3: periodicTask('YieldPoolSnapshotWriter', runYieldPoolSnapshotWriter, FIVE_MIN_MS);
     // Interface #9: periodicTask('BtcPlusApyHistoryWriter', runBtcPlusApyHistoryWriter, HALF_HOUR_MS);
 
-    console.log('[MarketScheduler] all 1 periodic tasks scheduled');
+    console.log('[MarketScheduler] all 2 periodic tasks scheduled');
 }
 
 if (require.main === module) {
