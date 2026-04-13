@@ -1,5 +1,4 @@
-import {runSolvBtcPorWriter} from './services/market/SolvBtcPorWriter';
-import {runXSolvBtcPorWriter} from './services/market/XSolvBtcPorWriter';
+import {runSolvBtcPorWriter, runXSolvBtcPorWriter} from './handlers/market/PorWriter';
 // Interface #3: import { runYieldPoolSnapshotWriter } from './services/market/YieldPoolSnapshotWriter';
 // Interface #9: import { runBtcPlusApyHistoryWriter } from './services/market/BtcPlusApyHistoryWriter';
 

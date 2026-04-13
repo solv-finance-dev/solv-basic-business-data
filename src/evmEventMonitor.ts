@@ -9,7 +9,7 @@ import {sendDelayQueueMessageNow} from "./lib/sqs";
 import {getLatestBlockNumber} from './lib/rpc';
 import {sendSNS} from "./lib/sns";
 // ─── BEGIN: market scheduler integration (10-endpoint migration) ───
-import {main as marketSchedulerMain} from './marketScheduler';
+import {main as schedulerMain} from './scheduler';
 // ─── END: market scheduler integration ───
 
 // 轮询上游服务的默认间隔。 默认10秒
@@ -40,7 +40,7 @@ export async function main() {
     // marketScheduler shares the same Node process with evmEventMonitor.
     // Production Dockerfile CMD unchanged (still node build/evmEventMonitor.js).
     // marketScheduler.main() uses setInterval internally, returns immediately, non-blocking.
-    marketSchedulerMain().catch((err) => {
+    schedulerMain().catch((err) => {
         console.error('[main] marketScheduler failed to start:', err);
     });
     // ─── END: market scheduler integration ───
