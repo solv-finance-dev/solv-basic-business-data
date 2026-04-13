@@ -2,7 +2,7 @@ import {routerEventByIds} from "./services/monitorService";
 import {getRedisClient} from "./lib/redis";
 import {setLastSyncedBlock} from "./data/evmSyncState";
 import {getChainConfigs} from "./services/evmService";
-import {getOrCreateSequelize} from "./lib/dbClient";
+import {getBasicSequelize} from "./lib/dbClient";
 import {CurrencyInfo} from "@solvprotocol/models";
 import {sendSNS} from "./lib/sns";
 
@@ -94,7 +94,7 @@ export async function main(task: string) {
             console.log(`Monitor switch status: chainId=${chain.chainId} key=${key} value=${value}`);
         }
 
-        await getOrCreateSequelize();
+        await getBasicSequelize();
         const currencyInfo = await CurrencyInfo.findOne();
         console.log(`DB health check: CurrencyInfo first record id=${currencyInfo?.id ?? 'null'}`);
     } else if (task === 'testSNS') {

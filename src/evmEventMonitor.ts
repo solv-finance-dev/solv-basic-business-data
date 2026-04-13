@@ -3,7 +3,7 @@ import {getLastSyncedBlock, setLastSyncedBlock} from './data/evmSyncState';
 import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
-import {getOrCreateSequelize} from "./lib/dbClient";
+import {getBasicSequelize} from "./lib/dbClient";
 import {getRedisClient} from "./lib/redis";
 import {sendDelayQueueMessageNow} from "./lib/sqs";
 import {getLatestBlockNumber} from './lib/rpc';
@@ -46,7 +46,7 @@ export async function main() {
     // ─── END: market scheduler integration ───
 }
 
-async function runCycle(): Promise<void> {
+async function runCycle(): Promise<void> {1
     console.log('EVM Event Monitor: Starting new cycle...');
     // 获取所有要同步的链配置
     const chains: ChainConfig[] = getChainConfigs();
@@ -115,7 +115,7 @@ async function processChain(chain: ChainConfig): Promise<void> {
         // 按 logIndex 升序排序
         blockEvents.sort((a, b) => a.logIndex - b.logIndex);
 
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {

@@ -69,7 +69,7 @@
     },
     {
       "chainId": 5000,
-      "startBlockNumber": 27310600,
+      "startBlockNumber": 2915000,
       "blockLimit": 5,
       "delayBlock": 2,
       "config": {

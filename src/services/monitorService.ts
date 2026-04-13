@@ -16,7 +16,7 @@ import type {
 } from '../types/handler';
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
-import {getOrCreateSequelize} from "../lib/dbClient";
+import {getBasicSequelize} from "../lib/dbClient";
 import {sendDelayQueueMessageNow} from "../lib/sqs";
 
 type TemplateAddressMap = Record<string, string[]>;
@@ -128,7 +128,7 @@ export async function routerEventByIds(
         return;
     }
 
-    const sequelize = await getOrCreateSequelize();
+    const sequelize = await getBasicSequelize();
     const newTransaction = await sequelize.transaction();
     try {
         await routerEvent(events, templateAddressesMap, newTransaction, handlerEntries);

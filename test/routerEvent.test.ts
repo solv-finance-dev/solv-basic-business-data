@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import {routerEvent, routerEventByIds} from "../src/services/monitorService";
 import {EventEvm} from "../src/types/eventEvm";
-import {closeSequelize, initSequelize} from "../src/lib/db";
-import {getOrCreateSequelize} from "../src/lib/dbClient";
+import {closeSequelize} from "../src/lib/db";
+import {getBasicSequelize} from "../src/lib/dbClient";
 
 require("../src/services/monitorService");
 
@@ -39,7 +39,7 @@ describe('test router event', () => {
     }, 60000); // 增加超时时间到 60 秒
 
     test('CurrencyInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
         try {
             const events = "[{\"id\": \"5407435\", \"eventId\": \"42161_0x6c8d11ea8186b4c39bf2ae56fad01c6f21760557572131ae7e50590174ebf3b6_8\", \"chainId\": 42161, \"blockNumber\": \"113055785\", \"blockHash\": \"0x22175d2a6d6bb54ad4b601e0a6252b0f5db6f2c85e134b1131b2ec2e252d07f3\", \"blockTimestamp\": \"1689836167\", \"transactionHash\": \"0x6c8d11ea8186b4c39bf2ae56fad01c6f21760557572131ae7e50590174ebf3b6\", \"transactionIndex\": 3, \"logIndex\": 8, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0x98c0c4bde5f642566cdaebfb7cd2cdc72a98bc7f3440e38c19e1d58d92388d34\", \"indexedTopic1\": \"0x000000000000000000000000fd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000001\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-30T04:03:09.515Z\", \"updatedAt\": \"2026-01-30T04:03:09.515Z\"}]";
@@ -51,7 +51,7 @@ describe('test router event', () => {
         }
     });
     test('BondCurrencyInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
         try {
             const events = "[{\"id\": \"5406864\", \"eventId\": \"42161_0xa51144119e7cd15cb2fda2477bcd643b7064aa805d3170cd6c11145d38fc8e6b_9\", \"chainId\": 42161, \"blockNumber\": \"122465586\", \"blockHash\": \"0x94cf2a303b5da0badc6dcb5f8d934ddf25fa4543f0e1b3bf7fc1ea28c8a6aeee\", \"blockTimestamp\": \"1692328418\", \"transactionHash\": \"0xa51144119e7cd15cb2fda2477bcd643b7064aa805d3170cd6c11145d38fc8e6b\", \"transactionIndex\": 3, \"logIndex\": 9, \"contractAddress\": \"0x66e6b4c8aa1b8ca548cc4ebcd6f3a8c6f4f3d04d\", \"eventSignature\": \"0x98c0c4bde5f642566cdaebfb7cd2cdc72a98bc7f3440e38c19e1d58d92388d34\", \"indexedTopic1\": \"0x0000000000000000000000002f2a2543b76a4166549f7aab2e75bef0aefc5b0f\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000001\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-27T08:27:03.913Z\", \"updatedAt\": \"2026-01-27T08:27:03.913Z\"}]";
@@ -63,7 +63,7 @@ describe('test router event', () => {
         }
     });
     test('SftWrappedTokenInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
         try {
             // case 1:handleSftWrappedTokenFactoryEvent
@@ -80,7 +80,7 @@ describe('test router event', () => {
         }
     });
     test('BtcRedeemRecordHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         const events = "[{\"id\": \"5406716\", \"eventId\": \"56_0x75495134d10bfc50fdb10988aa2d6f24656611c13793c68f77a4d1d759bd9d35_159\", \"chainId\": 56, \"blockNumber\": \"55281695\", \"blockHash\": \"0x9c80b09c492b8dc20dccfdb41acb2edd609857fceb215e68e1cb94f99eaacfd0\", \"blockTimestamp\": \"1753459230\", \"transactionHash\": \"0x75495134d10bfc50fdb10988aa2d6f24656611c13793c68f77a4d1d759bd9d35\", \"transactionIndex\": 43, \"logIndex\": 159, \"contractAddress\": \"0x30a61591c5bd3b5ae00d26f6b51c8ef0b9945baf\", \"eventSignature\": \"0x28f9c004bb654531eb47e83f5db427572a4c405c58cecd40317d0238b9ce109b\", \"indexedTopic1\": \"0x0000000000000000000000004aae823a6a0b376de6a78e74ecc5b079d38cbcf7\", \"indexedTopic2\": \"0x000000000000000000000000af6c50826143a6793d6ef2133dcc6d0e45fc8f68\", \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000005af3107a400000000000000000000000000000000000000000000000000000005af3107a4000000000000000000000000000000000000000000000000000000000006883aa1e000000000000000000000000000000000000000000000000000000000000002a626331716a7868666a6b326a6c797478376e336a737930746c7a35787370337039616b7878346b687a7200000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-26T09:24:44.684Z\", \"updatedAt\": \"2026-01-26T09:24:44.684Z\"}]";
@@ -93,7 +93,7 @@ describe('test router event', () => {
         }
     });
     test('CarryCollectorHistoryHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         // CreatePool(bytes32,address,address,((address,address,uint256,uint256),(uint16,address,uint64),(address,address,address),(uint256,uint256,uint256,uint64,uint64),address,address,address,uint64,bool,uint256))
@@ -109,7 +109,7 @@ describe('test router event', () => {
         }
     });
     test('CarryInfoHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         const events = "[{\"id\": \"5407245\", \"eventId\": \"1_0xa31ab1c2946ac7b22b93f1d47f45e133e4717ea3000df30946c7541f2acb3ff8_672\", \"chainId\": 1, \"blockNumber\": \"19461968\", \"blockHash\": \"0x8259a2411461dea1d07f602769af2aea870558dcf1c980d79863b9691417bc89\", \"blockTimestamp\": \"1710768419\", \"transactionHash\": \"0xa31ab1c2946ac7b22b93f1d47f45e133e4717ea3000df30946c7541f2acb3ff8\", \"transactionIndex\": 364, \"logIndex\": 672, \"contractAddress\": \"0x57bb6a8563a8e8478391c79f3f433c6ba077c567\", \"eventSignature\": \"0xd595e96e192644463bfb4c98d31b6047a34346508489deadee0f83d0eeba24ec\", \"indexedTopic1\": \"0x75c4ef0cc642bb65d7ef0b8ac6600f34abc7f27ba0e17cbe89e7657e5daa541a\", \"indexedTopic2\": \"0xbd58d3af4a7848cbe34fedda652b5d2c47374b906fb39f60dda145cd2d2aa469\", \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec700000000000000000000000000000000000000000000000000000000000f42400000000000000000000000000000000000000000000000000000000000000000\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-29T07:09:56.731Z\", \"updatedAt\": \"2026-01-29T07:09:56.731Z\"}]";
@@ -122,7 +122,7 @@ describe('test router event', () => {
         }
     });
     test('NavRecordsHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         // SetRedeemNav && SetSubscribeNav
@@ -136,7 +136,7 @@ describe('test router event', () => {
         }
     });
     test('ProtocolFeeCollectorHistoryHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         const events = "[{\"id\": \"5407284\", \"eventId\": \"42161_0x3723eba85a84162709635fc4264fdda02b1a7e1d8daa2772d68bb8f5b3b67c99_0\", \"chainId\": 42161, \"blockNumber\": \"123423136\", \"blockHash\": \"0x9840a2bc577b9cfda4f70d6ea034d5ce1691ae00217526671d935aa3622d3181\", \"blockTimestamp\": \"1692588949\", \"transactionHash\": \"0x3723eba85a84162709635fc4264fdda02b1a7e1d8daa2772d68bb8f5b3b67c99\", \"transactionIndex\": 1, \"logIndex\": 0, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0xd14a872b3c2506b548b78b31d3336d5cf5cae0db9641d742da52dd397fb1e2c0\", \"indexedTopic1\": null, \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004dd7cf38a249a371a8e589bc1c44485bc791d3f\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-29T08:29:16.506Z\", \"updatedAt\": \"2026-01-29T08:29:16.506Z\"}]";
@@ -149,7 +149,7 @@ describe('test router event', () => {
         }
     });
     test('ProtocolFeeInfoHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         const events = "[{\"id\": \"5407298\", \"eventId\": \"42161_0x7d5b8afee6672c6e4ce336ad216c71212d556d618c5308b02a75424f44b72908_12\", \"chainId\": 42161, \"blockNumber\": \"123824018\", \"blockHash\": \"0x11b261bb99a977432455981ff08b6157c6ab36683a0d9667692733be2fa7bfe3\", \"blockTimestamp\": \"1692698122\", \"transactionHash\": \"0x7d5b8afee6672c6e4ce336ad216c71212d556d618c5308b02a75424f44b72908\", \"transactionIndex\": 3, \"logIndex\": 12, \"contractAddress\": \"0x629ad7bc14726e9cea4fcb3a7b363d237bb5dbe8\", \"eventSignature\": \"0xa45ad11a8f07c35f34f99d383133ff3d9de1f51286e14db3b6be8a4667fccb01\", \"indexedTopic1\": \"0x375ebcd78e8b3571c0f6482bdaae602672e73e145e92ca40f9b8f1537236bf2e\", \"indexedTopic2\": null, \"indexedTopic3\": null, \"data\": \"0x000000000000000000000000fd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb90000000000000000000000000000000000000000000000000000000001c1e181\", \"removed\": false, \"dataSource\": \"QuickNodeStream\", \"createdAt\": \"2026-01-29T08:49:02.775Z\", \"updatedAt\": \"2026-01-29T08:49:02.775Z\"}]";
@@ -162,7 +162,7 @@ describe('test router event', () => {
         }
     });
     test('RawOptRepayInfoOpenEndHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         // Normal:Repay(uint256,address,address,uint256)
@@ -178,7 +178,7 @@ describe('test router event', () => {
         }
     });
     test('XSolvBTCTransactionInfoHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         // Deposit(address,address,address,uint256,uint256) && Withdraw(address,address,address,uint256,uint256)
@@ -192,7 +192,7 @@ describe('test router event', () => {
         }
     });
     test('RawOptSaleInfoOpenEndHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         // handleOpenFundMarketEvent router contract exists
@@ -210,7 +210,7 @@ describe('test router event', () => {
         }
     });
     test('MarketInfoHandler.ts', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         // SetProtocolFeeCollector(address,address)
@@ -225,7 +225,7 @@ describe('test router event', () => {
         }
     });
     test('ContractInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -238,7 +238,7 @@ describe('test router event', () => {
         }
     });
     test('Erc3525TokenInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -251,7 +251,7 @@ describe('test router event', () => {
         }
     });
     test('Erc20TokenInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -264,7 +264,7 @@ describe('test router event', () => {
         }
     });
     test('MarketContractHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -277,7 +277,7 @@ describe('test router event', () => {
         }
     });
     test('NavHistoryPoolHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -290,7 +290,7 @@ describe('test router event', () => {
         }
     });
     test('PoolOrderInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -303,7 +303,7 @@ describe('test router event', () => {
         }
     });
     test('PoolSlotInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -316,7 +316,7 @@ describe('test router event', () => {
         }
     });
     test('RedeemSlotInfoHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -329,7 +329,7 @@ describe('test router event', () => {
         }
     }, 120000); // 设置测试超时时间为 120 秒
     test('ActivityHandler', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -345,7 +345,7 @@ describe('test router event', () => {
     }, 120000);
 
     test('ActivityHandler Daniel test', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
 
         try {
@@ -369,7 +369,7 @@ describe('test router event', () => {
         }
     }, 300000);
     test('routerEventByIds', async () => {
-        const sequelize = await getOrCreateSequelize();
+        const sequelize = await getBasicSequelize();
         const transaction = await sequelize.transaction();
         await routerEventByIds([5422036], {name: "Activity", handlerName: "handleXSolvBTCPoolEvent"}, transaction);
     })
