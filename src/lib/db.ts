@@ -5,6 +5,7 @@ import 'reflect-metadata';
 import {getBasicSequelize} from "./dbClient";
 import { getToken } from './token';
 import { getSecretValue } from './secret';
+import PorDataHistoryBusiness from '../models/business/PorDataHistory';
 import {
     // ── Existing 23 models (do not remove) ──
     BondCurrencyInfo,
@@ -382,7 +383,8 @@ export async function initBusinessSequelize() {
                 RawOptSaleInfoOpenEnd,
                 SftWrappedTokenInfo,
                 XSolvBTCTransactionInfo,
-                RouterContractInfo
+                RouterContractInfo,
+                PorDataHistoryBusiness,
             ],
             define: {
                 timestamps: false,
