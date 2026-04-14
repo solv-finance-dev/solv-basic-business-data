@@ -5,6 +5,7 @@ let cachedBasicSequelize: Sequelize | null = null;
 let lastBasicInitTime: number | null = null; // 记录上次初始化的时间戳
 const CACHE_BASIC_EXPIRY_TIME = 10 * 60 * 1000; // 10分钟的毫秒数
 
+// 获取基础业务数据库（目前对应的是raw_那个库，未来raw这些表会随着业务系统下线而下掉，后续功能迁移到下面 Business 库）
 export async function getBasicSequelize(): Promise<Sequelize> {
     const now = Date.now();
 
@@ -24,6 +25,7 @@ let cachedBusinessSequelize: Sequelize | null = null;
 let lastBusinessInitTime: number | null = null; // 记录上次初始化的时间戳
 const CACHE_BUSINESS_EXPIRY_TIME = 10 * 60 * 1000; // 10分钟的毫秒数
 
+// 获取新的基础业务数据库
 export async function getBusinessSequelize(): Promise<Sequelize> {
     const now = Date.now();
 
