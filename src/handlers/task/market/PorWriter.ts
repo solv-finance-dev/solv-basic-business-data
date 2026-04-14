@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
-import {getBusinessSequelize} from '../../lib/dbClient';
-import {getBtcTvlFromChainlink, getNavFromChainlink} from '../../lib/chainlink';
-import PorDataHistory from '../../models/business/PorDataHistory';
+import {getBusinessSequelize} from '../../../lib/dbClient';
+import {getBtcTvlFromChainlink, getNavFromChainlink} from '../../../lib/chainlink';
+import PorDataHistory from '../../../models/business/PorDataHistory';
 
 interface PorWriterConfig {
     assetName: string;
