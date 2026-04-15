@@ -364,6 +364,24 @@
     ]
   },
   {
+    "name": "BizNavHistoryPool",
+    "module": "business/BizNavHistoryPoolHandler",
+    "handlers": [
+      {
+        "handler": "handleNavHistoryPoolEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x109198eb8bd3064efa5d0711b505f59cfd77de18"
+        ],
+        "eventSignatures": [
+          "SetRedeemNav(bytes32,uint256,uint256)",
+          "SetSubscribeNav(bytes32,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "BtcRedeemRecord",
     "module": "redeem/BtcRedeemRecordHandler",
     "handlers": [
