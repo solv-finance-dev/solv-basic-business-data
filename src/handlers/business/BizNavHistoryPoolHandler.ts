@@ -1,6 +1,6 @@
 import type { HandlerParam } from '../../types/handler';
 import { getBusinessSequelize } from '../../lib/dbClient';
-import NavHistoryPool from '../../models/business/BizNavHistoryPool';
+import BizNavHistoryPool from '../../models/business/BizNavHistoryPool';
 
 const NAV_TYPE = {
 	INVESTMENT: 'Investment',
@@ -34,7 +34,7 @@ function validateEventData(poolId: string, nav: string, time?: number): void {
 }
 
 async function upsertNavHistoryPool(poolId: string, navType: string, navDate: string, nav: string): Promise<void> {
-	const [record, created] = await NavHistoryPool.findOrCreate({
+	const [record, created] = await BizNavHistoryPool.findOrCreate({
 		where: {
 			poolId,
 			navType,

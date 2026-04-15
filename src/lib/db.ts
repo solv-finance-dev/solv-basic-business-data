@@ -148,6 +148,7 @@ import {
     YieldPoolConfig,
     // ── END: 112 legacy models ──
 } from "@solvprotocol/models";
+import BizNavHistoryPool from 'src/models/business/BizNavHistoryPool';
 
 export async function initRawSequelize(): Promise<Sequelize> {
     try {
@@ -366,6 +367,7 @@ export async function initBusinessSequelize() {
                 PorDataHistoryBusiness,
                 BizCurrencyInfo,
                 BizPoolOrderSlotInfo,
+				BizNavHistoryPool,
             ],
             define: {
                 timestamps: false,

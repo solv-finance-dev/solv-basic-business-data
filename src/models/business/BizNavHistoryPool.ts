@@ -4,7 +4,7 @@ import { Model, Table, Column, DataType, Sequelize } from 'sequelize-typescript'
 	tableName: 'biz_nav_history_pool',
 	timestamps: true,
 })
-export default class NavHistoryPool extends Model {
+export default class BizNavHistoryPool extends Model {
 	@Column({
 		primaryKey: true,
 		autoIncrement: true,
@@ -29,7 +29,6 @@ export default class NavHistoryPool extends Model {
 		field: 'nav_type',
 		allowNull: true,
 		type: DataType.STRING(16),
-		comment: '申购, 赎回',
 	})
 	declare navType?: string;
 
@@ -39,27 +38,6 @@ export default class NavHistoryPool extends Model {
 		type: DataType.DATE,
 	})
 	declare navDate?: Date;
-
-	@Column({
-		field: 'original_nav',
-		allowNull: true,
-		type: DataType.DECIMAL,
-	})
-	declare originalNav?: string;
-
-	@Column({
-		field: 'adjust_coefficient',
-		allowNull: true,
-		type: DataType.DECIMAL,
-	})
-	declare adjustCoefficient?: string;
-
-	@Column({
-		field: 'adjusted_nav',
-		allowNull: true,
-		type: DataType.DECIMAL,
-	})
-	declare adjustedNav?: string;
 
 	@Column({
 		field: 'created_at',
