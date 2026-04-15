@@ -3,7 +3,7 @@ import {getLastSyncedBlock, setLastSyncedBlock} from './data/evmSyncState';
 import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
-import {getBasicSequelize} from "./lib/dbClient";
+import {getRawSequelize} from "./lib/dbClient";
 import {getRedisClient} from "./lib/redis";
 import {sendDelayQueueMessageNow} from "./lib/sqs";
 import {getLatestBlockNumber} from './lib/rpc';
@@ -115,7 +115,7 @@ async function processChain(chain: ChainConfig): Promise<void> {
         // 按 logIndex 升序排序
         blockEvents.sort((a, b) => a.logIndex - b.logIndex);
 
-        const sequelize = await getBasicSequelize();
+        const sequelize = await getRawSequelize();
         const transaction = await sequelize.transaction();
 
         try {

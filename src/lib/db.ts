@@ -2,10 +2,12 @@ import { Sequelize } from 'sequelize-typescript';
 import * as pg from 'pg';
 import { Dialect } from 'sequelize/types/sequelize';
 import 'reflect-metadata';
-import {getBasicSequelize} from "./dbClient";
+import {getRawSequelize} from "./dbClient";
 import { getToken } from './token';
 import { getSecretValue } from './secret';
 import PorDataHistoryBusiness from '../models/business/PorDataHistory';
+import BizCurrencyInfo from '../models/business/BizCurrencyInfo';
+import BizPoolOrderSlotInfo from '../models/business/BizPoolOrderSlotInfo';
 import {
     // ── Existing 23 models (do not remove) ──
     BondCurrencyInfo,
@@ -147,7 +149,7 @@ import {
     // ── END: 112 legacy models ──
 } from "@solvprotocol/models";
 
-export async function initBasicSequelize(): Promise<Sequelize> {
+export async function initRawSequelize(): Promise<Sequelize> {
     try {
         const token = await getToken();
         const secretString = (await getSecretValue(process.env.SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '';
@@ -361,8 +363,9 @@ export async function initBusinessSequelize() {
                 ssl: !localFlag,
             },
             models: [
-                RouterContractInfo,
                 PorDataHistoryBusiness,
+                BizCurrencyInfo,
+                BizPoolOrderSlotInfo,
             ],
             define: {
                 timestamps: false,
@@ -385,7 +388,7 @@ export async function initBusinessSequelize() {
 }
 
 export async function closeSequelize(): Promise<void> {
-    const sequelize = await getBasicSequelize();
+    const sequelize = await getRawSequelize();
     await sequelize.close();
     const businessSequelize = await initBusinessSequelize();
     await businessSequelize.close();

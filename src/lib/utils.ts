@@ -37,3 +37,25 @@ export function eventSignature(signature: string | null | undefined): string {
     }
     return id(signature).toLowerCase();
 }
+
+export function toOptionalString(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+    return String(value);
+}
+
+export function toOptionalLowercaseAddress(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+    return String(value).toLowerCase();
+}
+
+export function toOptionalNumber(value: unknown): number | undefined {
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+    const numericValue = Number(value);
+    return Number.isNaN(numericValue) ? undefined : numericValue;
+}

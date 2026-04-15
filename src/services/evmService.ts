@@ -12,6 +12,30 @@ const contractTypeCache = new Map<string, string>();
 const erc20MetadataCache = new Map<string, { decimals: number; symbol: string; name: string }>();
 const chainConfigCache = new Map<number, ChainConfig | undefined>();
 
+export interface EventEvmListParams {
+    chainId: number;
+    contractAddress?: string;
+    eventSignature?: string;
+    transactionHash?: string;
+    indexedTopic1?: string;
+    indexedTopic2?: string;
+    indexedTopic3?: string;
+    blockNumberStart?: number;
+    blockNumberEnd?: number;
+    blockTimestampStart?: number;
+    blockTimestampEnd?: number;
+    removed?: boolean;
+    page?: number;
+    size?: number;
+}
+
+interface EventEvmPageResult {
+    page: number;
+    size: number;
+    total: number;
+    data: EventEvm[];
+}
+
 export function getChainConfigs(): ChainConfig[] {
     const config = loadEvmConfig();
     return config.chains.map((chain) => normalizeChainConfig(chain));
@@ -122,6 +146,59 @@ export async function getEventByIds(eventIds: number[]): Promise<EventEvm[]> {
     }
 }
 
+export async function fetchEventPage(params: EventEvmListParams): Promise<EventEvmPageResult | null> {
+    if (!Number.isFinite(params.chainId)) {
+        console.error('EvmService: Invalid chainId for event page.', params);
+        return null;
+    }
+
+    const size = params.size ?? 200;
+    if (!Number.isFinite(size) || size <= 0 || size > 200) {
+        console.error('EvmService: Invalid page size for event page.', params);
+        return null;
+    }
+
+    try {
+        const response = await getLambdaClient()
+            .invoke({
+                FunctionName: `${process.env.CONFIG_ENV}-infra-basic-event-evm-page-handler`,
+                Payload: JSON.stringify({
+                    ...params,
+                    size,
+                }),
+            })
+            .promise();
+
+        return parseEventPagePayload(response.Payload);
+    } catch (error) {
+        console.error('EvmService: Failed to fetch event page.', error);
+        return null;
+    }
+}
+
+export async function getLatestEventBlockNumber(chainId: number): Promise<number | null> {
+    const result = await fetchEventPage({
+        chainId,
+        size: 1,
+    });
+
+    const latestEvent = result?.data?.[0];
+    if (!latestEvent) {
+        return null;
+    }
+
+    const blockNumber = Number(latestEvent.blockNumber);
+    if (!Number.isFinite(blockNumber)) {
+        console.error('EvmService: Invalid latest block number from event page.', {
+            chainId,
+            blockNumber: latestEvent.blockNumber,
+        });
+        return null;
+    }
+
+    return blockNumber;
+}
+
 export async function fetchTemplateAddresses(chainId: number): Promise<TemplateAddress[]> {
     if (!Number.isFinite(chainId)) {
         console.error('EvmService: Invalid chainId for template addresses.', {chainId});
@@ -200,6 +277,35 @@ function parseLambdaPayload(payload: AWS.Lambda.Types.InvocationResponse['Payloa
     return [];
 }
 
+function parseEventPagePayload(payload: AWS.Lambda.Types.InvocationResponse['Payload']): EventEvmPageResult | null {
+    if (!payload) {
+        return null;
+    }
+
+    try {
+        const raw = typeof payload === 'string' ? payload : payload.toString();
+        const parsed = JSON.parse(raw);
+        const target = parsed && typeof parsed === 'object' && 'body' in parsed
+            ? (typeof parsed.body === 'string' ? JSON.parse(parsed.body) : parsed.body)
+            : parsed;
+
+        if (!target || typeof target !== 'object') {
+            return null;
+        }
+
+        const result = target as EventEvmPageResult;
+        return {
+            page: Number(result.page ?? 1),
+            size: Number(result.size ?? 0),
+            total: Number(result.total ?? 0),
+            data: Array.isArray(result.data) ? result.data : [],
+        };
+    } catch (error) {
+        console.error('EvmService: Failed to parse event page payload.', error);
+        return null;
+    }
+}
+
 function parseTemplateAddressPayload(payload: AWS.Lambda.Types.InvocationResponse['Payload']): TemplateAddress[] {
     if (!payload) {
         return [];
@@ -253,5 +359,4 @@ export async function getErc20Metadata(chainId: number, tokenAddress: string): P
     erc20MetadataCache.set(key, metadata);
     return metadata;
 }
-
 

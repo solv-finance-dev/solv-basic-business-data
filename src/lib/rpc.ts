@@ -232,7 +232,7 @@ export async function getOwnerOf(
 
 // 获取 ERC3525 token 的 balance
 // 可选传入 blockNumber，用于在指定区块高度查询历史数据
-export async function getBalanceOf(
+export async function get3525BalanceOf(
 	chainId: number,
 	contractAddress: string,
 	tokenId: string,
@@ -313,6 +313,53 @@ export async function getErc20BalanceOf(
 		});
 		throw error;
 	}
+}
+
+export async function getBalanceWithRetry(chainId: number, contractAddress: string, owner: string, maxRetries: number = 3): Promise<any> {
+	let retries = 0;
+	while (retries < maxRetries) {
+		try {
+			let response = await getErc20BalanceOf(chainId, contractAddress, owner);
+
+			return response;
+		} catch (error) {
+			console.error(`Error fetching data for address ${owner}:`, error);
+			retries++;
+			if (retries === maxRetries) {
+				console.error(`Max retries reached for address ${owner}`);
+				return 0; // Return null if max retries are reached
+			}
+		}
+	}
+}
+
+export async function getDecimalsWithRetry(chainId: number, contractAddress: string, maxRetries: number = 3): Promise<any> {
+	let retries = 0;
+	while (retries < maxRetries) {
+		try {
+			let response = await getDecimals(chainId, contractAddress);
+
+			return response;
+		} catch (error) {
+			console.error(`Error fetching data for contractAddress ${contractAddress}:`, error);
+			retries++;
+			if (retries === maxRetries) {
+				console.error(`Max retries reached for contractAddress ${contractAddress}`);
+				return 0; // Return null if max retries are reached
+			}
+		}
+	}
+}
+
+export async function getDecimals(chainId: number, contractAddress: string): Promise<number> {
+	const provider = getRpcProvider(chainId);
+
+	const decimalsABI = [`function decimals() view returns (uint8)`];
+
+	const contract = new Contract(contractAddress, decimalsABI, provider);
+	const decimals = await contract.decimals();
+
+	return decimals;
 }
 
 function getBlockTag(blockNumber?: number): string {

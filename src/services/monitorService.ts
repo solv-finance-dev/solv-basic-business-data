@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {loadJsonConfig} from '../lib/config';
-import {getEventByIds, getTemplateAddressesMap} from './evmService';
+import {fetchChainEvents, getEventByIds, getTemplateAddressesMap} from './evmService';
 import {eventSignature, getEnv} from '../lib/utils';
 import {EventEvm} from '../types/eventEvm';
 import type {
@@ -16,7 +16,7 @@ import type {
 } from '../types/handler';
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
-import {getBasicSequelize} from "../lib/dbClient";
+import {getRawSequelize} from "../lib/dbClient";
 import {sendDelayQueueMessageNow} from "../lib/sqs";
 
 type TemplateAddressMap = Record<string, string[]>;
@@ -128,7 +128,7 @@ export async function routerEventByIds(
         return;
     }
 
-    const sequelize = await getBasicSequelize();
+    const sequelize = await getRawSequelize();
     const newTransaction = await sequelize.transaction();
     try {
         await routerEvent(events, templateAddressesMap, newTransaction, handlerEntries);
@@ -139,6 +139,82 @@ export async function routerEventByIds(
     }
     const sqsCount = await sendDelayQueueMessageNow(chainIds[0]);
     console.log(`fix flush delay sqs done on chain ${chainIds[0]}, messages sent: ${sqsCount}`);
+}
+
+export async function routerEventByBlock(
+    chainId: number,
+    startBlockNumber: number,
+    endBlockNumber: number,
+    config?: RouterEventConfig,
+    transaction?: Transaction
+): Promise<number> {
+    const blockLimit = endBlockNumber - startBlockNumber + 1;
+    if (blockLimit <= 0) {
+        return 0;
+    }
+
+    const events = await fetchChainEvents(chainId, startBlockNumber, blockLimit, endBlockNumber);
+    if (!events.length) {
+        console.log('MonitorService: No events found in block range.', {
+            chainId,
+            startBlockNumber,
+            endBlockNumber,
+        });
+        return 0;
+    }
+
+    const templateAddressesMap = await getTemplateAddressesMap(chainId);
+    const blockEventMap = new Map<number, EventEvm[]>();
+    const sortedEvents = [...events].sort((left, right) => Number(left.blockNumber) - Number(right.blockNumber));
+    for (const event of sortedEvents) {
+        const blockNumber = Number(event.blockNumber);
+        if (!blockEventMap.has(blockNumber)) {
+            blockEventMap.set(blockNumber, []);
+        }
+        blockEventMap.get(blockNumber)!.push(event);
+    }
+
+    let handlerEntries: HandlerEntry[] | undefined;
+    if (config) {
+        handlerEntries = getHandlerEntriesByConfig(config);
+        if (!handlerEntries.length) {
+            console.warn('MonitorService: No handler entries matched config.', {
+                name: config.name,
+                handlerName: config.handlerName,
+            });
+            return 0;
+        }
+    }
+
+    if (transaction) {
+        await routerEvent(sortedEvents, templateAddressesMap, transaction, handlerEntries);
+        return events.length;
+    }
+
+    const sequelize = await getRawSequelize();
+    for (const [blockNumber, blockEvents] of blockEventMap.entries()) {
+        const newTransaction = await sequelize.transaction();
+        try {
+            await routerEvent(blockEvents, templateAddressesMap, newTransaction, handlerEntries);
+            await newTransaction.commit();
+            console.log('MonitorService: routerEventByBlock block success.', {
+                chainId,
+                blockNumber,
+                eventCount: blockEvents.length,
+            });
+        } catch (error) {
+            await newTransaction.rollback();
+            console.error('MonitorService: routerEventByBlock block failed.', {
+                chainId,
+                blockNumber,
+                eventCount: blockEvents.length,
+            }, error);
+            throw error;
+        }
+    }
+    const sqsCount = await sendDelayQueueMessageNow(chainId);
+    console.log(`fix flush delay sqs done on chain ${chainId}, messages sent: ${sqsCount}`);
+    return events.length;
 }
 
 function getHandlerEntries(): HandlerEntry[] {

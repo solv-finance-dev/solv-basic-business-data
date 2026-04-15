@@ -9,7 +9,7 @@ import {NavRecords} from "@solvprotocol/models";
 import {CarryInfo} from "@solvprotocol/models";
 import {ProtocolFeeInfo} from "@solvprotocol/models";
 import {SftWrappedTokenInfo} from "@solvprotocol/models";
-import { getOwnerOf, getBalanceOf } from '../../../lib/rpc';
+import { getOwnerOf, get3525BalanceOf } from '../../../lib/rpc';
 import { createActivity, type ActivityCreationParams } from '../ActivityHandler';
 
 // ==================== 常量定义 ====================
@@ -737,7 +737,7 @@ export async function handleTransfer(
 	// 获取 balance（仅在 token 未被 burn 时调用）
 	let balance = '0';
 	try {
-		const balanceResult = await getBalanceOf(event.chainId, contractAddress, tokenId, event.blockNumber);
+		const balanceResult = await get3525BalanceOf(event.chainId, contractAddress, tokenId, event.blockNumber);
 		// getBalanceOf 现在可能返回 null（token 无效时），需要处理
 		if (balanceResult !== null) {
 			balance = balanceResult;

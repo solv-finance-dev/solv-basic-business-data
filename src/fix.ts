@@ -1,10 +1,12 @@
-import {routerEventByIds} from "./services/monitorService";
+import {routerEventByBlock, routerEventByIds} from "./services/monitorService";
 import {getRedisClient} from "./lib/redis";
 import {setLastSyncedBlock} from "./data/evmSyncState";
-import {getChainConfigs} from "./services/evmService";
-import {getBasicSequelize} from "./lib/dbClient";
+import {getChainConfigs, getLatestEventBlockNumber} from "./services/evmService";
+import {getRawSequelize} from "./lib/dbClient";
 import {CurrencyInfo} from "@solvprotocol/models";
 import {sendSNS} from "./lib/sns";
+
+const FIX_BLOCK_BATCH_SIZE = 200;
 
 const task = process.argv[2]
 
@@ -48,6 +50,69 @@ export async function main(task: string) {
             }
         }
         await routerEventByIds(params, config);
+    } else if (task === 'routerEventBlock') {
+        // node build/fix.js routerEventBlock [chainId] [startBlockNumber] [endBlockNumber] [name] [handlerName]
+        const chainId = Number(process.argv[3]);
+        const startBlockNumber = Number(process.argv[4]);
+        const inputEndBlockNumber = Number(process.argv[5]);
+
+        if (!Number.isFinite(chainId)) {
+            console.error('Invalid chainId for routerEventBlock:', process.argv[3]);
+            process.exit(1);
+        }
+        if (!Number.isFinite(startBlockNumber) || startBlockNumber < 1) {
+            console.error('Invalid startBlockNumber for routerEventBlock:', process.argv[4]);
+            process.exit(1);
+        }
+        if (!Number.isFinite(inputEndBlockNumber) || inputEndBlockNumber < 1) {
+            console.error('Invalid endBlockNumber for routerEventBlock:', process.argv[5]);
+            process.exit(1);
+        }
+        if (inputEndBlockNumber <= startBlockNumber) {
+            console.error('routerEventBlock requires endBlockNumber greater than startBlockNumber.', {
+                startBlockNumber,
+                endBlockNumber: inputEndBlockNumber,
+            });
+            process.exit(1);
+        }
+
+        let config: any;
+        if (process.argv[6]) {
+            config = {
+                name: process.argv[6]
+            }
+        }
+        if (process.argv[7]) {
+            config = {
+                name: config?.name,
+                handlerName: process.argv[7]
+            }
+        }
+
+        const latestBlockNumber = await getLatestEventBlockNumber(chainId);
+        if (latestBlockNumber === null) {
+            console.error(`routerEventBlock failed to get latest block number for chainId=${chainId}`);
+            process.exit(1);
+        }
+        if (latestBlockNumber < startBlockNumber) {
+            console.error(`routerEventBlock latest block number is less than startBlockNumber, chainId=${chainId}, latestBlockNumber=${latestBlockNumber}, startBlockNumber=${startBlockNumber}`);
+            process.exit(1);
+        }
+
+        const endBlockNumber = Math.min(inputEndBlockNumber, latestBlockNumber);
+        console.log(`routerEventBlock start, chainId=${chainId}, startBlockNumber=${startBlockNumber}, endBlockNumber=${endBlockNumber}, latestBlockNumber=${latestBlockNumber}, batchSize=${FIX_BLOCK_BATCH_SIZE}`);
+
+        for (let batchStart = startBlockNumber; batchStart <= endBlockNumber; batchStart += FIX_BLOCK_BATCH_SIZE) {
+            const batchEnd = Math.min(batchStart + FIX_BLOCK_BATCH_SIZE - 1, endBlockNumber);
+            console.log(`routerEventBlock processing batch, chainId=${chainId}, batchStart=${batchStart}, batchEnd=${batchEnd}`);
+            try {
+                const count = await routerEventByBlock(chainId, batchStart, batchEnd, config);
+                console.log(`routerEventBlock batch success, chainId=${chainId}, batchStart=${batchStart}, batchEnd=${batchEnd}, eventCount=${count}`);
+            } catch (error) {
+                console.error(`routerEventBlock batch failed, chainId=${chainId}, batchStart=${batchStart}, batchEnd=${batchEnd}`, error);
+                throw error;
+            }
+        }
     } else if (task === 'monitorSwitch') {
         // node build/fix.js monitorSwitch {stop|start} chainId
         // node build/fix.js monitorSwitch start 1
@@ -94,7 +159,7 @@ export async function main(task: string) {
             console.log(`Monitor switch status: chainId=${chain.chainId} key=${key} value=${value}`);
         }
 
-        await getBasicSequelize();
+        await getRawSequelize();
         const currencyInfo = await CurrencyInfo.findOne();
         console.log(`DB health check: CurrencyInfo first record id=${currencyInfo?.id ?? 'null'}`);
     } else if (task === 'testSNS') {
