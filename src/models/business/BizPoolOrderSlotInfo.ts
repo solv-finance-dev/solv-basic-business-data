@@ -1,7 +1,7 @@
 import {Column, DataType, Model, Table} from 'sequelize-typescript';
 
 @Table({
-    tableName: 'pool_order_slot_info',
+    tableName: 'biz_pool_order_slot_info',
     timestamps: true,
 })
 export default class BizPoolOrderSlotInfo extends Model {
