@@ -1,7 +1,7 @@
 import { Model, Table, Column, DataType, Sequelize } from 'sequelize-typescript';
 
 @Table({
-	tableName: 'nav_history_pool',
+	tableName: 'biz_nav_history_pool',
 	timestamps: true,
 })
 export default class NavHistoryPool extends Model {

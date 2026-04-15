@@ -10,3 +10,5 @@ build
 .vscode
 .idea
 .serena
+.claude
+CLAUDE.md
