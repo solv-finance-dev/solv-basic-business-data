@@ -5,9 +5,18 @@ import 'reflect-metadata';
 import {getRawSequelize} from "./dbClient";
 import { getToken } from './token';
 import { getSecretValue } from './secret';
+import BusinessConfig from "../models/business/BusinessConfig";
 import PorDataHistoryBusiness from '../models/business/PorDataHistory';
+import BizBabylonAddresses from '../models/business/BizBabylonAddresses';
 import BizCurrencyInfo from '../models/business/BizCurrencyInfo';
+import BizNonEvmVaultBalance from '../models/business/BizNonEvmVaultBalance';
+import BizPoolOrderInfo from '../models/business/BizPoolOrderInfo';
 import BizPoolOrderSlotInfo from '../models/business/BizPoolOrderSlotInfo';
+import BizPoolSlotInfo from '../models/business/BizPoolSlotInfo';
+import BizSolvBtcIssuances from '../models/business/BizSolvBtcIssuances';
+import BizSolvBtcReserves from '../models/business/BizSolvBtcReserves';
+import BizSolvBtcYTIssuances from '../models/business/BizSolvBtcYTIssuances';
+import BizSolvBtcYTReserves from '../models/business/BizSolvBtcYTReserves';
 import {
     // ── Existing 23 models (do not remove) ──
     BondCurrencyInfo,
@@ -363,9 +372,18 @@ export async function initBusinessSequelize() {
                 ssl: !localFlag,
             },
             models: [
+                BusinessConfig,
                 PorDataHistoryBusiness,
+                BizBabylonAddresses,
                 BizCurrencyInfo,
+                BizNonEvmVaultBalance,
+                BizPoolOrderInfo,
                 BizPoolOrderSlotInfo,
+                BizPoolSlotInfo,
+                BizSolvBtcIssuances,
+                BizSolvBtcReserves,
+                BizSolvBtcYTIssuances,
+                BizSolvBtcYTReserves,
             ],
             define: {
                 timestamps: false,

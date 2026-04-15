@@ -2,9 +2,12 @@ import {routerEventByBlock, routerEventByIds} from "./services/monitorService";
 import {getRedisClient} from "./lib/redis";
 import {setLastSyncedBlock} from "./data/evmSyncState";
 import {getChainConfigs, getLatestEventBlockNumber} from "./services/evmService";
-import {getRawSequelize} from "./lib/dbClient";
+import {getBusinessSequelize, getRawSequelize} from "./lib/dbClient";
 import {CurrencyInfo} from "@solvprotocol/models";
 import {sendSNS} from "./lib/sns";
+import BizCurrencyInfo from "./models/business/BizCurrencyInfo";
+import {handler as runChainLinkProof} from "./handlers/task/config/ChainLinkProof";
+import {handler as runOtherProof} from "./handlers/task/config/OtherProof";
 
 const FIX_BLOCK_BATCH_SIZE = 200;
 
@@ -151,6 +154,25 @@ export async function main(task: string) {
         }
         await setLastSyncedBlock(setChainId, height);
         console.log('Chain height set for chainId', setChainId, 'height:', height)
+    } else if (task === 'proofTask') {
+        // node build/fix.js proofTask {chainLink|other|all}
+        const proofName = process.argv[3];
+        if (proofName !== 'chainLink' && proofName !== 'other' && proofName !== 'all') {
+            console.error("Missing or invalid proofTask param, expected chainLink|other|all");
+            return;
+        }
+
+        if (proofName === 'chainLink' || proofName === 'all') {
+            console.log('Starting ChainLinkProof handler');
+            await runChainLinkProof({source: 'fix.proofTask'});
+            console.log('ChainLinkProof handler completed');
+        }
+
+        if (proofName === 'other' || proofName === 'all') {
+            console.log('Starting OtherProof handler');
+            await runOtherProof({source: 'fix.proofTask'});
+            console.log('OtherProof handler completed');
+        }
     } else if (task === 'checkHealth') {
         const chains = getChainConfigs();
         for (const chain of chains) {
@@ -161,7 +183,10 @@ export async function main(task: string) {
 
         await getRawSequelize();
         const currencyInfo = await CurrencyInfo.findOne();
-        console.log(`DB health check: CurrencyInfo first record id=${currencyInfo?.id ?? 'null'}`);
+        console.log(`DB health check RAW DB: CurrencyInfo first record id=${currencyInfo?.id ?? 'null'}`);
+        await getBusinessSequelize();
+        const bizCurrencyInfo = await BizCurrencyInfo.findOne();
+        console.log(`DB health check Business DB: BizCurrencyInfo first record id=${bizCurrencyInfo?.id ?? 'null'}`);
     } else if (task === 'testSNS') {
         // 发送测试SNS通知
         await sendSNS("This is a test SNS message from fix task", "Test SNS Notification");
