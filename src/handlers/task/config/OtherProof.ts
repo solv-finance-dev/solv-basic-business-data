@@ -3,8 +3,7 @@ import {getBusinessSequelize} from "../../../lib/dbClient";
 import BizBabylonAddresses from "../../../models/business/BizBabylonAddresses";
 import BizCurrencyInfo from "../../../models/business/BizCurrencyInfo";
 import BizNonEvmVaultBalance from "../../../models/business/BizNonEvmVaultBalance";
-import BizPoolOrderInfo from "../../../models/business/BizPoolOrderInfo";
-import BizPoolSlotInfo from "../../../models/business/BizPoolSlotInfo";
+import BizPoolOrderSlotInfo from "../../../models/business/BizPoolOrderSlotInfo";
 import BizSolvBtcIssuances from "../../../models/business/BizSolvBtcIssuances";
 import BizSolvBtcReserves from "../../../models/business/BizSolvBtcReserves";
 import BizSolvBtcYTIssuances from "../../../models/business/BizSolvBtcYTIssuances";
@@ -38,9 +37,8 @@ interface DepositTokenItem {
     currencyDecimals: number;
 }
 
-interface PoolDataItem extends BizPoolSlotInfo {
-    poolOrderInfo: BizPoolOrderInfo;
-    currencyInfo: BizCurrencyInfo;
+interface PoolDataItem extends BizPoolOrderSlotInfo {
+    currencyInfo?: BizCurrencyInfo;
 }
 
 interface EvmOutputItem {
@@ -110,7 +108,7 @@ async function proofData() {
 
     try {
         // Fetch all required data in parallel for better performance
-        const [solvbtcData, solvbtcYTData, solvbtcBabylonData, poolData, solanaDepositTokensAddress, solvbtcIssuances, solvbtcYTIssuances] = await Promise.all([
+        const [solvbtcData, solvbtcYTData, solvbtcBabylonData, rawPoolData, solanaDepositTokensAddress, solvbtcIssuances, solvbtcYTIssuances] = await Promise.all([
             BizSolvBtcReserves.findAll({
                 where: {assetName: "BTC"}
             }),
@@ -121,25 +119,15 @@ async function proofData() {
                 }
             }),
             BizBabylonAddresses.findAll(),
-            BizPoolSlotInfo.findAll({
-                attributes: ["chainId", "subtype", "yieldType"], // Add more attributes for debugging
+            BizPoolOrderSlotInfo.findAll({
+                attributes: ["chainId", "subtype", "yieldType", "vault", "currency", "currencySymbol"],
                 where: {
                     [Op.or]: [
                         {subtype: "FOF"},
                         {yieldType: "Babylon"},
                     ],
                 },
-                include: [
-                    {
-                        model: BizPoolOrderInfo,
-                        attributes: ["vault"],
-                    },
-                    {
-                        model: BizCurrencyInfo,
-                        attributes: ["currencyAddress", "symbol", "decimals"],
-                    },
-                ]
-            }) as Promise<PoolDataItem[]>,
+            }) as Promise<BizPoolOrderSlotInfo[]>,
             BizNonEvmVaultBalance.findAll({
                 attributes: ["chain", "vaultName", "vaultAddress", "tokenAddress", "currencySymbol", "tokenDecimals"],
                 where: {
@@ -163,6 +151,8 @@ async function proofData() {
             }) as Promise<BizSolvBtcYTIssuances[]>,
         ]);
 
+        const poolData = await attachCurrencyInfo(rawPoolData);
+
         // Debug logging
         console.log(`Found ${solvbtcData.length} SolvBTC reserves`);
         console.log(`Found ${solvbtcYTData.length} SolvBTC YT reserves`);
@@ -176,9 +166,8 @@ async function proofData() {
                 chainId: item.chainId,
                 subtype: item.subtype,
                 yieldType: item.yieldType,
-                hasPoolOrderInfo: !!item.poolOrderInfo,
                 hasCurrencyInfo: !!item.currencyInfo,
-                vault: item.poolOrderInfo?.vault,
+                vault: item.vault,
                 currencyAddress: item.currencyInfo?.currencyAddress
             });
         });
@@ -306,15 +295,15 @@ function processPoolData(poolData: PoolDataItem[]): { solvBTCEvmData: EvmDataIte
             chainId: item.chainId,
             subtype: item.subtype,
             yieldType: item.yieldType,
-            poolOrderInfo: item.poolOrderInfo,
+            vault: item.vault,
             currencyInfo: item.currencyInfo
         });
 
         // Skip items with missing required data
-        if (!item.poolOrderInfo?.vault || !item.currencyInfo?.currencyAddress ||
+        if (!item.vault || !item.currencyInfo?.currencyAddress ||
             !item.currencyInfo?.symbol || item.currencyInfo?.decimals === undefined) {
             console.warn(`Skipping pool data item with missing required fields:`, {
-                hasVault: !!item.poolOrderInfo?.vault,
+                hasVault: !!item.vault,
                 hasCurrencyAddress: !!item.currencyInfo?.currencyAddress,
                 hasSymbol: !!item.currencyInfo?.symbol,
                 hasDecimals: item.currencyInfo?.decimals !== undefined,
@@ -324,7 +313,7 @@ function processPoolData(poolData: PoolDataItem[]): { solvBTCEvmData: EvmDataIte
         }
 
         const evmDataItem: EvmDataItem = {
-            vaultAddress: item.poolOrderInfo.vault,
+            vaultAddress: item.vault,
             chainId: item.chainId || 0,
             currencyAddress: item.currencyInfo.currencyAddress,
             currencySymbol: item.currencyInfo.symbol,
@@ -349,6 +338,46 @@ function processPoolData(poolData: PoolDataItem[]): { solvBTCEvmData: EvmDataIte
 
     console.log(`Final results: ${solvBTCEvmData.length} SolvBTC EVM items, ${xSolvBTCEvmData.length} xSolvBTC EVM items`);
     return {solvBTCEvmData, xSolvBTCEvmData};
+}
+
+async function attachCurrencyInfo(poolData: BizPoolOrderSlotInfo[]): Promise<PoolDataItem[]> {
+    if (!poolData.length) {
+        return [];
+    }
+
+    const currencyConditions = poolData
+        .filter(item => item.chainId !== undefined && item.chainId !== null && item.currency)
+        .map(item => ({
+            chainId: item.chainId,
+            currencyAddress: item.currency!.toLowerCase(),
+        }));
+
+    if (!currencyConditions.length) {
+        return poolData as PoolDataItem[];
+    }
+
+    const currencies = await BizCurrencyInfo.findAll({
+        attributes: ["chainId", "currencyAddress", "symbol", "decimals"],
+        where: {
+            [Op.or]: currencyConditions,
+        },
+    });
+
+    const currencyMap = new Map<string, BizCurrencyInfo>();
+    for (const currency of currencies) {
+        if (currency.chainId !== undefined && currency.chainId !== null && currency.currencyAddress) {
+            currencyMap.set(`${currency.chainId}:${currency.currencyAddress.toLowerCase()}`, currency);
+        }
+    }
+
+    return poolData.map(item => {
+        const key = item.chainId !== undefined && item.chainId !== null && item.currency
+            ? `${item.chainId}:${item.currency.toLowerCase()}`
+            : '';
+        return Object.assign(item, {
+            currencyInfo: key ? currencyMap.get(key) : undefined,
+        });
+    }) as PoolDataItem[];
 }
 
 async function buildDepositTokenData(

@@ -213,6 +213,20 @@ export default class BizPoolOrderSlotInfo extends Model {
     declare isInterestRateSet?: boolean;
 
     @Column({
+        field: 'subtype',
+        allowNull: true,
+        type: DataType.STRING(64),
+    })
+    declare subtype?: string;
+
+    @Column({
+        field: 'yield_type',
+        allowNull: true,
+        type: DataType.STRING(64),
+    })
+    declare yieldType?: string;
+
+    @Column({
         field: 'created_at',
         allowNull: true,
         type: DataType.DATE,
