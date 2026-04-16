@@ -712,6 +712,18 @@
         "eventSignatures": [
           "Transfer(address,address,uint256)"
         ]
+      },
+      {
+        "handler": "handleTransferEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x0337CF080eD130f954d5d12cd3A8BdA10D2c14Af"
+        ],
+        "templateSignature": "NewBeaconProxy(string,string,address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)"
+        ]
       }
     ]
   }
