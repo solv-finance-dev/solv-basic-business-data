@@ -240,8 +240,10 @@ async function proofData() {
         };
 
         await Promise.all([
+            // Chaos
             updateBusinessConfig("solvbtc-addresses", solvBTCData),
             updateBusinessConfig("xsolvbtc-addresses", xSolvBTCData),
+            // movement 链所需配置，之前chanson/nic
             updateBusinessConfig("solvbtc-xsolvbtc-tokens", finalData)
         ]);
 

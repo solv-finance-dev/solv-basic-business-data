@@ -9,7 +9,8 @@ import BizCurrencyInfo from "./models/business/BizCurrencyInfo";
 import {handler as runChainLinkProof} from "./handlers/task/config/ChainLinkProof";
 import {handler as runOtherProof} from "./handlers/task/config/OtherProof";
 
-const FIX_BLOCK_BATCH_SIZE = 200;
+// 下游接口最多支持100
+const FIX_BLOCK_BATCH_SIZE = 100;
 
 const task = process.argv[2]
 

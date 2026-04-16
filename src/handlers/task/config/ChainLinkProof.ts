@@ -73,7 +73,7 @@ async function chainlink() {
         console.log("solvbtcYTData", solvbtcYTData.length)
 
         const solvbtc = await btcData("SolvBTC", solvbtcData.map(item => item.vaultAddress) ?? []);
-        await updateBusinessConfig("solv-btc-addresses.json", solvbtc)
+        await updateBusinessConfig("solv-btc-addresses", solvbtc)
 
         let solvbtcAddresses: { [key: string]: string[] } = {};
         for (const item of solvbtcYTData) {

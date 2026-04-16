@@ -153,7 +153,7 @@ export async function routerEventByBlock(
         return 0;
     }
 
-    const events = await fetchChainEvents(chainId, startBlockNumber, blockLimit, endBlockNumber);
+    const events = await fetchChainEvents(chainId, startBlockNumber, blockLimit, endBlockNumber + 1);
     if (!events.length) {
         console.log('MonitorService: No events found in block range.', {
             chainId,
