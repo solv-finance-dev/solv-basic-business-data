@@ -812,8 +812,8 @@
     ]
   },
   {
-    "name": "BasicSaleRedeem",
-    "module": "business/BasicSaleRedeemHandler",
+    "name": "BizSaleRedeem",
+    "module": "business/BizSaleRedeemHandler",
     "handlers": [
       {
         "handler": "handleOpenFundMarketEvent",
@@ -879,8 +879,8 @@
     ]
   },
   {
-    "name": "BasicTransferRecords",
-    "module": "business/BasicTransferRecordsHandler",
+    "name": "BizTransferRecords",
+    "module": "business/BizTransferRecordsHandler",
     "handlers": [
       {
         "handler": "handleTransferEvent",
