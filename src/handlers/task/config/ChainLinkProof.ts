@@ -176,7 +176,6 @@ async function updateBusinessConfig(key: string, config: unknown): Promise<void>
     if (existing) {
         await existing.update({
             config,
-            title: key,
             updatedAt: new Date(),
         });
         return;
