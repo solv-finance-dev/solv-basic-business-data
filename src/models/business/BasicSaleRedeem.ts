@@ -1,7 +1,7 @@
 import {Column, DataType, Model, Sequelize, Table} from 'sequelize-typescript';
 
 @Table({
-    tableName: 'basic_sale_redeem',
+    tableName: 'biz_sale_redeem',
     timestamps: true,
 })
 export default class BasicSaleRedeem extends Model {

@@ -1,7 +1,7 @@
 import {Column, DataType, Model, Sequelize, Table} from 'sequelize-typescript';
 
 @Table({
-    tableName: 'basic_token_transfer_records',
+    tableName: 'biz_token_transfer_records',
     timestamps: true,
     updatedAt: false,
 })

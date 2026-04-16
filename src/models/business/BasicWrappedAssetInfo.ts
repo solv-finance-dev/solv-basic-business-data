@@ -1,7 +1,7 @@
 import {Column, DataType, Model, Sequelize, Table} from 'sequelize-typescript';
 
 @Table({
-    tableName: 'basic_wrapped_asset_info',
+    tableName: 'biz_wrapped_asset_info',
     timestamps: true,
 })
 export default class BasicWrappedAssetInfo extends Model {
