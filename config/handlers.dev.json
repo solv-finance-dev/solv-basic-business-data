@@ -653,5 +653,39 @@
         ]
       }
     ]
+  },
+  {
+    "name": "BasicSaleRedeem",
+    "module": "business/BasicSaleRedeemHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x109198eb8bd3064efa5d0711b505f59cfd77de18"
+        ],
+        "eventSignatures": [
+          "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
+          "RequestRedeem(bytes32,address,uint256,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BasicTransferRecords",
+    "module": "business/BasicTransferRecordsHandler",
+    "handlers": [
+      {
+        "handler": "handleTransferEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [11155111],
+        "contractAddresses": [],
+        "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)"
+        ]
+      }
+    ]
   }
 ]

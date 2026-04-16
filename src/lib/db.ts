@@ -17,6 +17,10 @@ import BizSolvBtcIssuances from '../models/business/BizSolvBtcIssuances';
 import BizSolvBtcReserves from '../models/business/BizSolvBtcReserves';
 import BizSolvBtcYTIssuances from '../models/business/BizSolvBtcYTIssuances';
 import BizSolvBtcYTReserves from '../models/business/BizSolvBtcYTReserves';
+import BasicSaleRedeem from '../models/business/BasicSaleRedeem';
+import BasicTokenTransferRecords from '../models/business/BasicTokenTransferRecords';
+import BasicSolvbtcMintBurn from '../models/business/BasicSolvbtcMintBurn';
+import BasicWrappedAssetInfo from '../models/business/BasicWrappedAssetInfo';
 import {
     // ── Existing 23 models (do not remove) ──
     BondCurrencyInfo,
@@ -384,6 +388,10 @@ export async function initBusinessSequelize() {
                 BizSolvBtcReserves,
                 BizSolvBtcYTIssuances,
                 BizSolvBtcYTReserves,
+                BasicSaleRedeem,
+                BasicTokenTransferRecords,
+                BasicSolvbtcMintBurn,
+                BasicWrappedAssetInfo,
             ],
             define: {
                 timestamps: false,
