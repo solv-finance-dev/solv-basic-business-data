@@ -4,7 +4,7 @@ import {Column, DataType, Model, Sequelize, Table} from 'sequelize-typescript';
     tableName: 'biz_wrapped_asset_info',
     timestamps: true,
 })
-export default class BasicWrappedAssetInfo extends Model {
+export default class BizWrappedAssetInfo extends Model {
     @Column({
         primaryKey: true,
         autoIncrement: true,

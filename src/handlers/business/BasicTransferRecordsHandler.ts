@@ -1,6 +1,6 @@
-import BasicTokenTransferRecords from '../../models/business/BasicTokenTransferRecords';
-import BasicSolvbtcMintBurn from '../../models/business/BasicSolvbtcMintBurn';
-import BasicWrappedAssetInfo from '../../models/business/BasicWrappedAssetInfo';
+import BizTokenTransferRecords from '../../models/business/BizTokenTransferRecords';
+import BizSolvbtcMintBurn from '../../models/business/BizSolvbtcMintBurn';
+import BizWrappedAssetInfo from '../../models/business/BizWrappedAssetInfo';
 import {getBusinessSequelize} from '../../lib/dbClient';
 import {getErc20Metadata} from '../../services/evmService';
 import {Sequelize} from 'sequelize-typescript';
@@ -21,7 +21,7 @@ export async function handleTransferEvent(param: HandlerParam): Promise<void> {
     // 1. basic_token_transfer_records — append-only source record
     //    created = true → new event, proceed to downstream tables
     //    created = false → duplicate (replay), skip all downstream writes
-    const [, created] = await BasicTokenTransferRecords.findOrCreate({
+    const [, created] = await BizTokenTransferRecords.findOrCreate({
         where: {txHash: event.transactionHash, logIndex: event.logIndex},
         defaults: {
             chainId: event.chainId,
@@ -42,7 +42,7 @@ export async function handleTransferEvent(param: HandlerParam): Promise<void> {
 
     // 2. basic_solvbtc_mint_burn — only mint/burn (from/to = 0x0)
     if (from === ZERO_ADDRESS) {
-        await BasicSolvbtcMintBurn.findOrCreate({
+        await BizSolvbtcMintBurn.findOrCreate({
             where: {txHash: event.transactionHash, logIndex: event.logIndex},
             defaults: {
                 chainId: event.chainId,
@@ -59,7 +59,7 @@ export async function handleTransferEvent(param: HandlerParam): Promise<void> {
             },
         });
     } else if (to === ZERO_ADDRESS) {
-        await BasicSolvbtcMintBurn.findOrCreate({
+        await BizSolvbtcMintBurn.findOrCreate({
             where: {txHash: event.transactionHash, logIndex: event.logIndex},
             defaults: {
                 chainId: event.chainId,
@@ -79,11 +79,11 @@ export async function handleTransferEvent(param: HandlerParam): Promise<void> {
 
     // 3. basic_wrapped_asset_info — atomic balance update
     if (from !== ZERO_ADDRESS) {
-        await BasicWrappedAssetInfo.findOrCreate({
+        await BizWrappedAssetInfo.findOrCreate({
             where: {chainId: event.chainId, tokenAddress: contractAddress, holder: from},
             defaults: {symbol, decimals, balance: '0', lastUpdated: event.blockTimestamp},
         });
-        await BasicWrappedAssetInfo.update(
+        await BizWrappedAssetInfo.update(
             {
                 balance: Sequelize.literal(`balance - ${value}`),
                 lastUpdated: event.blockTimestamp,
@@ -93,11 +93,11 @@ export async function handleTransferEvent(param: HandlerParam): Promise<void> {
     }
 
     if (to !== ZERO_ADDRESS) {
-        await BasicWrappedAssetInfo.findOrCreate({
+        await BizWrappedAssetInfo.findOrCreate({
             where: {chainId: event.chainId, tokenAddress: contractAddress, holder: to},
             defaults: {symbol, decimals, balance: '0', lastUpdated: event.blockTimestamp},
         });
-        await BasicWrappedAssetInfo.update(
+        await BizWrappedAssetInfo.update(
             {
                 balance: Sequelize.literal(`balance + ${value}`),
                 lastUpdated: event.blockTimestamp,

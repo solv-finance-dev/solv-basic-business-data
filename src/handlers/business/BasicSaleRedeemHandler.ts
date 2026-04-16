@@ -1,4 +1,4 @@
-import BasicSaleRedeem from '../../models/business/BasicSaleRedeem';
+import BizSaleRedeem from '../../models/business/BizSaleRedeem';
 import BizCurrencyInfo from '../../models/business/BizCurrencyInfo';
 import BizPoolOrderSlotInfo from '../../models/business/BizPoolOrderSlotInfo';
 import {getBusinessSequelize} from '../../lib/dbClient';
@@ -96,7 +96,7 @@ async function createBasicSaleRedeem(params: {
     decimals: number;
     sftSymbol: string;
 }): Promise<void> {
-    await BasicSaleRedeem.findOrCreate({
+    await BizSaleRedeem.findOrCreate({
         where: {
             txHash: params.txHash,
             transactionIndex: params.transactionIndex,

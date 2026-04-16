@@ -4,7 +4,7 @@ import {Column, DataType, Model, Sequelize, Table} from 'sequelize-typescript';
     tableName: 'biz_sale_redeem',
     timestamps: true,
 })
-export default class BasicSaleRedeem extends Model {
+export default class BizSaleRedeem extends Model {
     @Column({
         primaryKey: true,
         autoIncrement: true,

@@ -5,7 +5,7 @@ import {Column, DataType, Model, Sequelize, Table} from 'sequelize-typescript';
     timestamps: true,
     updatedAt: false,
 })
-export default class BasicSolvbtcMintBurn extends Model {
+export default class BizSolvbtcMintBurn extends Model {
     @Column({
         primaryKey: true,
         autoIncrement: true,
