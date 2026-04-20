@@ -73,8 +73,8 @@ export async function main(task: string) {
             console.error('Invalid endBlockNumber for routerEventBlock:', process.argv[5]);
             process.exit(1);
         }
-        if (inputEndBlockNumber <= startBlockNumber) {
-            console.error('routerEventBlock requires endBlockNumber greater than startBlockNumber.', {
+        if (inputEndBlockNumber < startBlockNumber) {
+            console.error('routerEventBlock requires endBlockNumber greater than or equal to startBlockNumber.', {
                 startBlockNumber,
                 endBlockNumber: inputEndBlockNumber,
             });

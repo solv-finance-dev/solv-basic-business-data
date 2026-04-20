@@ -158,7 +158,7 @@ async function proofData() {
         console.log(`Found ${solvbtcYTData.length} SolvBTC YT reserves`);
         console.log(`Found ${solvbtcBabylonData.length} Babylon addresses`);
         console.log(`Found ${poolData.length} pool data items`);
-        console.log(`Found ${solanaDepositTokensAddress} pool data items`);
+        console.log(`Found ${solanaDepositTokensAddress.length} non-EVM vault balance items`);
 
         // Log pool data details for debugging
         poolData.forEach((item, index) => {

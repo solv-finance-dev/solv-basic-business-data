@@ -1,6 +1,10 @@
 import { SecretsManager } from 'aws-sdk';
 
 export function getSecretValue(secretName: string, region: string): Promise<string | undefined> {
+	if (!secretName) {
+		// 返回空
+		return Promise.resolve(undefined);
+	}
 	const client = new SecretsManager({ region });
 	const params = { SecretId: secretName };
 	return new Promise((resolve, reject) => {

@@ -349,7 +349,7 @@ export async function initRawSequelize(): Promise<Sequelize> {
 export async function initBusinessSequelize() {
     try {
         const token = await getToken();
-        const secretString = (await getSecretValue(process.env.BUSINESS_SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '';
+        const secretString = (await getSecretValue(process.env.BUSINESS_SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '{}';
         const {
             username,
             password,
@@ -366,9 +366,9 @@ export async function initBusinessSequelize() {
         return new Sequelize({
             host: localFlag ? host : process.env.BUSINESS_DB_PROXY_HOSTNAME,
             dialectModule: pg,
-            dialect: engine,
+            dialect: 'postgres',
             database: process.env.BUSINESS_DATABASE_NAME,
-            username,
+            username: process.env.BUSINESS_DB_USER_NAME,
             password: localFlag ? password : token,
             dialectOptions: {
                 ssl: !localFlag,
