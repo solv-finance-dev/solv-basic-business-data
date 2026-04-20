@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import {routerEvent, routerEventByIds} from "../src/services/monitorService";
+import {routerEvent, routerEventByBlock, routerEventByIds} from "../src/services/monitorService";
 import {EventEvm} from "../src/types/eventEvm";
 import {closeSequelize} from "../src/lib/db";
-import {getRawSequelize} from "../src/lib/dbClient";
+import {getBusinessSequelize, getRawSequelize} from "../src/lib/dbClient";
 
 require("../src/services/monitorService");
 
@@ -372,5 +372,11 @@ describe('test router event', () => {
         const sequelize = await getRawSequelize();
         const transaction = await sequelize.transaction();
         await routerEventByIds([5422036], {name: "Activity", handlerName: "handleXSolvBTCPoolEvent"}, transaction);
-    })
+    });
+    test('routerEventByBlock', async () => {
+        const sequelize = await getRawSequelize();
+        const transaction = await sequelize.transaction();
+        const count = await routerEventByBlock(11155111, 5434289, 5434293, {name: "BizCurrencyInfo", handlerName: "handleOpenFundMarketEvent"}, undefined);
+        console.log("count: ", count);
+    });
 });

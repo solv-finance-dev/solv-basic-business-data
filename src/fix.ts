@@ -55,7 +55,8 @@ export async function main(task: string) {
         }
         await routerEventByIds(params, config);
     } else if (task === 'routerEventBlock') {
-        // node build/fix.js routerEventBlock [chainId] [startBlockNumber] [endBlockNumber] [name] [handlerName]
+        // node build/fix.js routerEventBlock [chainId] [startBlockNumber(含)] [endBlockNumber(含)] [name] [handlerName]
+        // node build/fix.js routerEventBlock [chainId] [>=startBlockNumber] [<=endBlockNumber] [name] [handlerName]
         const chainId = Number(process.argv[3]);
         const startBlockNumber = Number(process.argv[4]);
         const inputEndBlockNumber = Number(process.argv[5]);
@@ -92,6 +93,8 @@ export async function main(task: string) {
                 handlerName: process.argv[7]
             }
         }
+
+        console.log(`config for routerEventBlock: ${JSON.stringify(config)}`);
 
         const latestBlockNumber = await getLatestEventBlockNumber(chainId);
         if (latestBlockNumber === null) {
