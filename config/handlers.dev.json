@@ -734,7 +734,7 @@
       {
         "handler": "handleTransferEvent",
         "abi": "SftWrappedToken.json",
-        "chainIds": [11155111],
+        "chainIds": [11155111, 56],
         "contractAddresses": [],
         "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
         "eventSignatures": [
@@ -744,9 +744,11 @@
       {
         "handler": "handleTransferEvent",
         "abi": "SftWrappedToken.json",
-        "chainIds": [11155111],
+        "chainIds": [11155111, 56],
         "contractAddresses": [
-          "0x0337CF080eD130f954d5d12cd3A8BdA10D2c14Af"
+          "0x0337CF080eD130f954d5d12cd3A8BdA10D2c14Af",
+          "0x823160CC510b8DF4e6905dCA1C2f083A15A64436",
+          "0x014e6F6ba7a9f4C9a51a0Aa3189B5c0a21006869"
         ],
         "templateSignature": "NewBeaconProxy(string,string,address)",
         "eventSignatures": [
