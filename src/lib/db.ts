@@ -334,7 +334,7 @@ export async function initRawSequelize(): Promise<Sequelize> {
 
     } catch (err: any) {
         console.error('Init Basic Sequelize Error:', err);
-        throw new Error('Set Up DB Connection Failed.');
+        throw new Error('Set Up Basic DB Connection Failed.');
     }
 }
 
@@ -393,7 +393,7 @@ export async function initBusinessSequelize() {
 
     } catch (err: any) {
         console.error('Init Business Sequelize Error:', err);
-        throw new Error('Set Up DB Connection Failed.');
+        throw new Error('Set Up Business DB Connection Failed.');
     }
 }
 
