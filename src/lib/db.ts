@@ -162,30 +162,22 @@ import {
 
 export async function initRawSequelize(): Promise<Sequelize> {
     try {
-        const token = await getToken();
-        const secretString = (await getSecretValue(process.env.SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '';
-        const {
-            username,
-            password,
-            engine,
-            host,
-        }: {
-            username: string;
-            password: string;
-            engine: Dialect | undefined;
-            host: string;
-        } = JSON.parse(secretString!);
-        const localFlag = process.env.CONFIG_ENV === 'local';
-
+        if (!process.env.DB_PROXY_HOSTNAME) {
+            throw new Error('BUSINESS_DB_PROXY_HOSTNAME is not set.');
+        }
+        const token = await getToken(process.env.DB_PROXY_HOSTNAME, process.env.DB_USER_NAME, process.env.CDK_DEPLOY_REGION);
         return new Sequelize({
-            host: localFlag ? host : process.env.DB_PROXY_HOSTNAME,
+            host: process.env.DB_PROXY_HOSTNAME,
             dialectModule: pg,
-            dialect: engine,
+            dialect: 'postgres',
             database: process.env.DATABASE_NAME,
-            username,
-            password: localFlag ? password : token,
+            username: process.env.DB_USER_NAME,
+            password: token,
             dialectOptions: {
-                ssl: !localFlag,
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false,
+                },
             },
             models: [
                 BondCurrencyInfo,
@@ -348,30 +340,26 @@ export async function initRawSequelize(): Promise<Sequelize> {
 
 export async function initBusinessSequelize() {
     try {
-        const token = await getToken();
-        const secretString = (await getSecretValue(process.env.BUSINESS_SECRET_ID!, process.env.CDK_DEPLOY_REGION!)) ?? '{}';
-        const {
-            username,
-            password,
-            engine,
-            host,
-        }: {
-            username: string;
-            password: string;
-            engine: Dialect | undefined;
-            host: string;
-        } = JSON.parse(secretString!);
-        const localFlag = process.env.CONFIG_ENV === 'local';
+        const username = process.env.BUSINESS_DB_USER_NAME;
+        const hostUrl = process.env.BUSINESS_DB_PROXY_HOSTNAME;
+        const database = process.env.BUSINESS_DATABASE_NAME;
+        if (!hostUrl) {
+            throw new Error('BUSINESS_DB_PROXY_HOSTNAME is not set.');
+        }
 
+        const token = await getToken(hostUrl, username, process.env.CDK_DEPLOY_REGION);
         return new Sequelize({
-            host: localFlag ? host : process.env.BUSINESS_DB_PROXY_HOSTNAME,
+            host: hostUrl,
             dialectModule: pg,
             dialect: 'postgres',
-            database: process.env.BUSINESS_DATABASE_NAME,
-            username: process.env.BUSINESS_DB_USER_NAME,
-            password: localFlag ? password : token,
+            database: database,
+            username: username,
+            password: token,
             dialectOptions: {
-                ssl: !localFlag,
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false,
+                },
             },
             models: [
                 BusinessConfig,
