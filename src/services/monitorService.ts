@@ -153,13 +153,9 @@ export async function routerEventByBlock(
         return 0;
     }
 
-    const events = await fetchChainEvents(chainId, startBlockNumber, blockLimit, endBlockNumber);
+    const events = await fetchChainEvents(chainId, startBlockNumber, blockLimit, endBlockNumber + 1);
     if (!events.length) {
-        console.log('MonitorService: No events found in block range.', {
-            chainId,
-            startBlockNumber,
-            endBlockNumber,
-        });
+        console.log(`MonitorService: No events found in block range. chainId: ${chainId}, startBlockNumber: ${startBlockNumber}, endBlockNumber: ${endBlockNumber}`);
         return 0;
     }
 
@@ -178,10 +174,7 @@ export async function routerEventByBlock(
     if (config) {
         handlerEntries = getHandlerEntriesByConfig(config);
         if (!handlerEntries.length) {
-            console.warn('MonitorService: No handler entries matched config.', {
-                name: config.name,
-                handlerName: config.handlerName,
-            });
+            console.log(`MonitorService: No handler entries matched config. name: ${config.name}, handlerName: ${config.handlerName}. chainId: ${chainId}, startBlockNumber: ${startBlockNumber}, endBlockNumber: ${endBlockNumber}`);
             return 0;
         }
     }
@@ -197,18 +190,10 @@ export async function routerEventByBlock(
         try {
             await routerEvent(blockEvents, templateAddressesMap, newTransaction, handlerEntries);
             await newTransaction.commit();
-            console.log('MonitorService: routerEventByBlock block success.', {
-                chainId,
-                blockNumber,
-                eventCount: blockEvents.length,
-            });
+            console.log(`MonitorService: routerEventByBlock block success. chainId: ${chainId}, blockNumber: ${blockNumber}, eventCount: ${blockEvents.length}`);
         } catch (error) {
             await newTransaction.rollback();
-            console.error('MonitorService: routerEventByBlock block failed.', {
-                chainId,
-                blockNumber,
-                eventCount: blockEvents.length,
-            }, error);
+            console.error(`MonitorService: routerEventByBlock block failed. chainId: ${chainId}, blockNumber: ${blockNumber}, eventCount: ${blockEvents.length}`, error);
             throw error;
         }
     }

@@ -77,7 +77,9 @@ function normalizeChainConfig(chain: ChainConfig): ChainConfig {
 export async function fetchChainEvents(
     chainId: number,
     beginBlockNumber: number,
+    // Lambda侧最大仅支持100个区块，超过100区块会被Lambda直接拒绝执行
     blockLimit?: number,
+    // 注意，这个最大区块号参数maxBlockNumber不包含（Lambda侧查询逻辑为开区间），如需包含最大区块号得自行+1后传入
     maxBlockNumber?: number
 ): Promise<EventEvm[]> {
     if (!Number.isFinite(chainId) || !Number.isFinite(beginBlockNumber)) {

@@ -64,27 +64,44 @@ export async function getLatestSafeBlockNumber(chainId: number): Promise<number>
 	return await getLatestBlockNumber(chainId);
 }
 
-// 获取 ERC20 基础元数据（decimals/symbol）。
+// 获取 ERC20/ERC-3525 基础元数据（decimals/symbol/name）。
+// SFT（ERC-3525）合约不支持 decimals()，fallback 到 valueDecimals()。
+// 使用 Promise.allSettled 确保单个方法失败不影响其他方法。
 export async function getErc20Metadata(
 	chainId: number,
 	tokenAddress: string
 ): Promise<{ decimals: number; symbol: string; name: string }> {
 	const provider = getRpcProvider(chainId);
-	const erc20Abi = [
+	const abi = [
 		'function decimals() view returns (uint8)',
+		'function valueDecimals() view returns (uint8)',
 		'function symbol() view returns (string)',
 		'function name() view returns (string)',
 	];
-	const contract = new Contract(tokenAddress, erc20Abi, provider);
+	const contract = new Contract(tokenAddress, abi, provider);
 
-	const [decimalsResult, symbolResult, nameResult] = await Promise.all([
+	const [decimalsResult, symbolResult, nameResult] = await Promise.allSettled([
 		contract.decimals(),
 		contract.symbol(),
 		contract.name(),
 	]);
-	const decimals = typeof decimalsResult === 'bigint' ? Number(decimalsResult) : Number(decimalsResult);
-	const symbol = String(symbolResult);
-	const name = String(nameResult);
+
+	let decimals = 18;
+	if (decimalsResult.status === 'fulfilled') {
+		decimals = Number(decimalsResult.value);
+	} else {
+		// ERC-3525 fallback: try valueDecimals()
+		try {
+			const vd = await contract.valueDecimals();
+			decimals = Number(vd);
+		} catch (_) {
+			// both failed, use default 18
+		}
+	}
+
+	const symbol = symbolResult.status === 'fulfilled' ? String(symbolResult.value) : '';
+	const name = nameResult.status === 'fulfilled' ? String(nameResult.value) : '';
+
 	return { decimals, symbol, name };
 }
 

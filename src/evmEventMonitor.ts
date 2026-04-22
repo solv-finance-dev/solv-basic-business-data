@@ -58,7 +58,7 @@ async function runCycle(): Promise<void> {1
     results.forEach((result: PromiseSettledResult<void>, index: number) => {
         if (result.status === 'rejected') {
             console.error('EVM Event Monitor: Chain task failed.', chains[index].chainId, result.reason);
-            sendSNS(`chainId:${chains[index].chainId},reason:${result.reason.toString()}`, "basic-business-data 处理发现异常 ");
+            sendSNS(`chainId:${chains[index].chainId},reason:${result.reason.toString()}`, process.env.CONFIG_ENV! + ":basic-business-data 处理发现异常 ");
         }
     });
 

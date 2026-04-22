@@ -810,5 +810,101 @@
         ]
       }
     ]
+  },
+  {
+    "name": "BizSaleRedeem",
+    "module": "business/BizSaleRedeemHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [1, 56, 196, 8453, 42161, 57073],
+        "contractAddresses": [
+          "0x57bB6a8563a8e8478391C79F3F433C6BA077c567",
+          "0xaE050694c137aD777611286C316E5FDda58242F3",
+          "0xB37889068f9Ecaa64bd011c8de66Ae677368C118",
+          "0xf5a247157656678398B08d3eFa1673358C611A3f",
+          "0x629aD7Bc14726e9cEA4FCb3A7b363D237bB5dBE8",
+          "0xBa891CE042BdB092C450D242c05DB44d7e5Bb728"
+        ],
+        "eventSignatures": [
+          "Subscribe(bytes32,address,uint256,uint256,address,uint256,uint256)",
+          "RequestRedeem(bytes32,address,uint256,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleRouterEvent",
+        "abi": "SftWrappedRouter.json",
+        "chainIds": [1, 56, 196, 8453, 42161, 57073],
+        "contractAddresses": [
+          "0x1fF7d7C0A7D8E94046708C611DeC5056A9d2B823",
+          "0x01024AaeD5561fa6237C0ad4073417576C591261",
+          "0xa3C5e4d471DF75447dcb1256eF1Ada80EEb806B3",
+          "0xb8c587fd9529ebf50265023ec88cf70aa2b00878",
+          "0x5c1215712F174dF2Cbc653eDce8B53FA4CAF2201",
+          "0x8EC6Ef69a423045cEa97d2Bd0D768D042A130aA7",
+          "0xa83376174F44B06536B0f0DDBa6Da6F7e8FD3167",
+          "0x7D6e2D7854adf5903704D9CBCaA76374358c093c",
+          "0x90da52188Dc54E9e5c6D18534b8E3aBF17Bf48b1",
+          "0x65EFfDA5e69dF470d4dBd31a805e15855Cae65c7",
+          "0x814F3ae67dF0da9fe2399a29516FD14b9085263a",
+          "0xe9eD7530427Cb41A56C9e004e00e074cCc168C44",
+          "0x836bE4332347440995Bc06103aA740AdaFC0068a",
+          "0x6Ea88D4D0c4bC06F6A51f427eF295c93e10D0b36",
+          "0x9c5ACE3A5915e330a48D36478C01d03cCb4FD099",
+          "0x40689Da9DE02E0B12Ec86EdaC68D64e966C63512"
+        ],
+        "eventSignatures": [
+          "CreateSubscription(bytes32,address,address,uint256,address,uint256)",
+          "CreateRedemption(bytes32,address,address,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleSolvBTCRouterV2Event",
+        "abi": "SolvBTCRouterV2.json",
+        "chainIds": [1, 56, 196, 8453, 42161, 57073],
+        "contractAddresses": [
+          "0x3d93B9e8F0886358570646dAd9421564C5fE6334",
+          "0x67035877F5c12202c387d1698274C2aBF28F3678",
+          "0x6a08776B4A36b569aB52fec98A8EbFaC645c02C5",
+          "0xcf871588203aF2A70E8513db43D785023f5E8aA1",
+          "0x92E8A4407FD1ae7a53a32f1f832184edF071080A",
+          "0x7512cc44B0352a1e3Fb6F97cdE4A7c454b9e178F"
+        ],
+        "eventSignatures": [
+          "Deposit(address,address,address,uint256,uint256,address[],bytes32[])",
+          "WithdrawRequest(address,address,address,bytes32,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BizTransferRecords",
+    "module": "business/BizTransferRecordsHandler",
+    "handlers": [
+      {
+        "handler": "handleTransferEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [1, 56, 196, 8453, 42161, 57073],
+        "contractAddresses": [],
+        "templateSignature": "SftWrappedTokenCreated(address,uint256,address,string,string,address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)"
+        ]
+      },
+      {
+        "handler": "handleTransferEvent",
+        "abi": "SftWrappedToken.json",
+        "chainIds": [1, 56, 196, 8453, 42161, 57073],
+        "contractAddresses": [
+          "0x823160CC510b8DF4e6905dCA1C2f083A15A64436",
+          "0x014e6F6ba7a9f4C9a51a0Aa3189B5c0a21006869"
+        ],
+        "templateSignature": "NewBeaconProxy(string,string,address)",
+        "eventSignatures": [
+          "Transfer(address,address,uint256)"
+        ]
+      }
+    ]
   }
 ]
