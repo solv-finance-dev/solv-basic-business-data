@@ -8,6 +8,7 @@ const NAV_TYPE = {
 } as const;
 
 interface EventInfo {
+	chainId: number;
 	poolId: string;
 	nav: string;
 	timestamp: number;
@@ -15,6 +16,7 @@ interface EventInfo {
 
 function extractEventInfo(event: any, args: Record<string, unknown>): EventInfo {
 	return {
+		chainId: event.chainId,
 		poolId: String(args.poolId ?? ''),
 		nav: String(args.nav ?? ''),
 		timestamp: event.blockTimestamp,
@@ -33,14 +35,16 @@ function validateEventData(poolId: string, nav: string, time?: number): void {
 	}
 }
 
-async function upsertNavHistoryPool(poolId: string, navType: string, navDate: string, nav: string): Promise<void> {
+async function upsertNavHistoryPool(chainId: number, poolId: string, navType: string, navDate: string, nav: string): Promise<void> {
 	const [record, created] = await BizNavHistoryPool.findOrCreate({
 		where: {
+			chainId,
 			poolId,
 			navType,
 			navDate,
 		},
 		defaults: {
+			chainId,
 			poolId,
 			nav,
 			navType,
@@ -63,8 +67,8 @@ async function handleSetRedeemNavEvent(param: HandlerParam): Promise<void> {
 
 	const navDate = new Date(eventInfo.timestamp * 1000).toISOString().slice(0, 10);
 
-	await upsertNavHistoryPool(eventInfo.poolId, NAV_TYPE.REDEMPTION, navDate, eventInfo.nav);
-	await upsertNavHistoryPool(eventInfo.poolId, NAV_TYPE.INVESTMENT, navDate, eventInfo.nav);
+	await upsertNavHistoryPool(eventInfo.chainId, eventInfo.poolId, NAV_TYPE.REDEMPTION, navDate, eventInfo.nav);
+	await upsertNavHistoryPool(eventInfo.chainId, eventInfo.poolId, NAV_TYPE.INVESTMENT, navDate, eventInfo.nav);
 }
 
 async function handleSetSubscribeNavEvent(param: HandlerParam): Promise<void> {
@@ -79,7 +83,7 @@ async function handleSetSubscribeNavEvent(param: HandlerParam): Promise<void> {
 
 	const navDate = new Date(time * 1000).toISOString().slice(0, 10);
 
-	await upsertNavHistoryPool(eventInfo.poolId, NAV_TYPE.INVESTMENT, navDate, eventInfo.nav);
+	await upsertNavHistoryPool(eventInfo.chainId, eventInfo.poolId, NAV_TYPE.INVESTMENT, navDate, eventInfo.nav);
 }
 
 export async function handleNavHistoryPoolEvent(param: HandlerParam): Promise<void> {
