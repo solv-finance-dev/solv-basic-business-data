@@ -13,6 +13,12 @@ export default class BizNavHistoryPool extends Model {
 	declare id: number;
 
 	@Column({
+		field: 'chain_id',
+		type: DataType.INTEGER,
+})
+	declare chainId: number;
+
+	@Column({
 		field: 'pool_id',
 		allowNull: true,
 		type: DataType.STRING(128),
