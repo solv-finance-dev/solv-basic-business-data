@@ -162,14 +162,7 @@ async function proofData() {
 
         // Log pool data details for debugging
         poolData.forEach((item, index) => {
-            console.log(`Pool item ${index}:`, {
-                chainId: item.chainId,
-                subtype: item.subtype,
-                yieldType: item.yieldType,
-                hasCurrencyInfo: !!item.currencyInfo,
-                vault: item.vault,
-                currencyAddress: item.currencyInfo?.currencyAddress
-            });
+            console.log(`Pool item ${index}: chainId=${item.chainId}, subtype=${item.subtype}, yieldType=${item.yieldType}, vault=${item.vault}, currencyAddress=${item.currencyInfo?.currencyAddress}`);
         });
 
         const depositTokenDataByChain = await buildDepositTokenData(solanaDepositTokensAddress);

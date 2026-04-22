@@ -1,13 +1,12 @@
 import { Sequelize } from 'sequelize-typescript';
 import * as pg from 'pg';
-import { Dialect } from 'sequelize/types/sequelize';
 import 'reflect-metadata';
 import {getRawSequelize} from "./dbClient";
 import { getToken } from './token';
-import { getSecretValue } from './secret';
 import BusinessConfig from "../models/business/BusinessConfig";
 import PorDataHistoryBusiness from '../models/business/PorDataHistory';
 import BizBabylonAddresses from '../models/business/BizBabylonAddresses';
+import BizBtcRedeemRecord from '../models/business/BizBtcRedeemRecord';
 import BizCurrencyInfo from '../models/business/BizCurrencyInfo';
 import BizNonEvmVaultBalance from '../models/business/BizNonEvmVaultBalance';
 import BizPoolOrderSlotInfo from '../models/business/BizPoolOrderSlotInfo';
@@ -365,6 +364,7 @@ export async function initBusinessSequelize() {
                 BusinessConfig,
                 PorDataHistoryBusiness,
                 BizBabylonAddresses,
+                BizBtcRedeemRecord,
                 BizCurrencyInfo,
                 BizNonEvmVaultBalance,
                 BizPoolOrderSlotInfo,

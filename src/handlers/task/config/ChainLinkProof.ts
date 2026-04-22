@@ -104,8 +104,8 @@ async function chainlink() {
         await updateBusinessConfig("solv-btc-core-addresses", solvbtcCORE)
 
         // SolvBTC.ENA
-        const solvbtcENA = await btcData("SolvBTC.ENA", solvbtcAddresses["Ethena"] ?? []);
-        await updateBusinessConfig("solv-btc-ena-addresses", solvbtcENA)
+        // const solvbtcENA = await btcData("SolvBTC.ENA", solvbtcAddresses["Ethena"] ?? []);
+        // await updateBusinessConfig("solv-btc-ena-addresses", solvbtcENA)
 
         // SolvBTC.TRADING
         const solvbtcTrading = await btcData("SolvBTC.TRADING", solvbtcAddresses["Ethena"] ?? []);

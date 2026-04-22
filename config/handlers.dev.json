@@ -655,6 +655,21 @@
     ]
   },
   {
+    "name": "BizBtcRedeemRecord",
+    "module": "business/BizBtcRedeemRecordHandler",
+    "handlers": [
+      {
+        "handler": "handleMainnetRedeemerEvent",
+        "abi": "MainnetRedeemer.json",
+        "chainIds": [11155111],
+        "contractAddresses": ["0x1b67191154a94945b1a82a9be32bbc679c0c08fa"],
+        "eventSignatures": [
+          "Redeem(address,address,string,uint256,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "BizSaleRedeem",
     "module": "business/BizSaleRedeemHandler",
     "handlers": [
