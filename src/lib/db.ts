@@ -19,6 +19,7 @@ import BizSaleRedeem from '../models/business/BizSaleRedeem';
 import BizTokenTransferRecords from '../models/business/BizTokenTransferRecords';
 import BizSolvbtcMintBurn from '../models/business/BizSolvbtcMintBurn';
 import BizWrappedAssetInfo from '../models/business/BizWrappedAssetInfo';
+import BizNavHistoryPool from '../models/business/BizNavHistoryPool';
 import {
 	// ── Existing 23 models (do not remove) ──
 	BondCurrencyInfo,
@@ -159,7 +160,7 @@ import {
 	YieldPoolConfig,
 	// ── END: 112 legacy models ──
 } from '@solvprotocol/models';
-import BizNavHistoryPool from 'src/models/business/BizNavHistoryPool';
+
 
 export async function initRawSequelize(): Promise<Sequelize> {
 	try {
