@@ -9,6 +9,9 @@ import BusinessConfig from "../models/business/BusinessConfig";
 import PorDataHistoryBusiness from '../models/business/PorDataHistory';
 import BizBabylonAddresses from '../models/business/BizBabylonAddresses';
 import BizCurrencyInfo from '../models/business/BizCurrencyInfo';
+import BizCarryInfo from '../models/business/BizCarryInfo';
+import BizNavRecords from '../models/business/BizNavRecords';
+import BizRedeemSlotInfo from '../models/business/BizRedeemSlotInfo';
 import BizNonEvmVaultBalance from '../models/business/BizNonEvmVaultBalance';
 import BizPoolOrderSlotInfo from '../models/business/BizPoolOrderSlotInfo';
 import BizSolvBtcIssuances from '../models/business/BizSolvBtcIssuances';
@@ -366,6 +369,9 @@ export async function initBusinessSequelize() {
                 PorDataHistoryBusiness,
                 BizBabylonAddresses,
                 BizCurrencyInfo,
+                BizNavRecords,
+                BizRedeemSlotInfo,
+                BizCarryInfo,
                 BizNonEvmVaultBalance,
                 BizPoolOrderSlotInfo,
                 BizSolvBtcIssuances,
