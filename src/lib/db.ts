@@ -8,6 +8,7 @@ import { getSecretValue } from './secret';
 import BusinessConfig from "../models/business/BusinessConfig";
 import PorDataHistoryBusiness from '../models/business/PorDataHistory';
 import BizBabylonAddresses from '../models/business/BizBabylonAddresses';
+import BizContractInfo from '../models/business/BizContractInfo';
 import BizCurrencyInfo from '../models/business/BizCurrencyInfo';
 import BizCarryInfo from '../models/business/BizCarryInfo';
 import BizNavRecords from '../models/business/BizNavRecords';
@@ -368,6 +369,7 @@ export async function initBusinessSequelize() {
                 BusinessConfig,
                 PorDataHistoryBusiness,
                 BizBabylonAddresses,
+                BizContractInfo,
                 BizCurrencyInfo,
                 BizNavRecords,
                 BizRedeemSlotInfo,

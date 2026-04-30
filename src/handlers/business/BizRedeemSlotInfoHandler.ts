@@ -1,14 +1,12 @@
 import type { HandlerParam } from '../../types/handler';
 import type { Transaction } from 'sequelize';
 import {getBusinessSequelize} from '../../lib/dbClient';
+import BizContractInfo from '../../models/business/BizContractInfo';
 import BizRedeemSlotInfo from '../../models/business/BizRedeemSlotInfo';
 import BizCurrencyInfo from '../../models/business/BizCurrencyInfo';
-import {RawOptErc3525TokenInfo} from "@solvprotocol/models";
 import BizPoolOrderSlotInfo from '../../models/business/BizPoolOrderSlotInfo';
-import {RawOptContractInfo} from "@solvprotocol/models";
 import { getSlotOf, getSlotURI } from '../../lib/rpc';
 import { AbiCoder } from 'ethers';
-import { sendQueueMessageDelay } from '../../lib/sqs';
 
 // ==================== 类型定义 ====================
 
@@ -112,7 +110,7 @@ async function getContractType(
 	transaction: Transaction
 ): Promise<string | null> {
 	try {
-		const contractInfo = await RawOptContractInfo.findOne({
+		const contractInfo = await BizContractInfo.findOne({
 			where: {
 				chainId,
 				contractAddress: contractAddress.toLowerCase(),
@@ -371,74 +369,6 @@ async function getSlotURISafe(
 }
 
 /**
- * 统一创建 BizRedeemSlotInfo 并发送 SQS
- */
-async function createRedeemSlotInfoAndSendSQS(
-	createData: Parameters<typeof BizRedeemSlotInfo.create>[0],
-	chainId: number,
-	transaction: Transaction
-): Promise<BizRedeemSlotInfo> {
-	const redeemSlotInfo = await BizRedeemSlotInfo.create(createData, { transaction });
-
-	// 创建成功后发送 SQS 消息
-	if (redeemSlotInfo && redeemSlotInfo.id) {
-		try {
-			await sendQueueMessageDelay(chainId, 'assetQueue', {
-				source: 'V3_5_Raw_Redeem_Slot_Info',
-				data: {
-					id: Number(redeemSlotInfo.id),
-					chainId: String(chainId),
-					contractAddress: redeemSlotInfo.contractAddress,
-				},
-			});
-		} catch (error) {
-			console.error('BizRedeemSlotInfoHandler: Failed to send SQS message for new redeem slot info', {
-				id: redeemSlotInfo.id,
-				chainId,
-				contractAddress: redeemSlotInfo.contractAddress,
-				slot: redeemSlotInfo.slot,
-				error: error instanceof Error ? error.message : String(error),
-			});
-		}
-	}
-
-	return redeemSlotInfo;
-}
-
-/**
- * 统一更新 BizRedeemSlotInfo 并发送 SQS
- */
-async function updateRedeemSlotInfoAndSendSQS(
-	redeemSlotInfo: BizRedeemSlotInfo,
-	updateData: Parameters<typeof BizRedeemSlotInfo.prototype.update>[0],
-	transaction: Transaction
-): Promise<void> {
-	await redeemSlotInfo.update(updateData, { transaction });
-
-	// 确保 chainId 存在才发送 SQS
-	if (redeemSlotInfo.chainId !== undefined && redeemSlotInfo.chainId !== null) {
-		try {
-			await sendQueueMessageDelay(redeemSlotInfo.chainId, 'assetQueue', {
-				source: 'V3_5_Raw_Redeem_Slot_Info',
-				data: {
-					id: Number(redeemSlotInfo.id),
-					chainId: String(redeemSlotInfo.chainId),
-					contractAddress: redeemSlotInfo.contractAddress,
-				},
-			});
-		} catch (error) {
-			console.error('BizRedeemSlotInfoHandler: Failed to send SQS message for updated redeem slot info', {
-				id: redeemSlotInfo.id,
-				chainId: redeemSlotInfo.chainId,
-				contractAddress: redeemSlotInfo.contractAddress,
-				slot: redeemSlotInfo.slot,
-				error: error instanceof Error ? error.message : String(error),
-			});
-		}
-	}
-}
-
-/**
  * 获取货币符号
  */
 async function getCurrencySymbol(
@@ -498,7 +428,7 @@ async function getRedeemSlotInfo(
 
 /**
  * 从 tokenId 获取 slot
- * 优先从数据库查找，如果找不到，再从链上调用 slotOf
+ * 直接从链上调用 slotOf，避免依赖旧数据源
  */
 async function getSlotFromTokenId(
     chainId: number,
@@ -508,37 +438,8 @@ async function getSlotFromTokenId(
     blockNumber?: number
 ): Promise<string | null> {
     console.log('BizRedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
-    // 首先尝试从数据库查找
-    try {
-        const tokenInfo = await RawOptErc3525TokenInfo.findOne({
-            where: {
-                chainId,
-                contractAddress: contractAddress.toLowerCase(),
-                tokenId,
-            },
-            transaction,
-        });
-
-        if (tokenInfo?.slot) {
-            return tokenInfo.slot;
-        }
-    } catch (error) {
-        console.warn('BizRedeemSlotInfoHandler: Failed to get slot from database', {
-            chainId,
-            contractAddress,
-            tokenId,
-            error: error instanceof Error ? error.message : String(error),
-        });
-    }
-
-    // 如果数据库中没有找到，尝试从链上获取
-    const slotFromChain = await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
-    if (slotFromChain) {
-        return slotFromChain;
-    }
-
-    // 如果都失败了，返回 null（不记录警告，由调用方决定如何处理）
-    return null;
+    void transaction;
+    return await getSlotOf(chainId, contractAddress, tokenId, blockNumber);
 }
 
 // ==================== 事件处理函数 ====================
@@ -632,7 +533,7 @@ async function handleCreateSlot(
 
     // 创建 RedeemSlotInfo 记录并发送 SQS
     try {
-        await createRedeemSlotInfoAndSendSQS(
+        await BizRedeemSlotInfo.create(
             {
                 chainId: event.chainId,
                 msgSender: creator || toAddressString(args.msgSender),
@@ -653,8 +554,7 @@ async function handleCreateSlot(
                 lastUpdated: event.blockTimestamp,
                 blockTimestamp: event.blockTimestamp,
             },
-            event.chainId,
-            transaction
+            {transaction}
         );
 
         // 使用 console.debug 避免在测试中输出日志
@@ -710,13 +610,12 @@ async function handleMintValue(
     const currentRedeemAmount = redeemSlotInfo.redeemAmount || '0';
 
     try {
-        await updateRedeemSlotInfoAndSendSQS(
-            redeemSlotInfo,
+        await redeemSlotInfo.update(
             {
                 redeemAmount: addBigInt(currentRedeemAmount, value),
                 lastUpdated: event.blockTimestamp,
             },
-            transaction
+            {transaction}
         );
 
         console.log('BizRedeemSlotInfoHandler: MintValue success', {
@@ -784,13 +683,12 @@ async function handleClaim(
     const currentClaimedAmount = redeemSlotInfo.claimedAmount || '0';
 
     try {
-        await updateRedeemSlotInfoAndSendSQS(
-            redeemSlotInfo,
+        await redeemSlotInfo.update(
             {
                 claimedAmount: addBigInt(currentClaimedAmount, claimValue),
                 lastUpdated: event.blockTimestamp,
             },
-            transaction
+            {transaction}
         );
 
         console.log('BizRedeemSlotInfoHandler: Claim success', {
@@ -847,13 +745,12 @@ async function handleRepay(
     const currentRepaidValue = redeemSlotInfo.repaidValue || '0';
 
     try {
-        await updateRedeemSlotInfoAndSendSQS(
-            redeemSlotInfo,
+        await redeemSlotInfo.update(
             {
                 repaidValue: addBigInt(currentRepaidValue, repayCurrencyAmount),
                 lastUpdated: event.blockTimestamp,
             },
-            transaction
+            {transaction}
         );
 
         console.log('BizRedeemSlotInfoHandler: Repay success', {
@@ -919,13 +816,12 @@ async function handleBurnValue(
     const currentRedeemAmount = redeemSlotInfo.redeemAmount || '0';
 
     try {
-        await updateRedeemSlotInfoAndSendSQS(
-            redeemSlotInfo,
+        await redeemSlotInfo.update(
             {
                 redeemAmount: subBigInt(currentRedeemAmount, burnValue),
                 lastUpdated: event.blockTimestamp,
             },
-            transaction
+            {transaction}
         );
 
         console.log('BizRedeemSlotInfoHandler: BurnValue success', {
@@ -1045,16 +941,15 @@ async function handleSetRedeemNav(
         return;
     }
 
-    // 更新记录并发送 SQS
+    // 更新记录
     try {
-        await updateRedeemSlotInfoAndSendSQS(
-            redeemSlotInfo,
+        await redeemSlotInfo.update(
             {
                 nav,
                 navSetTime: event.blockTimestamp,
                 lastUpdated: event.blockTimestamp,
             },
-            transaction
+            {transaction}
         );
 
         console.log('BizRedeemSlotInfoHandler: SetRedeemNav success', {
@@ -1109,15 +1004,14 @@ async function handleCloseRedeemSlot(
         return;
     }
 
-    // 更新记录并发送 SQS
+    // 更新记录
     try {
-        await updateRedeemSlotInfoAndSendSQS(
-            redeemSlotInfo,
+        await redeemSlotInfo.update(
             {
                 state: 'Locked',
                 lastUpdated: event.blockTimestamp,
             },
-            transaction
+            {transaction}
         );
 
         console.log('BizRedeemSlotInfoHandler: CloseRedeemSlot success', {
@@ -1192,7 +1086,7 @@ export async function handleRedeemShareDelegateEvent(param: HandlerParam): Promi
     await getBusinessSequelize();
 
     try {
-        const existing = await RawOptContractInfo.findOne({
+        const existing = await BizContractInfo.findOne({
             where: {
                 chainId: event.chainId,
                 contractAddress: event.contractAddress.toLowerCase(),

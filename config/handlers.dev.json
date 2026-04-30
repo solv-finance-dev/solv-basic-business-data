@@ -625,6 +625,23 @@
     ]
   },
   {
+    "name": "BizContractInfo",
+    "module": "business/BizContractInfoHandler",
+    "handlers": [
+      {
+        "handler": "handlePayableDelegateFactoryEvent",
+        "abi": "PayableDelegateFactory.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x9fD4EBbA9bb92E2c40d76Bd319bcf77387FFeB90"
+        ],
+        "eventSignatures": [
+          "NewDelegateBeaconProxy(bytes32,bytes32,address)"
+        ]
+      }
+    ]
+  },
+  {
     "name": "BizNavRecords",
     "module": "business/BizNavRecordsHandler",
     "handlers": [
