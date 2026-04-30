@@ -89,7 +89,7 @@
     ]
   },
   {
-    "name": "PayableDelegateFactory",
+    "name": "ContractInfo",
     "module": "baseInfo/ContractInfoHandler",
     "handlers": [
       {
@@ -548,7 +548,6 @@
           "0xb1b1dc971E7F3Cd44B03c29381c4775498Ad0434",
           "0x0179E23361d105F1b62E500Bab79B1F9dBe3bAE8",
           "0x9d881b8Ed6E9Dab1f89f3fcE9Cb8C18979078306"
-
         ],
         "eventSignatures": [
           "CancelRedemption(bytes32,address,address,uint256,uint256)",
@@ -621,6 +620,91 @@
         ],
         "eventSignatures": [
           "SetCurrency(address,bool)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BizContractInfo",
+    "module": "business/BizContractInfoHandler",
+    "handlers": [
+      {
+        "handler": "handlePayableDelegateFactoryEvent",
+        "abi": "PayableDelegateFactory.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x9fD4EBbA9bb92E2c40d76Bd319bcf77387FFeB90"
+        ],
+        "eventSignatures": [
+          "NewDelegateBeaconProxy(bytes32,bytes32,address)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BizNavRecords",
+    "module": "business/BizNavRecordsHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x109198eb8bd3064efa5d0711b505f59cfd77de18"
+        ],
+        "eventSignatures": [
+          "SetRedeemNav(bytes32,uint256,uint256)",
+          "SetSubscribeNav(bytes32,uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BizRedeemSlotInfo",
+    "module": "business/BizRedeemSlotInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x109198eb8bd3064efa5d0711b505f59cfd77de18"
+        ],
+        "eventSignatures": [
+          "CloseRedeemSlot(bytes32,uint256,uint256)",
+          "SetRedeemNav(bytes32,uint256,uint256)"
+        ]
+      },
+      {
+        "handler": "handleRedeemShareDelegateEvent",
+        "abi": "OpenFundRedemptionDelegate.json",
+        "chainIds": [11155111],
+        "contractAddresses": null,
+        "templateSignature": "NewDelegateBeaconProxy(bytes32,bytes32,address)",
+        "eventSignatures": [
+          "CreateSlot(uint256,address,bytes)",
+          "MintValue(uint256,uint256,uint256)",
+          "Claim(address,uint256,uint256,address,uint256)",
+          "Repay(uint256,address,address,uint256)",
+          "SlotChanged(uint256,uint256,uint256)",
+          "BurnValue(uint256,uint256)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BizCarryInfo",
+    "module": "business/BizCarryInfoHandler",
+    "handlers": [
+      {
+        "handler": "handleOpenFundMarketEvent",
+        "abi": "OpenFundMarket.json",
+        "chainIds": [11155111],
+        "contractAddresses": [
+          "0x109198eb8bd3064efa5d0711b505f59cfd77de18"
+        ],
+        "eventSignatures": [
+          "SettleCarry(bytes32,uint256,address,uint256,uint256)"
         ]
       }
     ]
