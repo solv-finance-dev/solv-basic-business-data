@@ -6,7 +6,7 @@ import {getContractType} from '../../services/evmService';
 import {sendQueueMessageDelay} from '../../lib/sqs';
 
 export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Promise<void> {
-    const {event, args, transaction} = param;
+    const {event, args, bizTransaction} = param;
     const beaconProxy = String(args.beaconProxy ?? '');
     if (!beaconProxy) {
         return;
@@ -21,7 +21,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
             chainId: event.chainId,
             contractAddress,
         },
-        transaction,
+        transaction: bizTransaction,
     });
     if (existing) {
         console.log('BizContractInfoHandler: record already exists for beaconProxy ', beaconProxy, ' eventId ', event.eventId);
@@ -50,7 +50,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
             lastUpdated: event.blockTimestamp,
             contractURI,
         },
-        transaction,
+        transaction: bizTransaction,
     });
 
     if (!created) {
@@ -63,7 +63,7 @@ export async function handlePayableDelegateFactoryEvent(param: HandlerParam): Pr
                 lastUpdated: event.blockTimestamp,
                 contractURI,
             },
-            {transaction},
+            {transaction: bizTransaction},
         );
         console.log('BizContractInfoHandler: updated record for beaconProxy ', beaconProxy, ' eventId ', event.eventId);
     } else {

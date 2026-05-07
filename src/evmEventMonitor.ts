@@ -3,7 +3,7 @@ import {getLastSyncedBlock, setLastSyncedBlock} from './data/evmSyncState';
 import {initHandlersConfig, routerEvent} from './services/monitorService';
 import {EventEvm} from './types/eventEvm';
 import type {ChainConfig} from './types/config';
-import {getRawSequelize} from "./lib/dbClient";
+import {getBusinessSequelize, getRawSequelize} from "./lib/dbClient";
 import {getRedisClient} from "./lib/redis";
 import {sendDelayQueueMessageNow} from "./lib/sqs";
 import {getLatestBlockNumber} from './lib/rpc';
@@ -116,13 +116,25 @@ async function processChain(chain: ChainConfig): Promise<void> {
         blockEvents.sort((a, b) => a.logIndex - b.logIndex);
 
         const sequelize = await getRawSequelize();
+        const businessSequelize = await getBusinessSequelize();
         const transaction = await sequelize.transaction();
+        const bizTransaction = await businessSequelize.transaction();
+        let transactionCommitted = false;
+        let bizTransactionCommitted = false;
 
         try {
-            await routerEvent(blockEvents, templateAddressesMap, transaction);
+            await routerEvent(blockEvents, templateAddressesMap, transaction, bizTransaction);
+            await bizTransaction.commit();
+            bizTransactionCommitted = true;
             await transaction.commit();
+            transactionCommitted = true;
         } catch (error) {
-            await transaction.rollback();
+            if (!bizTransactionCommitted) {
+                await bizTransaction.rollback();
+            }
+            if (!transactionCommitted) {
+                await transaction.rollback();
+            }
             // 生成uuid
             const uuid = crypto.randomUUID();
             // 从blockEvents里获取id作为id的数组合集

@@ -42,4 +42,5 @@ export interface HandlerParam {
     eventFunc: string;
     config: HandlerEntry;
     transaction: Transaction;
+    bizTransaction?: Transaction;
 }
