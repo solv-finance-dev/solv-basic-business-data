@@ -16,7 +16,7 @@ import type {
 } from '../types/handler';
 import type {Transaction} from 'sequelize';
 import {decodeEventFromAbi} from "../lib/abi";
-import {getRawSequelize} from "../lib/dbClient";
+import {getBusinessSequelize, getRawSequelize} from "../lib/dbClient";
 import {sendDelayQueueMessageNow} from "../lib/sqs";
 
 type TemplateAddressMap = Record<string, string[]>;
@@ -42,6 +42,7 @@ export async function routerEvent(
     events: EventEvm[],
     templateAddressesMap: TemplateAddressMap,
     transaction: Transaction,
+    bizTransaction?: Transaction,
     handlerEntries?: HandlerEntry[]
 ): Promise<void> {
     if (!events.length) {
@@ -84,7 +85,7 @@ export async function routerEvent(
             const eventSignatureKey = event.eventSignature.toLowerCase();
             const eventSignature = entry.eventSignatureMap ? entry.eventSignatureMap[eventSignatureKey] : '';
             try {
-                await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, events: events, transaction});
+                await invokeHandler(entry, {event, args, eventFunc: eventSignature, config: entry, events: events, transaction, bizTransaction});
             } catch (error) {
                 console.error(`MonitorService: Handler failed: ${entry.name}`, error);
                 throw new Error('MonitorService: handler execution failed.');
@@ -97,7 +98,8 @@ export async function routerEvent(
 export async function routerEventByIds(
     ids: number[],
     config?: RouterEventConfig,
-    transaction?: Transaction
+    transaction?: Transaction,
+    bizTransaction?: Transaction
 ): Promise<void> {
     const events = await getEventByIds(ids);
     if (!events.length) {
@@ -124,17 +126,29 @@ export async function routerEventByIds(
     }
 
     if (transaction) {
-        await routerEvent(events, templateAddressesMap, transaction, handlerEntries);
+        await routerEvent(events, templateAddressesMap, transaction, bizTransaction, handlerEntries);
         return;
     }
 
     const sequelize = await getRawSequelize();
+    const businessSequelize = await getBusinessSequelize();
     const newTransaction = await sequelize.transaction();
+    const newBizTransaction = await businessSequelize.transaction();
+    let newTransactionCommitted = false;
+    let newBizTransactionCommitted = false;
     try {
-        await routerEvent(events, templateAddressesMap, newTransaction, handlerEntries);
+        await routerEvent(events, templateAddressesMap, newTransaction, newBizTransaction, handlerEntries);
+        await newBizTransaction.commit();
+        newBizTransactionCommitted = true;
         await newTransaction.commit();
+        newTransactionCommitted = true;
     } catch (error) {
-        await newTransaction.rollback();
+        if (!newBizTransactionCommitted) {
+            await newBizTransaction.rollback();
+        }
+        if (!newTransactionCommitted) {
+            await newTransaction.rollback();
+        }
         throw error;
     }
     const sqsCount = await sendDelayQueueMessageNow(chainIds[0]);
@@ -146,7 +160,8 @@ export async function routerEventByBlock(
     startBlockNumber: number,
     endBlockNumber: number,
     config?: RouterEventConfig,
-    transaction?: Transaction
+    transaction?: Transaction,
+    bizTransaction?: Transaction
 ): Promise<number> {
     const blockLimit = endBlockNumber - startBlockNumber + 1;
     if (blockLimit <= 0) {
@@ -180,19 +195,31 @@ export async function routerEventByBlock(
     }
 
     if (transaction) {
-        await routerEvent(sortedEvents, templateAddressesMap, transaction, handlerEntries);
+        await routerEvent(sortedEvents, templateAddressesMap, transaction, bizTransaction, handlerEntries);
         return events.length;
     }
 
     const sequelize = await getRawSequelize();
+    const businessSequelize = await getBusinessSequelize();
     for (const [blockNumber, blockEvents] of blockEventMap.entries()) {
         const newTransaction = await sequelize.transaction();
+        const newBizTransaction = await businessSequelize.transaction();
+        let newTransactionCommitted = false;
+        let newBizTransactionCommitted = false;
         try {
-            await routerEvent(blockEvents, templateAddressesMap, newTransaction, handlerEntries);
+            await routerEvent(blockEvents, templateAddressesMap, newTransaction, newBizTransaction, handlerEntries);
+            await newBizTransaction.commit();
+            newBizTransactionCommitted = true;
             await newTransaction.commit();
+            newTransactionCommitted = true;
             console.log(`MonitorService: routerEventByBlock block success. chainId: ${chainId}, blockNumber: ${blockNumber}, eventCount: ${blockEvents.length}`);
         } catch (error) {
-            await newTransaction.rollback();
+            if (!newBizTransactionCommitted) {
+                await newBizTransaction.rollback();
+            }
+            if (!newTransactionCommitted) {
+                await newTransaction.rollback();
+            }
             console.error(`MonitorService: routerEventByBlock block failed. chainId: ${chainId}, blockNumber: ${blockNumber}, eventCount: ${blockEvents.length}`, error);
             throw error;
         }

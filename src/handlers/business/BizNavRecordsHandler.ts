@@ -4,7 +4,7 @@ import BizNavRecords from '../../models/business/BizNavRecords';
 
 // 处理 OpenFundMarket 的 SetRedeemNav/SetSubscribeNav 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
-    const {eventFunc, event, args, transaction} = param;
+    const {eventFunc, event, args, bizTransaction} = param;
 
     const poolId = args.poolId !== undefined ? String(args.poolId).toLowerCase() : undefined;
     if (!poolId) {
@@ -21,7 +21,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
             eventIndex: event.logIndex,
             transactionIndex: event.transactionIndex,
         },
-        transaction,
+        transaction: bizTransaction,
     });
     if (existing) {
         return;
@@ -49,7 +49,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
             eventIndex: event.logIndex,
             lastUpdated: event.blockTimestamp,
         },
-        {transaction},
+        {transaction: bizTransaction},
     );
 
     console.log('BizNavRecordsHandler: created record for txHash ', event.transactionHash, ' eventId ', event.eventId);

@@ -107,7 +107,7 @@ function extractArg(args: HandlerParam['args'], ...keys: string[]): unknown {
 async function getContractType(
 	chainId: number,
 	contractAddress: string,
-	transaction: Transaction
+	transaction: Transaction | undefined
 ): Promise<string | null> {
 	try {
 		const contractInfo = await BizContractInfo.findOne({
@@ -374,7 +374,7 @@ async function getSlotURISafe(
 async function getCurrencySymbol(
 	chainId: number,
 	currencyAddress: string,
-	transaction: Transaction
+	transaction: Transaction | undefined
 ): Promise<string | undefined> {
 	try {
 		const currencyInfo = await BizCurrencyInfo.findOne({
@@ -404,7 +404,7 @@ async function getRedeemSlotInfo(
     chainId: number,
     contractAddress: string,
     slot: string,
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<BizRedeemSlotInfo | null> {
     try {
         return await BizRedeemSlotInfo.findOne({
@@ -434,7 +434,7 @@ async function getSlotFromTokenId(
     chainId: number,
     contractAddress: string,
     tokenId: string,
-    transaction: Transaction,
+    transaction: Transaction | undefined,
     blockNumber?: number
 ): Promise<string | null> {
     console.log('BizRedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
@@ -450,7 +450,7 @@ async function getSlotFromTokenId(
 async function handleCreateSlot(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     const slot = toString(extractArg(args, '_slot', 'slot'));
     if (!slot) {
@@ -581,7 +581,7 @@ async function handleCreateSlot(
 async function handleMintValue(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     const slot = toString(extractArg(args, '_slot', 'slot'));
     const value = toString(extractArg(args, '_value', 'value'));
@@ -642,7 +642,7 @@ async function handleMintValue(
 async function handleClaim(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     const tokenId = toString(extractArg(args, 'tokenId', '_tokenId'));
     const claimValue = toString(extractArg(args, 'claimValue', '_claimValue'));
@@ -715,7 +715,7 @@ async function handleClaim(
 async function handleRepay(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     const slot = toString(extractArg(args, 'slot', '_slot'));
     const repayCurrencyAmount = toString(extractArg(args, 'repayCurrencyAmount', '_repayCurrencyAmount'));
@@ -776,7 +776,7 @@ async function handleRepay(
 async function handleBurnValue(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     const tokenId = toString(args.tokenId);
     const burnValue = toString(args.burnValue);
@@ -847,7 +847,7 @@ async function handleBurnValue(
 async function getOpenFundRedemption(
     chainId: number,
     poolId: string,
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<string | null> {
     try {
         const poolOrder = await BizPoolOrderSlotInfo.findOne({
@@ -876,7 +876,7 @@ async function getRedeemSlotInfoByPoolId(
     chainId: number,
     poolId: string,
     slot: string,
-    transaction: Transaction,
+    transaction: Transaction | undefined,
     eventId: string
 ): Promise<BizRedeemSlotInfo | null> {
     // 获取 openFundRedemption 地址
@@ -911,7 +911,7 @@ async function getRedeemSlotInfoByPoolId(
 async function handleSetRedeemNav(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     // 提取并验证参数
     const poolId = toString(args.poolId)?.toLowerCase();
@@ -976,7 +976,7 @@ async function handleSetRedeemNav(
 async function handleCloseRedeemSlot(
     event: HandlerParam['event'],
     args: HandlerParam['args'],
-    transaction: Transaction
+    transaction: Transaction | undefined
 ): Promise<void> {
     // 提取并验证参数
     const poolId = toString(args.poolId)?.toLowerCase();
@@ -1049,7 +1049,7 @@ const OPEN_FUND_MARKET_EVENT_SIGNATURES = {
 // ==================== 主处理函数 ====================
 
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
-	const { eventFunc, event, args, transaction } = param;
+	const { eventFunc, event, args, bizTransaction } = param;
 
     await getBusinessSequelize();
     
@@ -1057,11 +1057,11 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
         // 根据事件签名路由到对应的处理函数
         switch (eventFunc) {
             case OPEN_FUND_MARKET_EVENT_SIGNATURES.SET_REDEEM_NAV:
-                await handleSetRedeemNav(event, args, transaction);
+                await handleSetRedeemNav(event, args, bizTransaction);
                 break;
 
             case OPEN_FUND_MARKET_EVENT_SIGNATURES.CLOSE_REDEEM_SLOT:
-                await handleCloseRedeemSlot(event, args, transaction);
+                await handleCloseRedeemSlot(event, args, bizTransaction);
                 break;
 
             default:
@@ -1081,7 +1081,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
 }
 
 export async function handleRedeemShareDelegateEvent(param: HandlerParam): Promise<void> {
-	const { eventFunc, event, args, transaction } = param;
+	const { eventFunc, event, args, bizTransaction } = param;
 
     await getBusinessSequelize();
 
@@ -1092,7 +1092,7 @@ export async function handleRedeemShareDelegateEvent(param: HandlerParam): Promi
                 contractAddress: event.contractAddress.toLowerCase(),
                 contractType: "Open Fund Redemptions",
             },
-            transaction,
+            transaction: bizTransaction,
         });
         if (!existing) {
             return;
@@ -1100,23 +1100,23 @@ export async function handleRedeemShareDelegateEvent(param: HandlerParam): Promi
         // 根据事件签名路由到对应的处理函数
         switch (eventFunc) {
             case REDEEM_SHARE_DELEGATE_EVENT_SIGNATURES.CREATE_SLOT:
-                await handleCreateSlot(event, args, transaction);
+                await handleCreateSlot(event, args, bizTransaction);
                 break;
 
             case REDEEM_SHARE_DELEGATE_EVENT_SIGNATURES.MINT_VALUE:
-                await handleMintValue(event, args, transaction);
+                await handleMintValue(event, args, bizTransaction);
                 break;
 
             case REDEEM_SHARE_DELEGATE_EVENT_SIGNATURES.CLAIM:
-                await handleClaim(event, args, transaction);
+                await handleClaim(event, args, bizTransaction);
                 break;
 
             case REDEEM_SHARE_DELEGATE_EVENT_SIGNATURES.REPAY:
-                await handleRepay(event, args, transaction);
+                await handleRepay(event, args, bizTransaction);
                 break;
 
             case REDEEM_SHARE_DELEGATE_EVENT_SIGNATURES.BURN_VALUE:
-                await handleBurnValue(event, args, transaction);
+                await handleBurnValue(event, args, bizTransaction);
                 break;
 
             default:

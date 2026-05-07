@@ -4,7 +4,7 @@ import BizCarryInfo from '../../models/business/BizCarryInfo';
 
 // 处理 OpenFundMarket 的 SettleCarry 事件。
 export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<void> {
-    const {event, args, transaction} = param;
+    const {event, args, bizTransaction} = param;
 
     await getBusinessSequelize();
 
@@ -15,7 +15,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
             eventIndex: event.logIndex,
             transactionIndex: event.transactionIndex,
         },
-        transaction,
+        transaction: bizTransaction,
     });
     if (existing) {
         return;
@@ -40,7 +40,7 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
             eventIndex: event.logIndex,
             lastUpdated: event.blockTimestamp,
         },
-        {transaction},
+        {transaction: bizTransaction},
     );
 
     console.log('BizCarryInfoHandler: created record for txHash ', event.transactionHash, ' eventId ', event.eventId);
