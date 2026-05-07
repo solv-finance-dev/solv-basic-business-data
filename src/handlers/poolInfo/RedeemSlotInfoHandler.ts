@@ -61,11 +61,11 @@ function addBigInt(a: string | undefined | null, b: string | undefined | null): 
     try {
         return (BigInt(aValue) + BigInt(bValue)).toString();
     } catch (error) {
-        console.warn('RedeemSlotInfoHandler: BigInt addition failed', {
+        console.warn('RedeemSlotInfoHandler: BigInt addition failed', JSON.stringify({
             a: aValue,
             b: bValue,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         return '0';
     }
 }
@@ -81,11 +81,11 @@ function subBigInt(a: string | undefined | null, b: string | undefined | null): 
         // 确保结果不为负数
         return result < 0 ? '0' : result.toString();
     } catch (error) {
-        console.warn('RedeemSlotInfoHandler: BigInt subtraction failed', {
+        console.warn('RedeemSlotInfoHandler: BigInt subtraction failed', JSON.stringify({
             a: aValue,
             b: bValue,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         return '0';
     }
 }
@@ -120,11 +120,11 @@ async function getContractType(
 		});
 		return contractInfo?.contractType || null;
 	} catch (error) {
-		console.warn('RedeemSlotInfoHandler: Failed to get ContractInfo', {
+		console.warn('RedeemSlotInfoHandler: Failed to get ContractInfo', JSON.stringify({
 			chainId,
 			contractAddress,
 			error: error instanceof Error ? error.message : String(error),
-		});
+		}));
 		return null;
 	}
 }
@@ -188,11 +188,11 @@ function decodeSlotInfoFromBytes(
 			return {};
 		}
 	} catch (error) {
-		console.warn('RedeemSlotInfoHandler: Failed to decode slotInfo bytes', {
+		console.warn('RedeemSlotInfoHandler: Failed to decode slotInfo bytes', JSON.stringify({
 			contractType,
 			slotInfoBytesPrefix: slotInfoBytes?.substring(0, 50),
 			error: error instanceof Error ? error.message : String(error),
-		});
+		}));
 		return {};
 	}
 }
@@ -256,10 +256,10 @@ function extractFieldsFromSlotURI(slotURI: string): {
 	try {
 		// slotURI 格式: data:application/json;base64,{base64_encoded_json}
 		if (!slotURI || !slotURI.startsWith('data:application/json;base64,')) {
-			console.warn('RedeemSlotInfoHandler: slotURI format invalid', {
+			console.warn('RedeemSlotInfoHandler: slotURI format invalid', JSON.stringify({
 				hasSlotURI: !!slotURI,
 				startsWith: slotURI?.substring(0, 30),
-			});
+			}));
 			return {};
 		}
 
@@ -268,38 +268,38 @@ function extractFieldsFromSlotURI(slotURI: string): {
 		try {
 			jsonString = Buffer.from(base64Data, 'base64').toString('utf-8');
 		} catch (error) {
-			console.warn('RedeemSlotInfoHandler: Failed to decode base64', {
+			console.warn('RedeemSlotInfoHandler: Failed to decode base64', JSON.stringify({
 				error: error instanceof Error ? error.message : String(error),
 				base64DataPrefix: base64Data.substring(0, 50),
-			});
+			}));
 			return {};
 		}
 
 		// 调试：记录解码后的 JSON 字符串（前 200 个字符）
-		console.debug('RedeemSlotInfoHandler: Decoded JSON string', {
+		console.debug('RedeemSlotInfoHandler: Decoded JSON string', JSON.stringify({
 			jsonStringPrefix: jsonString.substring(0, 200),
 			jsonStringLength: jsonString.length,
-		});
+		}));
 
 		let parsed: any;
 		try {
 			parsed = JSON.parse(jsonString);
 		} catch (error) {
-			console.warn('RedeemSlotInfoHandler: Failed to parse JSON', {
+			console.warn('RedeemSlotInfoHandler: Failed to parse JSON', JSON.stringify({
 				error: error instanceof Error ? error.message : String(error),
 				jsonStringPrefix: jsonString.substring(0, 200),
 				jsonStringLength: jsonString.length,
-			});
+			}));
 			return {};
 		}
 
 		// 从 properties 数组中提取字段
 		if (!parsed.properties || !Array.isArray(parsed.properties)) {
-			console.warn('RedeemSlotInfoHandler: slotURI missing properties array', {
+			console.warn('RedeemSlotInfoHandler: slotURI missing properties array', JSON.stringify({
 				hasProperties: !!parsed.properties,
 				propertiesType: Array.isArray(parsed.properties) ? 'array' : typeof parsed.properties,
 				parsedKeys: Object.keys(parsed),
-			});
+			}));
 			return {};
 		}
 
@@ -330,19 +330,19 @@ function extractFieldsFromSlotURI(slotURI: string): {
 
 		// 调试：记录解析到的字段
 		if (Object.keys(result).length > 0) {
-			console.log('RedeemSlotInfoHandler: Extracted from slotURI', {
+			console.log('RedeemSlotInfoHandler: Extracted from slotURI', JSON.stringify({
 				extractedFields: Object.keys(result),
 				propertiesCount: parsed.properties.length,
 				propertyNames: parsed.properties.map((p: { name?: string }) => p.name),
-			});
+			}));
 		}
 
 		return result;
 	} catch (error) {
-		console.warn('RedeemSlotInfoHandler: Failed to parse slotURI', {
+		console.warn('RedeemSlotInfoHandler: Failed to parse slotURI', JSON.stringify({
 			error: error instanceof Error ? error.message : String(error),
 			slotURIPrefix: slotURI?.substring(0, 50),
-		});
+		}));
 		return {};
 	}
 }
@@ -359,12 +359,12 @@ async function getSlotURISafe(
 	try {
 		return await getSlotURI(chainId, contractAddress, slot, blockNumber);
 	} catch (error) {
-		console.warn('RedeemSlotInfoHandler: Failed to get slotURI', {
+		console.warn('RedeemSlotInfoHandler: Failed to get slotURI', JSON.stringify({
 			chainId,
 			contractAddress,
 			slot,
 			error: error instanceof Error ? error.message : String(error),
-		});
+		}));
 		return '';
 	}
 }
@@ -391,13 +391,13 @@ async function createRedeemSlotInfoAndSendSQS(
 				},
 			});
 		} catch (error) {
-			console.error('RedeemSlotInfoHandler: Failed to send SQS message for new redeem slot info', {
+			console.error('RedeemSlotInfoHandler: Failed to send SQS message for new redeem slot info', JSON.stringify({
 				id: redeemSlotInfo.id,
 				chainId,
 				contractAddress: redeemSlotInfo.contractAddress,
 				slot: redeemSlotInfo.slot,
 				error: error instanceof Error ? error.message : String(error),
-			});
+			}));
 		}
 	}
 
@@ -426,13 +426,13 @@ async function updateRedeemSlotInfoAndSendSQS(
 				},
 			});
 		} catch (error) {
-			console.error('RedeemSlotInfoHandler: Failed to send SQS message for updated redeem slot info', {
+			console.error('RedeemSlotInfoHandler: Failed to send SQS message for updated redeem slot info', JSON.stringify({
 				id: redeemSlotInfo.id,
 				chainId: redeemSlotInfo.chainId,
 				contractAddress: redeemSlotInfo.contractAddress,
 				slot: redeemSlotInfo.slot,
 				error: error instanceof Error ? error.message : String(error),
-			});
+			}));
 		}
 	}
 }
@@ -455,11 +455,11 @@ async function getCurrencySymbol(
 		});
 		return currencyInfo?.symbol;
 	} catch (error) {
-		console.warn('RedeemSlotInfoHandler: Failed to get CurrencyInfo', {
+		console.warn('RedeemSlotInfoHandler: Failed to get CurrencyInfo', JSON.stringify({
 			chainId,
 			currencyAddress,
 			error: error instanceof Error ? error.message : String(error),
-		});
+		}));
 		return undefined;
 	}
 }
@@ -485,12 +485,12 @@ async function getRedeemSlotInfo(
             transaction,
         });
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: Failed to get RedeemSlotInfo', {
+        console.error('RedeemSlotInfoHandler: Failed to get RedeemSlotInfo', JSON.stringify({
             chainId,
             contractAddress,
             slot,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         return null;
     }
 }
@@ -506,7 +506,7 @@ async function getSlotFromTokenId(
     transaction: Transaction,
     blockNumber?: number
 ): Promise<string | null> {
-    console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', { chainId, contractAddress, tokenId });
+    console.log('RedeemSlotInfoHandler: getSlotFromTokenId params', JSON.stringify({ chainId, contractAddress, tokenId }));
     // 首先尝试从数据库查找
     try {
         const tokenInfo = await RawOptErc3525TokenInfo.findOne({
@@ -522,12 +522,12 @@ async function getSlotFromTokenId(
             return tokenInfo.slot;
         }
     } catch (error) {
-        console.warn('RedeemSlotInfoHandler: Failed to get slot from database', {
+        console.warn('RedeemSlotInfoHandler: Failed to get slot from database', JSON.stringify({
             chainId,
             contractAddress,
             tokenId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
     }
 
     // 如果数据库中没有找到，尝试从链上获取
@@ -552,9 +552,9 @@ async function handleCreateSlot(
 ): Promise<void> {
     const slot = toString(extractArg(args, '_slot', 'slot'));
     if (!slot) {
-        console.warn('RedeemSlotInfoHandler: CreateSlot missing slot', {
+        console.warn('RedeemSlotInfoHandler: CreateSlot missing slot', JSON.stringify({
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
@@ -563,11 +563,11 @@ async function handleCreateSlot(
     // 检查是否已存在
     const existing = await getRedeemSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (existing) {
-        console.log('RedeemSlotInfoHandler: CreateSlot record already exists', {
+        console.log('RedeemSlotInfoHandler: CreateSlot record already exists', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
@@ -613,7 +613,7 @@ async function handleCreateSlot(
 
 	// 注意：nav 可能为 "0"，所以不能使用 !nav 来判断
 	if (!poolId || !currencyAddress || nav === undefined || nav === null || !createTime) {
-		console.warn('RedeemSlotInfoHandler: CreateSlot missing required fields', {
+		console.warn('RedeemSlotInfoHandler: CreateSlot missing required fields', JSON.stringify({
 			eventId: event.eventId,
 			slot,
 			hasPoolId: !!poolId,
@@ -622,7 +622,7 @@ async function handleCreateSlot(
 			hasCreateTime: !!createTime,
 			slotInfoType: typeof slotInfo,
 			slotInfoKeys: slotInfo && typeof slotInfo === 'object' ? Object.keys(slotInfo) : undefined,
-		});
+		}));
 		return;
 	}
 
@@ -664,12 +664,12 @@ async function handleCreateSlot(
         //     eventId: event.eventId,
         // });
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: CreateSlot failed', {
+        console.error('RedeemSlotInfoHandler: CreateSlot failed', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -686,11 +686,11 @@ async function handleMintValue(
     const value = toString(extractArg(args, '_value', 'value'));
 
     if (!slot || !value) {
-        console.warn('RedeemSlotInfoHandler: MintValue missing required fields', {
+        console.warn('RedeemSlotInfoHandler: MintValue missing required fields', JSON.stringify({
             eventId: event.eventId,
             hasSlot: !!slot,
             hasValue: !!value,
-        });
+        }));
         return;
     }
 
@@ -698,11 +698,11 @@ async function handleMintValue(
 
     const redeemSlotInfo = await getRedeemSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!redeemSlotInfo) {
-        console.warn('RedeemSlotInfoHandler: MintValue redeemSlotInfo not found', {
+        console.warn('RedeemSlotInfoHandler: MintValue redeemSlotInfo not found', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
@@ -718,19 +718,20 @@ async function handleMintValue(
             transaction
         );
 
-        console.log('RedeemSlotInfoHandler: MintValue success', {
+        console.log('RedeemSlotInfoHandler: MintValue success', JSON.stringify({
             contractAddress,
+			currentRedeemAmount,
             slot,
             value,
             eventId: event.eventId,
-        });
+        }));
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: MintValue failed', {
+        console.error('RedeemSlotInfoHandler: MintValue failed', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -749,11 +750,11 @@ async function handleClaim(
     // currency 和 claimCurrencyAmount 在事件中，但旧代码中没有使用
 
     if (!tokenId || !claimValue) {
-        console.warn('RedeemSlotInfoHandler: Claim missing required fields', {
+        console.warn('RedeemSlotInfoHandler: Claim missing required fields', JSON.stringify({
             eventId: event.eventId,
             hasTokenId: !!tokenId,
             hasClaimValue: !!claimValue,
-        });
+        }));
         return;
     }
 
@@ -762,21 +763,21 @@ async function handleClaim(
     // 从 tokenId 获取 slot
     const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
     if (!slot) {
-        console.warn('RedeemSlotInfoHandler: Claim tokenInfo not found or missing slot', {
+        console.warn('RedeemSlotInfoHandler: Claim tokenInfo not found or missing slot', JSON.stringify({
             contractAddress,
             tokenId,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
     const redeemSlotInfo = await getRedeemSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!redeemSlotInfo) {
-        console.warn('RedeemSlotInfoHandler: Claim redeemSlotInfo not found', {
+        console.warn('RedeemSlotInfoHandler: Claim redeemSlotInfo not found', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
@@ -792,19 +793,19 @@ async function handleClaim(
             transaction
         );
 
-        console.log('RedeemSlotInfoHandler: Claim success', {
+        console.log('RedeemSlotInfoHandler: Claim success', JSON.stringify({
             contractAddress,
             slot,
             claimValue,
             eventId: event.eventId,
-        });
+        }));
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: Claim failed', {
+        console.error('RedeemSlotInfoHandler: Claim failed', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -823,11 +824,11 @@ async function handleRepay(
     // payer 和 currency 在事件中，但旧代码中没有使用
 
     if (!slot || !repayCurrencyAmount) {
-        console.warn('RedeemSlotInfoHandler: Repay missing required fields', {
+        console.warn('RedeemSlotInfoHandler: Repay missing required fields', JSON.stringify({
             eventId: event.eventId,
             hasSlot: !!slot,
             hasRepayCurrencyAmount: !!repayCurrencyAmount,
-        });
+        }));
         return;
     }
 
@@ -835,11 +836,11 @@ async function handleRepay(
 
     const redeemSlotInfo = await getRedeemSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!redeemSlotInfo) {
-        console.warn('RedeemSlotInfoHandler: Repay redeemSlotInfo not found', {
+        console.warn('RedeemSlotInfoHandler: Repay redeemSlotInfo not found', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
@@ -855,19 +856,19 @@ async function handleRepay(
             transaction
         );
 
-        console.log('RedeemSlotInfoHandler: Repay success', {
+        console.log('RedeemSlotInfoHandler: Repay success', JSON.stringify({
             contractAddress,
             slot,
             repayCurrencyAmount,
             eventId: event.eventId,
-        });
+        }));
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: Repay failed', {
+        console.error('RedeemSlotInfoHandler: Repay failed', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -884,11 +885,11 @@ async function handleBurnValue(
     const burnValue = toString(args.burnValue);
 
     if (!tokenId || !burnValue) {
-        console.warn('RedeemSlotInfoHandler: BurnValue missing required fields', {
+        console.warn('RedeemSlotInfoHandler: BurnValue missing required fields', JSON.stringify({
             eventId: event.eventId,
             hasTokenId: !!tokenId,
             hasBurnValue: !!burnValue,
-        });
+        }));
         return;
     }
 
@@ -897,21 +898,21 @@ async function handleBurnValue(
     // 从 tokenId 获取 slot
     const slot = await getSlotFromTokenId(event.chainId, contractAddress, tokenId, transaction);
     if (!slot) {
-        console.warn('RedeemSlotInfoHandler: BurnValue tokenInfo not found or missing slot', {
+        console.warn('RedeemSlotInfoHandler: BurnValue tokenInfo not found or missing slot', JSON.stringify({
             contractAddress,
             tokenId,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
     const redeemSlotInfo = await getRedeemSlotInfo(event.chainId, contractAddress, slot, transaction);
     if (!redeemSlotInfo) {
-        console.warn('RedeemSlotInfoHandler: BurnValue redeemSlotInfo not found', {
+        console.warn('RedeemSlotInfoHandler: BurnValue redeemSlotInfo not found', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
-        });
+        }));
         return;
     }
 
@@ -927,19 +928,19 @@ async function handleBurnValue(
             transaction
         );
 
-        console.log('RedeemSlotInfoHandler: BurnValue success', {
+        console.log('RedeemSlotInfoHandler: BurnValue success', JSON.stringify({
             contractAddress,
             slot,
             burnValue,
             eventId: event.eventId,
-        });
+        }));
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: BurnValue failed', {
+        console.error('RedeemSlotInfoHandler: BurnValue failed', JSON.stringify({
             contractAddress,
             slot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -962,11 +963,11 @@ async function getOpenFundRedemption(
         });
         return poolOrder?.openFundRedemption?.toLowerCase() || null;
     } catch (error) {
-        console.warn('RedeemSlotInfoHandler: Failed to get PoolOrderInfo', {
+        console.warn('RedeemSlotInfoHandler: Failed to get PoolOrderInfo', JSON.stringify({
             chainId,
             poolId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         return null;
     }
 }
@@ -985,22 +986,22 @@ async function getRedeemSlotInfoByPoolId(
     // 获取 openFundRedemption 地址
     const openFundRedemption = await getOpenFundRedemption(chainId, poolId, transaction);
     if (!openFundRedemption) {
-        console.warn('RedeemSlotInfoHandler: PoolOrder not found or missing openFundRedemption', {
+        console.warn('RedeemSlotInfoHandler: PoolOrder not found or missing openFundRedemption', JSON.stringify({
             poolId,
             eventId,
-        });
+        }));
         return null;
     }
 
     // 查找 RedeemSlotInfo
     const redeemSlotInfo = await getRedeemSlotInfo(chainId, openFundRedemption, slot, transaction);
     if (!redeemSlotInfo) {
-        console.warn('RedeemSlotInfoHandler: RedeemSlotInfo not found', {
+        console.warn('RedeemSlotInfoHandler: RedeemSlotInfo not found', JSON.stringify({
             contractAddress: openFundRedemption,
             slot,
             poolId,
             eventId,
-        });
+        }));
         return null;
     }
 
@@ -1022,12 +1023,12 @@ async function handleSetRedeemNav(
     const nav = toString(args.nav);
 
     if (!poolId || !redeemSlot || !nav) {
-        console.warn('RedeemSlotInfoHandler: SetRedeemNav missing required fields', {
+        console.warn('RedeemSlotInfoHandler: SetRedeemNav missing required fields', JSON.stringify({
             eventId: event.eventId,
             hasPoolId: !!poolId,
             hasRedeemSlot: !!redeemSlot,
             hasNav: !!nav,
-        });
+        }));
         return;
     }
 
@@ -1056,19 +1057,19 @@ async function handleSetRedeemNav(
             transaction
         );
 
-        console.log('RedeemSlotInfoHandler: SetRedeemNav success', {
+        console.log('RedeemSlotInfoHandler: SetRedeemNav success', JSON.stringify({
             poolId,
             slot: redeemSlot,
             nav,
             eventId: event.eventId,
-        });
+        }));
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: SetRedeemNav failed', {
+        console.error('RedeemSlotInfoHandler: SetRedeemNav failed', JSON.stringify({
             poolId,
             slot: redeemSlot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -1087,11 +1088,11 @@ async function handleCloseRedeemSlot(
     const previousRedeemSlot = toString(args.previousRedeemSlot);
 
     if (!poolId || !previousRedeemSlot) {
-        console.warn('RedeemSlotInfoHandler: CloseRedeemSlot missing required fields', {
+        console.warn('RedeemSlotInfoHandler: CloseRedeemSlot missing required fields', JSON.stringify({
             eventId: event.eventId,
             hasPoolId: !!poolId,
             hasPreviousRedeemSlot: !!previousRedeemSlot,
-        });
+        }));
         return;
     }
 
@@ -1119,18 +1120,18 @@ async function handleCloseRedeemSlot(
             transaction
         );
 
-        console.log('RedeemSlotInfoHandler: CloseRedeemSlot success', {
+        console.log('RedeemSlotInfoHandler: CloseRedeemSlot success', JSON.stringify({
             poolId,
             slot: previousRedeemSlot,
             eventId: event.eventId,
-        });
+        }));
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: CloseRedeemSlot failed', {
+        console.error('RedeemSlotInfoHandler: CloseRedeemSlot failed', JSON.stringify({
             poolId,
             slot: previousRedeemSlot,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -1168,17 +1169,17 @@ export async function handleOpenFundMarketEvent(param: HandlerParam): Promise<vo
                 break;
 
             default:
-                console.warn('RedeemSlotInfoHandler: unhandled OpenFundMarket event signature', {
+                console.warn('RedeemSlotInfoHandler: unhandled OpenFundMarket event signature', JSON.stringify({
                     eventFunc,
                     eventId: event.eventId,
-                });
+                }));
         }
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: handleOpenFundMarketEvent failed', {
+        console.error('RedeemSlotInfoHandler: handleOpenFundMarketEvent failed', JSON.stringify({
             eventFunc,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
@@ -1221,17 +1222,17 @@ export async function handleRedeemShareDelegateEvent(param: HandlerParam): Promi
                 break;
 
             default:
-                console.warn('RedeemSlotInfoHandler: unhandled event signature', {
+                console.warn('RedeemSlotInfoHandler: unhandled event signature', JSON.stringify({
                     eventFunc,
                     eventId: event.eventId,
-                });
+                }));
         }
     } catch (error) {
-        console.error('RedeemSlotInfoHandler: handleRedeemShareDelegateEvent failed', {
+        console.error('RedeemSlotInfoHandler: handleRedeemShareDelegateEvent failed', JSON.stringify({
             eventFunc,
             eventId: event.eventId,
             error: error instanceof Error ? error.message : String(error),
-        });
+        }));
         throw error;
     }
 }
